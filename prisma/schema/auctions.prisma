@@ -8,5 +8,7 @@ model auctions {
 	max_length DateTime
 	is_completed Boolean
 	created_by_id String
+
   created_by users @relation(fields: [created_by_id], references: [id])
+  user_card users_cards @relation(fields: [user_card_id ], references: [id])
 }

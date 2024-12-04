@@ -18,4 +18,6 @@ model users {
   auctions auctions[]
   sentMessages chats[] @relation("sender")
   receivedMessages chats[] @relation("receiver")
+
+  users_cards users_cards[]
 }
