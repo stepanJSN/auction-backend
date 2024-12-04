@@ -16,4 +16,5 @@ model cards {
 
   location locations @relation(fields: [location_id], references: [id])
   episodes_cards episodes_cards[]
+  cards_sets cards_sets[]
 }

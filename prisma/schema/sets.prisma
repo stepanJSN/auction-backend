@@ -3,4 +3,6 @@ model sets {
   name String
   bonus Int
   created_at DateTime @default(now())
+
+  cards_sets cards_sets[]
 }
