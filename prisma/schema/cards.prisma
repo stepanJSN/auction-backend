@@ -1,0 +1,18 @@
+enum Gender {
+  male
+  female
+}
+
+model cards {
+  id String @id @default(uuid())
+  name String
+  image_url String
+  location_id String
+  type String
+  gender Gender @default(male)
+  is_active Boolean
+  is_created_by_admin Boolean
+  created_at DateTime @default(now())
+
+  location locations @relation(fields: [location_id], references: [id])
+}
