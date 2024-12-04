@@ -3,7 +3,7 @@ enum Role {
   User
 }
 
-model User {
+model Users {
   id         String   @id @default(uuid())
   email      String   @unique
   name       String
@@ -12,4 +12,7 @@ model User {
   rating     Int      @default(0)
   role       Role     @default(User)
   created_at DateTime @default(now())
+
+  from_user Transactions[] @relation("from")
+  to_user Transactions[] @relation("to")
 }
