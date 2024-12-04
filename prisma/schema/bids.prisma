@@ -1,0 +1,10 @@
+model bids {
+  id String   @id @default(uuid())
+	user_id String
+	auction_id String
+	bid_amount Decimal
+	created_at DateTime
+
+  user users @relation(fields: [user_id], references: [id])
+  auction auctions @relation(fields: [auction_id], references: [id])
+}

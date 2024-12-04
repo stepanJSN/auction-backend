@@ -20,4 +20,6 @@ model users {
   receivedMessages chats[] @relation("receiver")
 
   users_cards users_cards[]
+
+  bids bids[]
 }
