@@ -1,0 +1,12 @@
+model auctions {
+	id String   @id @default(uuid())
+	user_card_id String
+	starting_bid String
+	min_bid_step Decimal
+	max_bid Decimal?
+	min_length DateTime
+	max_length DateTime
+	is_completed Boolean
+	created_by_id String
+  created_by users @relation(fields: [created_by_id], references: [id])
+}

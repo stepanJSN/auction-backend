@@ -15,6 +15,7 @@ model users {
 
   outgoingTransactions transactions[] @relation("from")
   incomingTransactions transactions[] @relation("to")
+  auctions auctions[]
   sentMessages chats[] @relation("sender")
   receivedMessages chats[] @relation("receiver")
 }
