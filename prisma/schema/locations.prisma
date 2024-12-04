@@ -1,4 +1,4 @@
-model Locations {
+model locations {
   id String @id @default(uuid())
   name String
   type String

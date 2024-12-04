@@ -3,7 +3,7 @@ enum Role {
   User
 }
 
-model Users {
+model users {
   id         String   @id @default(uuid())
   email      String   @unique
   name       String
@@ -13,8 +13,8 @@ model Users {
   role       Role     @default(User)
   created_at DateTime @default(now())
 
-  outgoingTransactions Transactions[] @relation("from")
-  incomingTransactions Transactions[] @relation("to")
-  sentMessages Chats[] @relation("sender")
-  receivedMessages Chats[] @relation("receiver")
+  outgoingTransactions transactions[] @relation("from")
+  incomingTransactions transactions[] @relation("to")
+  sentMessages chats[] @relation("sender")
+  receivedMessages chats[] @relation("receiver")
 }

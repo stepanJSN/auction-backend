@@ -1,10 +1,10 @@
-model Chats {
+model chats {
   id          String   @id @default(uuid())
   sender_id   String
   receiver_id String
   message     String
   created_at  DateTime @default(now())
 
-  sender   Users @relation("sender", fields: [sender_id], references: [id], onDelete: Cascade)
-  receiver Users @relation("receiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+  sender   users @relation("sender", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver users @relation("receiver", fields: [receiver_id], references: [id], onDelete: Cascade)
 }
