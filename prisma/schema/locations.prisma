@@ -1,0 +1,5 @@
+model Locations {
+  id String @id @default(uuid())
+  name String
+  type String
+}
