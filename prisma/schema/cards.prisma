@@ -15,4 +15,5 @@ model cards {
   created_at DateTime @default(now())
 
   location locations @relation(fields: [location_id], references: [id])
+  episodes_cards episodes_cards[]
 }

@@ -1,0 +1,8 @@
+model episodes_cards {
+	id String   @id @default(uuid())
+	episode_id String
+	card_id String
+
+  cards cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  episodes episodes @relation(fields: [episode_id], references: [id], onDelete: Cascade)
+}
