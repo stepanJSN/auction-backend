@@ -13,6 +13,8 @@ model Users {
   role       Role     @default(User)
   created_at DateTime @default(now())
 
-  from_user Transactions[] @relation("from")
-  to_user Transactions[] @relation("to")
+  outgoingTransactions Transactions[] @relation("from")
+  incomingTransactions Transactions[] @relation("to")
+  sentMessages Chats[] @relation("sender")
+  receivedMessages Chats[] @relation("receiver")
 }
