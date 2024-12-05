@@ -3,8 +3,8 @@ import { JWTPayload } from './types/auth.type';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { Response } from 'express';
-import { SignInResponseDto } from './dto/signIn.dto';
-import * as bcrypt from 'bcrypt';
+import { SignInRequestDto, SignInResponseDto } from './dto/signIn.dto';
+import { compare } from 'bcrypt';
 
 const ONE_MONTH_IN_SECONDS = 2678400;
 const TEN_MINUTES_IN_SECONDS = 600;
@@ -42,7 +42,7 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid login or password');
 
-    const isValid = await bcrypt.compare(user.password, password);
+    const isValid = await compare(user.password, password);
     if (!isValid) throw new UnauthorizedException('Invalid login or password');
 
     return user;
@@ -50,9 +50,9 @@ export class AuthService {
 
   async signIn(
     response: Response,
-    email: string,
-    password: string,
+    signInRequestDto: SignInRequestDto,
   ): Promise<SignInResponseDto> {
+    const { email, password } = signInRequestDto;
     const user = await this.validateUserCredentials(email, password);
 
     const access_token = await this.generateToken(
@@ -70,6 +70,12 @@ export class AuthService {
       role: user.role,
       id: user.id,
     };
+  }
+
+  async getNewAccessToken(refreshToken: string) {
+    const result = await this.jwtService.verifyAsync(refreshToken);
+    if (!result) throw new UnauthorizedException('Invalid refresh token');
+    return await this.generateToken(result, TEN_MINUTES_IN_SECONDS);
   }
 
   removeRefreshTokenFromResponse(response: Response) {
