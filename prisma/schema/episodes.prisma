@@ -1,5 +1,5 @@
 model episodes {
-  id   String @id @default(uuid())
+  id   Int @id @default(autoincrement())
   code String
   name String
 
