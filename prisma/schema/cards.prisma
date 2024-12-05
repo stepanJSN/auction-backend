@@ -9,14 +9,14 @@ model cards {
   id                  String   @id @default(uuid())
   name                String
   image_url           String
-  location_id         Int
+  location_id         Int?
   type                String
   gender              Gender   @default(male)
   is_active           Boolean  @default(false)
   is_created_by_admin Boolean  @default(false)
   created_at          DateTime @default(now())
 
-  location       locations        @relation(fields: [location_id], references: [id])
+  location       locations?        @relation(fields: [location_id], references: [id])
   
   episodes_cards episodes_cards[]
   cards_sets     cards_sets[]
