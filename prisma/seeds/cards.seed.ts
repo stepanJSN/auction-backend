@@ -15,7 +15,7 @@ type CharacterType = {
 };
 
 export async function seedCards() {
-  const charactersUrl = process.env.API_URL + 'character';
+  const charactersUrl = process.env.API_URL + 'character?page=';
   await prismaInstance.cards.deleteMany({});
 
   async function handleCharactersChunk(charactersChunk: CharacterType[]) {
