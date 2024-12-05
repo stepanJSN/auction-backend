@@ -16,29 +16,30 @@ type CharacterType = {
 
 export async function seedCards() {
   const charactersUrl = process.env.API_URL + 'character';
-  const allCharacters = await getData<CharacterType>(charactersUrl);
-
   await prismaInstance.cards.deleteMany({});
 
-  const cardsPromises = allCharacters.map(async (character) => {
-    const { id } = await prismaInstance.cards.create({
-      data: {
-        name: character.name,
-        type: character.type,
-        gender: character.gender.toLowerCase() as Gender,
-        location_id: character.location.url
-          ? +character.location.url.split('/').pop()
-          : null,
-        image_url: character.image,
-        created_at: character.created,
-      },
+  async function handleCharactersChunk(charactersChunk: CharacterType[]) {
+    const cardsPromises = charactersChunk.map(async (character) => {
+      const { id } = await prismaInstance.cards.create({
+        data: {
+          name: character.name,
+          type: character.type,
+          gender: character.gender.toLowerCase() as Gender,
+          location_id: character.location.url
+            ? +character.location.url.split('/').pop()
+            : null,
+          image_url: character.image,
+          created_at: character.created,
+        },
+      });
+      const episodesCards = character.episode.map((episode) => ({
+        card_id: id,
+        episode_id: +episode.split('/').pop(),
+      }));
+      await prismaInstance.episodes_cards.createMany({ data: episodesCards });
     });
-    const episodesCards = character.episode.map((episode) => ({
-      card_id: id,
-      episode_id: +episode.split('/').pop(),
-    }));
-    await prismaInstance.episodes_cards.createMany({ data: episodesCards });
-  });
+    await Promise.all(cardsPromises);
+  }
 
-  await Promise.all(cardsPromises);
+  await getData<CharacterType>(charactersUrl, handleCharactersChunk);
 }

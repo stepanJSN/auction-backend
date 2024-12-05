@@ -8,14 +8,20 @@ type ApiResponse<T> = {
   results: T[];
 };
 
-export async function getData<T>(url: string): Promise<T[]> {
-  const response = await fetch(url);
-  const data = (await response.json()) as ApiResponse<T>;
+export async function getData<T>(
+  url: string,
+  handleChunk: (dataChunk: T[]) => Promise<void>,
+) {
+  let currentPage = 1;
 
-  if (data.info.next) {
-    const nextPageData = await getData<T>(data.info.next);
-    return [...data.results, ...nextPageData];
+  while (true) {
+    const response = await fetch(`${url}${currentPage}`);
+    const { results: dataChunk, info } =
+      (await response.json()) as ApiResponse<T>;
+
+    await handleChunk(dataChunk);
+
+    currentPage++;
+    if (!info.next) break;
   }
-
-  return data.results;
 }
