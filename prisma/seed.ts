@@ -1,10 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { seedLocation } from './seeds/location.seed';
+import { seedLocations } from './seeds/locations.seed';
+import { seedEpisodes } from './seeds/episodes.seed';
 
 export const prismaInstance = new PrismaClient();
 
 async function main() {
-  await seedLocation();
+  await seedLocations();
+  await seedEpisodes();
 }
 main()
   .then(async () => {
