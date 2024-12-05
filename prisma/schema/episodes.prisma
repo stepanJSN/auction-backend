@@ -1,0 +1,7 @@
+model episodes {
+  id   String @id @default(uuid())
+  code String
+  name String
+
+  episodes_cards episodes_cards[]
+}

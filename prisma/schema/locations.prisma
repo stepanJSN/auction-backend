@@ -1,0 +1,7 @@
+model locations {
+  id   String @id @default(uuid())
+  name String
+  type String
+
+  cards cards[]
+}

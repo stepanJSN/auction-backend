@@ -1,0 +1,8 @@
+model sets {
+  id         String   @id @default(uuid())
+  name       String
+  bonus      Int
+  created_at DateTime @default(now())
+
+  cards_sets cards_sets[]
+}
