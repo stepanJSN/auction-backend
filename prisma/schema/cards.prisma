@@ -1,6 +1,8 @@
 enum Gender {
+  unknown
   male
   female
+  genderless
 }
 
 model cards {
@@ -10,8 +12,8 @@ model cards {
   location_id         Int
   type                String
   gender              Gender   @default(male)
-  is_active           Boolean
-  is_created_by_admin Boolean
+  is_active           Boolean  @default(false)
+  is_created_by_admin Boolean  @default(false)
   created_at          DateTime @default(now())
 
   location       locations        @relation(fields: [location_id], references: [id])
