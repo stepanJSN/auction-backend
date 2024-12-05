@@ -1,6 +1,6 @@
 model episodes_cards {
   id         String @id @default(uuid())
-  episode_id String
+  episode_id Int
   card_id    String
 
   cards    cards    @relation(fields: [card_id], references: [id], onDelete: Cascade)
