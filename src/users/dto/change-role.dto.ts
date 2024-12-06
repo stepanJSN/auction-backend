@@ -1,7 +1,9 @@
 import { Role } from '@prisma/client';
-import { IsIn } from 'class-validator';
+import { IsIn, IsUUID } from 'class-validator';
 
 export class ChangeRoleDto {
+  @IsUUID()
+  userId: string;
   @IsIn(['User', 'Admin'])
   role: Role;
 }

@@ -58,11 +58,15 @@ export class UsersService {
     });
   }
 
-  async changeRole(userId: string, changeRoleDto: ChangeRoleDto) {
-    return await this.usersRepository.update(userId, changeRoleDto);
+  changeRole({ userId, role }: ChangeRoleDto) {
+    return this.usersRepository.update(userId, { role });
   }
 
-  async updateRating(userId: string, rating: number) {
-    return await this.usersRepository.update(userId, { rating });
+  updateRating(userId: string, rating: number) {
+    return this.usersRepository.update(userId, { rating });
+  }
+
+  async delete(userId: string) {
+    await this.usersRepository.deleteUser(userId);
   }
 }
