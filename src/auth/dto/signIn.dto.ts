@@ -11,8 +11,7 @@ export class SignInRequestDto {
 }
 
 export class SignInResponseDto {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
   role: Role;
   id: string;
 }
