@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { seedLocations } from './seeds/locations.seed';
 import { seedEpisodes } from './seeds/episodes.seed';
 import { seedCards } from './seeds/cards.seed';
+import { seedAdmin } from './seeds/admin.seed';
 
 export const prismaInstance = new PrismaClient();
 
@@ -9,6 +10,7 @@ async function main() {
   await seedLocations();
   await seedEpisodes();
   await seedCards();
+  await seedAdmin();
 }
 main()
   .then(async () => {
