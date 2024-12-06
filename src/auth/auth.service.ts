@@ -42,7 +42,7 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('Invalid login or password');
 
-    const isValid = await compare(user.password, password);
+    const isValid = await compare(password, user.password);
     if (!isValid) throw new UnauthorizedException('Invalid login or password');
 
     return user;
