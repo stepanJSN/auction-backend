@@ -54,14 +54,15 @@ export class AuthService {
   ): Promise<SignInResponseDto> {
     const { email, password } = signInRequestDto;
     const user = await this.validateUserCredentials(email, password);
+    const tokenPayload = { id: user.id, role: user.role, email };
 
     const access_token = await this.generateToken(
-      { id: user.id, role: user.role, email },
+      tokenPayload,
       TEN_MINUTES_IN_SECONDS,
     );
     await this.generateAndSetRefreshToken(
       response,
-      { id: user.id, email, role: user.role },
+      tokenPayload,
       ONE_MONTH_IN_SECONDS,
     );
 
