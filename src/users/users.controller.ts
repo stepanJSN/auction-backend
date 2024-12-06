@@ -43,7 +43,7 @@ export class UsersController {
     return this.usersService.findOneById(id);
   }
 
-  @Put()
+  @Put('/:userId')
   update(
     @Param('userId', ParseUUIDPipe) id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -59,7 +59,8 @@ export class UsersController {
   }
 
   @Delete('/:userId')
-  delete(@Param('userId', ParseUUIDPipe) id: string) {
-    return this.usersService.delete(id);
+  async delete(@Param('userId', ParseUUIDPipe) id: string) {
+    await this.usersService.delete(id);
+    return { success: true };
   }
 }

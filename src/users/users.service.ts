@@ -37,16 +37,17 @@ export class UsersService {
     return this.usersRepository.findAll(page, take);
   }
 
-  findOneById(userId: string) {
-    return this.usersRepository.findOneById(userId);
+  async findOneById(userId: string) {
+    const user = await this.usersRepository.findOneById(userId);
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    return user;
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {
     const user = await this.findOneById(userId);
-
-    if (user) {
-      throw new BadRequestException('User not found');
-    }
 
     const userPassword = updateUsersDto.password
       ? await this.hashPassword(updateUsersDto.password)
@@ -58,15 +59,18 @@ export class UsersService {
     });
   }
 
-  changeRole({ userId, role }: ChangeRoleDto) {
-    return this.usersRepository.update(userId, { role });
+  async changeRole({ userId, role }: ChangeRoleDto) {
+    await this.findOneById(userId);
+    return await this.usersRepository.update(userId, { role });
   }
 
-  updateRating(userId: string, rating: number) {
+  async updateRating(userId: string, rating: number) {
+    await this.findOneById(userId);
     return this.usersRepository.update(userId, { rating });
   }
 
   async delete(userId: string) {
-    await this.usersRepository.deleteUser(userId);
+    await this.findOneById(userId);
+    return await this.usersRepository.deleteUser(userId);
   }
 }
