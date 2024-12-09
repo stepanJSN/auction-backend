@@ -33,8 +33,19 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
-  findAll(page = 1, take = 10) {
-    return this.usersRepository.findAll(page, take);
+  async findAll(page = 1, take = 10) {
+    const { users, totalCount } = await this.usersRepository.findAll(
+      page,
+      take,
+    );
+    return {
+      data: users,
+      info: {
+        page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / take),
+      },
+    };
   }
 
   async findOneById(userId: string) {

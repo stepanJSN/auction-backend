@@ -27,18 +27,22 @@ export class UsersRepository {
     });
   }
 
-  findAll(page: number, take: number) {
-    return this.prisma.users.findMany({
-      select: {
-        id: true,
-        name: true,
-        surname: true,
-        rating: true,
-        role: true,
-      },
-      skip: (page - 1) * take,
-      take,
-    });
+  async findAll(page: number, take: number) {
+    const [users, totalCount] = await this.prisma.$transaction([
+      this.prisma.users.findMany({
+        select: {
+          id: true,
+          name: true,
+          surname: true,
+          rating: true,
+          role: true,
+        },
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.users.count(),
+    ]);
+    return { users, totalCount };
   }
 
   findOneById(id: string) {
