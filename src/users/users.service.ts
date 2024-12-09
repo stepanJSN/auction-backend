@@ -47,11 +47,11 @@ export class UsersService {
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {
-    const user = await this.findOneById(userId);
+    await this.findOneById(userId);
 
-    const userPassword = updateUsersDto.password
-      ? await this.hashPassword(updateUsersDto.password)
-      : user.password;
+    const userPassword =
+      updateUsersDto.password &&
+      (await this.hashPassword(updateUsersDto.password));
 
     return await this.usersRepository.update(userId, {
       ...updateUsersDto,

@@ -44,6 +44,9 @@ export class UsersRepository {
   findOneById(id: string) {
     return this.prisma.users.findUnique({
       where: { id },
+      omit: {
+        password: true,
+      },
     });
   }
 
@@ -51,10 +54,18 @@ export class UsersRepository {
     return await this.prisma.users.update({
       where: { id: userId },
       data: updateUser,
+      omit: {
+        password: true,
+      },
     });
   }
 
   async deleteUser(userId: string) {
-    return await this.prisma.users.delete({ where: { id: userId } });
+    return await this.prisma.users.delete({
+      where: { id: userId },
+      omit: {
+        password: true,
+      },
+    });
   }
 }
