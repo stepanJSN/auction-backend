@@ -1,10 +1,9 @@
 model bids {
   id         String   @id @default(uuid())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id    String
+  auctions   auctions @relation(fields: [auction_id], references: [id], onDelete: Cascade)
   auction_id String
   bid_amount Decimal
   created_at DateTime
-
-  users    users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  auctions auctions @relation(fields: [auction_id], references: [id], onDelete: Cascade)
 }
