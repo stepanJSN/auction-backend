@@ -9,9 +9,9 @@ import { ChangeRoleDto } from './dto/change-role.dto';
 export class UsersService {
   constructor(private usersRepository: UsersRepository) {}
 
-  private async hashPassword(password: string) {
+  private hashPassword(password: string) {
     const saltRounds = 10;
-    return await hash(password, saltRounds);
+    return hash(password, saltRounds);
   }
 
   async create(createUsersDto: CreateUserDto) {
@@ -21,7 +21,7 @@ export class UsersService {
       throw new BadRequestException('User already exists');
     }
 
-    return await this.usersRepository.create({
+    return this.usersRepository.create({
       email: createUsersDto.email,
       name: createUsersDto.name,
       surname: createUsersDto.surname,
@@ -33,8 +33,19 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
-  findAll(page = 1, take = 10) {
-    return this.usersRepository.findAll(page, take);
+  async findAll(page = 1, take = 10) {
+    const { users, totalCount } = await this.usersRepository.findAll(
+      page,
+      take,
+    );
+    return {
+      data: users,
+      info: {
+        page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / take),
+      },
+    };
   }
 
   async findOneById(userId: string) {
@@ -47,13 +58,13 @@ export class UsersService {
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {
-    const user = await this.findOneById(userId);
+    await this.findOneById(userId);
 
-    const userPassword = updateUsersDto.password
-      ? await this.hashPassword(updateUsersDto.password)
-      : user.password;
+    const userPassword =
+      updateUsersDto.password &&
+      (await this.hashPassword(updateUsersDto.password));
 
-    return await this.usersRepository.update(userId, {
+    return this.usersRepository.update(userId, {
       ...updateUsersDto,
       password: userPassword,
     });
@@ -61,7 +72,7 @@ export class UsersService {
 
   async changeRole({ userId, role }: ChangeRoleDto) {
     await this.findOneById(userId);
-    return await this.usersRepository.update(userId, { role });
+    return this.usersRepository.update(userId, { role });
   }
 
   async updateRating(userId: string, rating: number) {
@@ -71,6 +82,6 @@ export class UsersService {
 
   async delete(userId: string) {
     await this.findOneById(userId);
-    return await this.usersRepository.deleteUser(userId);
+    return this.usersRepository.deleteUser(userId);
   }
 }
