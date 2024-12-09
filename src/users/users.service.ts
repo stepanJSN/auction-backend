@@ -9,9 +9,9 @@ import { ChangeRoleDto } from './dto/change-role.dto';
 export class UsersService {
   constructor(private usersRepository: UsersRepository) {}
 
-  private async hashPassword(password: string) {
+  private hashPassword(password: string) {
     const saltRounds = 10;
-    return await hash(password, saltRounds);
+    return hash(password, saltRounds);
   }
 
   async create(createUsersDto: CreateUserDto) {
@@ -21,7 +21,7 @@ export class UsersService {
       throw new BadRequestException('User already exists');
     }
 
-    return await this.usersRepository.create({
+    return this.usersRepository.create({
       email: createUsersDto.email,
       name: createUsersDto.name,
       surname: createUsersDto.surname,
@@ -64,7 +64,7 @@ export class UsersService {
       updateUsersDto.password &&
       (await this.hashPassword(updateUsersDto.password));
 
-    return await this.usersRepository.update(userId, {
+    return this.usersRepository.update(userId, {
       ...updateUsersDto,
       password: userPassword,
     });
@@ -72,7 +72,7 @@ export class UsersService {
 
   async changeRole({ userId, role }: ChangeRoleDto) {
     await this.findOneById(userId);
-    return await this.usersRepository.update(userId, { role });
+    return this.usersRepository.update(userId, { role });
   }
 
   async updateRating(userId: string, rating: number) {
@@ -82,6 +82,6 @@ export class UsersService {
 
   async delete(userId: string) {
     await this.findOneById(userId);
-    return await this.usersRepository.deleteUser(userId);
+    return this.usersRepository.deleteUser(userId);
   }
 }
