@@ -21,8 +21,17 @@ export class LocationsService {
     return this.locationsRepository.create(createLocationDto);
   }
 
-  findAll(findAllLocationsDto: FindAllLocationsDto) {
-    return this.locationsRepository.findAll(findAllLocationsDto);
+  async findAll(findAllLocationsDto: FindAllLocationsDto) {
+    const { locations, totalCount } =
+      await this.locationsRepository.findAll(findAllLocationsDto);
+    return {
+      data: locations,
+      info: {
+        page: findAllLocationsDto.page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / findAllLocationsDto.take),
+      },
+    };
   }
 
   async findOne(id: number) {
