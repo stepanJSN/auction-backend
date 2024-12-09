@@ -1,10 +1,10 @@
-model users_cards {
-  id String @id @default(uuid())
-	card_id String
-	user_id String
-	created_at DateTime @default(now())
+model card_instances {
+  id         String   @id @default(uuid())
+  cards      cards    @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  card_id    String
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id    String
+  created_at DateTime @default(now())
 
-  cards cards @relation(fields: [card_id], references: [id], onDelete: Cascade)
-  users users @relation(fields: [user_id], references: [id], onDelete: Cascade)
-	auctions auctions[]
+  auctions auctions[]
 }

@@ -1,7 +1,7 @@
 model episodes {
-  id   Int @id @default(autoincrement())
+  id   Int    @id @default(autoincrement())
   code String
   name String
 
-  episodes_cards episodes_cards[]
+  cards cards[]
 }
