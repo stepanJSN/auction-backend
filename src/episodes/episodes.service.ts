@@ -21,8 +21,17 @@ export class EpisodesService {
     return this.episodesRepository.create(createEpisodeDto);
   }
 
-  findAll(findAllEpisodesDto: FindAllEpisodesDto) {
-    return this.episodesRepository.findAll(findAllEpisodesDto);
+  async findAll(findAllEpisodesDto: FindAllEpisodesDto) {
+    const { episodes, totalCount } =
+      await this.episodesRepository.findAll(findAllEpisodesDto);
+    return {
+      data: episodes,
+      info: {
+        page: findAllEpisodesDto.page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / findAllEpisodesDto.take),
+      },
+    };
   }
 
   async findOne(id: number) {

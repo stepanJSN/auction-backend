@@ -14,16 +14,21 @@ export class EpisodesRepository {
     });
   }
 
-  findAll({ name, page = 1, take = 10 }: FindAllEpisodesDto) {
-    return this.prisma.episodes.findMany({
-      where: {
-        name: {
-          contains: name,
-        },
+  async findAll({ name, page = 1, take = 10 }: FindAllEpisodesDto) {
+    const conditions = {
+      name: {
+        contains: name,
       },
-      skip: (page - 1) * take,
-      take,
-    });
+    };
+    const [episodes, totalCount] = await this.prisma.$transaction([
+      this.prisma.episodes.findMany({
+        where: conditions,
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.episodes.count({ where: conditions }),
+    ]);
+    return { episodes, totalCount };
   }
 
   findOne(id: number) {
