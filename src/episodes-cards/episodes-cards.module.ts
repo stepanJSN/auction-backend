@@ -4,5 +4,6 @@ import { EpisodesCardsRepository } from './episodes-cards.repository';
 
 @Module({
   providers: [EpisodesCardsService, EpisodesCardsRepository],
+  exports: [EpisodesCardsService],
 })
 export class EpisodesCardsModule {}
