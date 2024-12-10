@@ -8,6 +8,7 @@ import { CardsModule } from './cards/cards.module';
 import { CardInstancesModule } from './card-instances/card-instances.module';
 import { ImagesModule } from './images/images.module';
 import { ConfigModule } from '@nestjs/config';
+import { SetsModule } from './sets/sets.module';
 import configuration from 'config/configuration';
 
 @Module({
@@ -24,6 +25,7 @@ import configuration from 'config/configuration';
       isGlobal: true,
       load: [configuration],
     }),
+    SetsModule,
   ],
 })
 export class AppModule {}
