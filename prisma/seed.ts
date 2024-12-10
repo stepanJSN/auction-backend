@@ -3,7 +3,9 @@ import { seedLocations } from './seeds/locations.seed';
 import { seedEpisodes } from './seeds/episodes.seed';
 import { seedCards } from './seeds/cards.seed';
 import { seedAdmin } from './seeds/admin.seed';
+import { config } from 'dotenv';
 
+config();
 export const prismaInstance = new PrismaClient();
 
 async function main() {

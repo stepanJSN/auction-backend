@@ -1,13 +1,11 @@
-import { existsSync, promises as fs, mkdirSync } from 'fs';
+import { promises as fs, mkdirSync } from 'fs';
 import { join } from 'path';
 
-const UPLOAD_FOLDER = './public';
-const SERVER_URL = 'http://localhost:3000/';
+const UPLOAD_FOLDER = process.env.IMAGE_FOLDER;
+const SERVER_URL = process.env.SERVER_URL;
 
 export async function saveImage(imageURL: string) {
-  if (!existsSync(UPLOAD_FOLDER)) {
-    mkdirSync(UPLOAD_FOLDER);
-  }
+  mkdirSync(UPLOAD_FOLDER, { recursive: true });
 
   const fileName = 'avatar' + imageURL.split('/').pop();
   try {
