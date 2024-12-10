@@ -3,6 +3,6 @@ export default () => ({
   jwt_key: process.env.JWT_KEY || 'default key',
   api_url: process.env.API_URL || 'https://rickandmortyapi.com/api/',
   client_url: process.env.CLIENT_URL || 'http://localhost:5000',
-  server_url: process.env.CLIENT_URL || 'http://localhost:3000',
+  server_url: process.env.SERVER_URL || 'http://localhost:3000',
   image_folder: process.env.IMAGE_FOLDER || 'public',
 });

@@ -1,7 +1,7 @@
 import { promises as fs, mkdirSync } from 'fs';
 import { join } from 'path';
 
-const UPLOAD_FOLDER = process.env.IMAGE_FOLDER;
+const UPLOAD_FOLDER = './dist/' + process.env.IMAGE_FOLDER;
 const SERVER_URL = process.env.SERVER_URL;
 
 export async function saveImage(imageURL: string) {
@@ -15,7 +15,7 @@ export async function saveImage(imageURL: string) {
 
     await fs.writeFile(join(UPLOAD_FOLDER, fileName), buffer);
 
-    return SERVER_URL + fileName;
+    return `${SERVER_URL}/${fileName}`;
   } catch (error) {
     console.error(error);
     throw new Error('Failed to save image');

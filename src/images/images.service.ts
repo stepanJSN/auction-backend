@@ -20,7 +20,7 @@ export class ImagesService {
     try {
       await fs.mkdir(this.uploadDir, { recursive: true });
       await fs.writeFile(filePath, content.buffer);
-      return this.baseUrl + filename;
+      return `${this.baseUrl}/${filename}`;
     } catch (error) {
       console.error(error);
       throw new Error('Failed to save image');
@@ -28,7 +28,7 @@ export class ImagesService {
   }
 
   async delete(filename: string) {
-    const filePath = join(this.uploadDir, filename);
+    const filePath = join(this.uploadDir, filename.split('/').pop());
     try {
       await fs.unlink(filePath);
     } catch (error) {
