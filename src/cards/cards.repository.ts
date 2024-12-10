@@ -70,7 +70,7 @@ export class CardsRepository {
             id: episodeId,
           })),
         },
-        location: {
+        location: updateCardData.locationId && {
           connect: { id: updateCardData.locationId },
         },
       },

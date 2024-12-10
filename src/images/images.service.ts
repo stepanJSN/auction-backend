@@ -28,7 +28,7 @@ export class ImagesService {
   }
 
   async delete(filename: string) {
-    const filePath = join(this.uploadDir, filename);
+    const filePath = join(this.uploadDir, filename.split('/').pop());
     try {
       await fs.unlink(filePath);
     } catch (error) {

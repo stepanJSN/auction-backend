@@ -99,8 +99,20 @@ export class CardsService {
     return card;
   }
 
-  async update(id: string, updateCardDto: UpdateCardDto) {
-    await this.findOne(id);
+  async update(
+    id: string,
+    updateCardDto: UpdateCardDto,
+    image?: Express.Multer.File,
+  ) {
+    const { image_url } = await this.findOne(id);
+
+    if (image) {
+      await this.imagesService.delete(image_url);
+      const filename = Date.now() + image.originalname;
+      const imageUrl = await this.imagesService.upload(filename, image);
+      return this.cardsRepository.update(id, { ...updateCardDto, imageUrl });
+    }
+
     return this.cardsRepository.update(id, updateCardDto);
   }
 

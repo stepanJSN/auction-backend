@@ -64,11 +64,24 @@ export class CardsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('image'))
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCardDto: UpdateCardDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 1000000 }),
+          new FileTypeValidator({
+            fileType: /(image\/(jpeg|png|avif|webp|jpg))/,
+          }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    image?: Express.Multer.File,
   ) {
-    return this.cardsService.update(id, updateCardDto);
+    return this.cardsService.update(id, updateCardDto, image);
   }
 
   @Delete(':id')
