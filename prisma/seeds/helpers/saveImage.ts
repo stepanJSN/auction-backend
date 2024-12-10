@@ -15,7 +15,7 @@ export async function saveImage(imageURL: string) {
 
     await fs.writeFile(join(UPLOAD_FOLDER, fileName), buffer);
 
-    return SERVER_URL + fileName;
+    return `${SERVER_URL}/${fileName}`;
   } catch (error) {
     console.error(error);
     throw new Error('Failed to save image');
