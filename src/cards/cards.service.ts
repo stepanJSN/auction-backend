@@ -117,7 +117,8 @@ export class CardsService {
   }
 
   async remove(id: string) {
-    await this.findOne(id);
+    const { image_url } = await this.findOne(id);
+    await this.imagesService.delete(image_url);
     this.cardsRepository.delete(id);
   }
 }
