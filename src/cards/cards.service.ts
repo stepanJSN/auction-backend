@@ -2,8 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
-import type { cards as CardType, Role } from '@prisma/client';
+import type { cards as CardType } from '@prisma/client';
 import { CardsRepository } from './cards.repository';
+import { ImagesService } from 'src/images/images.service';
+import { FindAllCardsServiceType } from './types/find-all-cards-service.type';
 
 const CARD_PER_ITERATION = 20;
 
@@ -12,64 +14,80 @@ export class CardsService {
   constructor(
     private cardsRepository: CardsRepository,
     private cardInstancesService: CardInstancesService,
+    private imagesService: ImagesService,
   ) {}
 
-  async areCardsSold(cards: CardType[]) {
-    const cardInstances = await this.cardInstancesService.findAll({
-      cardsId: cards.map((card) => card.id),
-    });
-    return cardInstances.length > 0;
-  }
-
-  async create(createCardDto: CreateCardDto) {
+  private async areNotAllCardsSoldByAPI(): Promise<boolean> {
     let currentPage = 1;
     while (true) {
-      const cardsChunk = await this.cardsRepository.findAll({
+      const { cards, totalCount } = await this.cardsRepository.findAll({
         isCreatedByAdmin: false,
         page: currentPage,
         take: CARD_PER_ITERATION,
       });
-      if (!this.areCardsSold(cardsChunk.cards)) {
-        throw new BadRequestException('Not all cards from the API were sold');
-      }
-      const totalPages = Math.ceil(cardsChunk.totalCount / CARD_PER_ITERATION);
-      if (totalPages === currentPage) break;
+
+      const cardInstances = await this.cardInstancesService.findAll({
+        cardsId: cards.map((card) => card.id),
+      });
+      if (!(cardInstances.length > 0)) return true;
+
+      const totalPages = Math.ceil(totalCount / CARD_PER_ITERATION);
+      if (currentPage >= totalPages) break;
       currentPage++;
     }
-    return this.cardsRepository.create(createCardDto);
+    return false;
   }
 
-  async findAll(userId: string, role: Role, page: number, take: number) {
+  async create(createCardDto: CreateCardDto, image: Express.Multer.File) {
+    const cardsAvailable = await this.areNotAllCardsSoldByAPI();
+    if (cardsAvailable) {
+      throw new BadRequestException('Not all cards from the API were sold');
+    }
+
+    const filename = Date.now() + image.originalname;
+    const imageUrl = await this.imagesService.upload(filename, image);
+
+    return this.cardsRepository.create({ ...createCardDto, imageUrl });
+  }
+
+  private async attachOwnershipFlag(cards: CardType[], userId: string) {
+    const cardsId = cards.map((card) => card.id);
+    const cardInstances = await this.cardInstancesService.findAll({
+      userId,
+      cardsId,
+    });
+
+    return cards.map((card) => ({
+      ...card,
+      isOwned: cardInstances.some(
+        (cardInstance) => cardInstance.card_id === card.id,
+      ),
+    }));
+  }
+
+  async findAll({ userId, role, page, take }: FindAllCardsServiceType) {
     const { cards, totalCount } = await this.cardsRepository.findAll({
-      active: true,
+      active: role === 'User',
       page,
       take,
     });
-    const cardsId = cards.map((card) => card.id);
     const info = {
       page,
       totalCount,
       totalPages: Math.ceil(totalCount / take),
     };
-    if (role === 'User') {
-      const cardInstances = await this.cardInstancesService.findAll({
-        userId,
-        cardsId,
-      });
-      const cardsWithOwnershipFlag = cards.map((card) => ({
-        ...card,
-        isOwned: cardInstances.some(
-          (cardInstance) => cardInstance.card_id === card.id,
-        ),
-      }));
-      return {
-        data: cardsWithOwnershipFlag,
-        info: info,
-      };
+    if (role !== 'User') {
+      return { data: cards, info };
     }
+
+    const cardsWithOwnershipFlag = await this.attachOwnershipFlag(
+      cards,
+      userId,
+    );
+
     return {
-      data: cards,
-      info: info,
+      data: cardsWithOwnershipFlag,
+      info,
     };
   }
 
