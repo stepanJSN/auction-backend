@@ -1,10 +1,9 @@
 model transactions {
   id         String   @id @default(uuid())
+  to         users?   @relation("to", fields: [to_id], references: [id], onDelete: SetNull)
   to_id      String?
+  from       users?   @relation("from", fields: [from_id], references: [id], onDelete: SetNull)
   from_id    String?
   amount     Decimal
   created_at DateTime @default(now())
-
-  from users? @relation("from", fields: [from_id], references: [id], onDelete: SetNull)
-  to   users? @relation("to", fields: [to_id], references: [id], onDelete: SetNull)
 }
