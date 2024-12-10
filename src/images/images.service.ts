@@ -20,7 +20,7 @@ export class ImagesService {
     try {
       await fs.mkdir(this.uploadDir, { recursive: true });
       await fs.writeFile(filePath, content.buffer);
-      return this.baseUrl + filename;
+      return `${this.baseUrl}/${filename}`;
     } catch (error) {
       console.error(error);
       throw new Error('Failed to save image');

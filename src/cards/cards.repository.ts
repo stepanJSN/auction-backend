@@ -1,22 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllCardsType } from './types/find-all-cards.type';
-import { CreateCardDto } from './dto/create-card.dto';
-import { UpdateCardDto } from './dto/update-card.dto';
+import { CreateCardType } from './types/create-card.type';
+import { UpdateCardType } from './types/update-card.type';
 
 @Injectable()
 export class CardsRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(createCard: CreateCardDto) {
+  async create(createCard: CreateCardType) {
     const { id } = await this.prisma.cards.create({
       data: {
-        ...createCard,
-        image_url: '',
+        name: createCard.name,
+        type: createCard.type,
+        gender: createCard.gender,
+        image_url: createCard.imageUrl,
+        is_created_by_admin: true,
         episodes: {
           connect: createCard.episodesId.map((episodeId) => ({
             id: episodeId,
           })),
+        },
+        location: {
+          connect: {
+            id: createCard.locationId,
+          },
         },
       },
     });
@@ -49,15 +57,21 @@ export class CardsRepository {
     });
   }
 
-  update(cardId: string, updateCardData: UpdateCardDto) {
+  update(cardId: string, updateCardData: UpdateCardType) {
     return this.prisma.cards.update({
       where: { id: cardId },
       data: {
-        ...updateCardData,
+        name: updateCardData.name,
+        type: updateCardData.type,
+        gender: updateCardData.gender,
+        image_url: updateCardData.imageUrl,
         episodes: {
-          set: updateCardData.episodesId.map((episodeId) => ({
+          set: updateCardData.episodesId?.map((episodeId) => ({
             id: episodeId,
           })),
+        },
+        location: {
+          connect: { id: updateCardData.locationId },
         },
       },
     });
