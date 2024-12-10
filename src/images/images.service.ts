@@ -9,16 +9,8 @@ export class ImagesService {
   private readonly baseUrl: string;
 
   constructor(private configService: ConfigService) {
-    this.baseUrl = this.configService.get<string>(
-      'SERVER_URL',
-      'http://localhost:3000/',
-      { infer: true },
-    );
-    const imageFolder = this.configService.get<string>(
-      'IMAGE_FOLDER',
-      'public',
-      { infer: true },
-    );
+    this.baseUrl = this.configService.get<string>('server_url');
+    const imageFolder = this.configService.get<string>('image_folder');
 
     this.uploadDir = join(__dirname, '..', '..', imageFolder);
   }
