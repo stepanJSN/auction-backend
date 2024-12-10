@@ -14,16 +14,22 @@ export class LocationsRepository {
     });
   }
 
-  findAll({ name, page = 1, take = 10 }: FindAllLocationsDto) {
-    return this.prisma.locations.findMany({
-      where: {
-        name: {
-          contains: name,
-        },
+  async findAll({ name, page = 1, take = 10 }: FindAllLocationsDto) {
+    const conditions = {
+      name: {
+        contains: name,
       },
-      skip: (page - 1) * take,
-      take,
-    });
+    };
+    const [locations, totalCount] = await this.prisma.$transaction([
+      this.prisma.locations.findMany({
+        where: conditions,
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.locations.count({ where: conditions }),
+    ]);
+
+    return { locations, totalCount };
   }
 
   findOne(id: number) {

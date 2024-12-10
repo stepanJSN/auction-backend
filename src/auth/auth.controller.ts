@@ -18,11 +18,21 @@ export class AuthController {
 
   @Public()
   @Post('signin')
-  signIn(
+  async signIn(
     @Res({ passthrough: true }) response: Response,
     @Body() signInDto: SignInRequestDto,
   ) {
-    return this.authService.signIn(response, signInDto);
+    const { refreshToken, ...signInResponse } =
+      await this.authService.signIn(signInDto);
+
+    response.cookie('refreshToken', refreshToken.token, {
+      httpOnly: true,
+      maxAge: refreshToken.maxAge,
+      secure: true,
+      sameSite: 'none',
+    });
+
+    return signInResponse;
   }
 
   @Public()
@@ -38,8 +48,13 @@ export class AuthController {
 
   @Public()
   @Get('logout')
-  logout(@Res({ passthrough: true }) res: Response) {
-    this.authService.removeRefreshTokenFromResponse(res);
+  logout(@Res() response: Response) {
+    response.cookie('refreshToken', '', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+      expires: new Date(0),
+    });
     return { success: true };
   }
 }

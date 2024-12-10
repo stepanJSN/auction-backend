@@ -1,5 +1,5 @@
 import { prismaInstance } from '../seed';
-import { getData } from './getData';
+import { getData } from './helpers/getData';
 
 type EpisodeType = {
   id: number;
