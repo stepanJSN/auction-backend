@@ -6,9 +6,18 @@ import { LocationsModule } from './locations/locations.module';
 import { EpisodesModule } from './episodes/episodes.module';
 import { EpisodesCardsModule } from './episodes-cards/episodes-cards.module';
 import { CardsModule } from './cards/cards.module';
-import { UsersCardsModule } from './users-cards/users-cards.module';
+import { CardInstancesModule } from './card-instances/card-instances.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, UsersModule, LocationsModule, EpisodesModule, EpisodesCardsModule, CardsModule, UsersCardsModule],
+  imports: [
+    AuthModule,
+    PrismaModule,
+    UsersModule,
+    LocationsModule,
+    EpisodesModule,
+    EpisodesCardsModule,
+    CardsModule,
+    CardInstancesModule,
+  ],
 })
 export class AppModule {}
