@@ -1,43 +1,65 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateCardType } from './types/create-card.type';
-import { UpdateCardType } from './types/update-card.type';
 import { FindAllCardsType } from './types/find-all-cards.type';
+import { CreateCardDto } from './dto/create-card.dto';
+import { UpdateCardDto } from './dto/update-card.dto';
 
 @Injectable()
 export class CardsRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(createCard: CreateCardType) {
+  async create(createCard: CreateCardDto) {
     const { id } = await this.prisma.cards.create({
       data: {
         ...createCard,
         image_url: '',
+        episodes: {
+          connect: createCard.episodesId.map((episodeId) => ({
+            id: episodeId,
+          })),
+        },
       },
     });
     return id;
   }
 
-  findAll({ active, page, take }: FindAllCardsType) {
-    return this.prisma.cards.findMany({
-      where: {
-        is_active: active,
-      },
-      skip: (page - 1) * take,
-      take,
-    });
+  async findAll({ active, isCreatedByAdmin, page, take }: FindAllCardsType) {
+    const conditions = {
+      is_active: active,
+      is_created_by_admin: isCreatedByAdmin,
+    };
+
+    const [cards, totalCount] = await this.prisma.$transaction([
+      this.prisma.cards.findMany({
+        where: conditions,
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.cards.count({ where: conditions }),
+    ]);
+    return { cards, totalCount };
   }
 
-  findOneById(cardId: string) {
+  findOneById(cardId: string, includeEpisodes = false) {
     return this.prisma.cards.findUnique({
       where: { id: cardId },
+      include: {
+        episodes: includeEpisodes,
+      },
     });
   }
 
-  update(cardId: string, updateCardData: UpdateCardType) {
+  update(cardId: string, updateCardData: UpdateCardDto) {
     return this.prisma.cards.update({
       where: { id: cardId },
-      data: updateCardData,
+      data: {
+        ...updateCardData,
+        episodes: {
+          set: updateCardData.episodesId.map((episodeId) => ({
+            id: episodeId,
+          })),
+        },
+      },
     });
   }
 
