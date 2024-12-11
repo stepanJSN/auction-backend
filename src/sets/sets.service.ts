@@ -17,7 +17,7 @@ export class SetsService {
     return id;
   }
 
-  async findAll({ page, take, role, userId }: FindAllSetsServiceType) {
+  async findAll({ page = 1, take = 10, role, userId }: FindAllSetsServiceType) {
     const { sets, totalCount } = await this.setsRepository.findAll(page, take);
     const info = {
       page,

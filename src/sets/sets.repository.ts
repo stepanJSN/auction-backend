@@ -28,7 +28,7 @@ export class SetsRepository {
           cards: true,
         },
       }),
-      this.prisma.cards.count(),
+      this.prisma.sets.count(),
     ]);
     return { sets, totalCount };
   }
@@ -49,8 +49,11 @@ export class SetsRepository {
         name,
         bonus,
         cards: {
-          set: cardsId.map((cardId) => ({ id: cardId })),
+          set: cardsId?.map((cardId) => ({ id: cardId })),
         },
+      },
+      include: {
+        cards: true,
       },
     });
   }
