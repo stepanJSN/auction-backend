@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
-import type { cards as CardType } from '@prisma/client';
 import { CardsRepository } from './cards.repository';
 import { ImagesService } from 'src/images/images.service';
 import { FindAllCardsServiceType } from './types/find-all-cards-service.type';
@@ -50,21 +49,6 @@ export class CardsService {
     return this.cardsRepository.create({ ...createCardDto, imageUrl });
   }
 
-  private async attachOwnershipFlag(cards: CardType[], userId: string) {
-    const cardsId = cards.map((card) => card.id);
-    const cardInstances = await this.cardInstancesService.findAll({
-      userId,
-      cardsId,
-    });
-
-    return cards.map((card) => ({
-      ...card,
-      isOwned: cardInstances.some(
-        (cardInstance) => cardInstance.card_id === card.id,
-      ),
-    }));
-  }
-
   async findAll({ userId, role, page, take }: FindAllCardsServiceType) {
     const { cards, totalCount } = await this.cardsRepository.findAll({
       active: role === 'User',
@@ -80,10 +64,8 @@ export class CardsService {
       return { data: cards, info };
     }
 
-    const cardsWithOwnershipFlag = await this.attachOwnershipFlag(
-      cards,
-      userId,
-    );
+    const cardsWithOwnershipFlag =
+      await this.cardInstancesService.attachOwnershipFlag(cards, userId);
 
     return {
       data: cardsWithOwnershipFlag,
