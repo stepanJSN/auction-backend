@@ -19,12 +19,27 @@ export class SetsRepository {
     });
   }
 
-  findAll() {
-    return `This action returns all sets`;
+  async findAll(page = 1, take = 10) {
+    const [sets, totalCount] = await this.prisma.$transaction([
+      this.prisma.sets.findMany({
+        skip: (page - 1) * take,
+        take,
+        include: {
+          cards: true,
+        },
+      }),
+      this.prisma.cards.count(),
+    ]);
+    return { sets, totalCount };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} set`;
+  findOne(id: string) {
+    return this.prisma.sets.findUnique({
+      where: { id },
+      include: {
+        cards: true,
+      },
+    });
   }
 
   update(id: string, { name, bonus, cardsId }: UpdateSetDto) {
