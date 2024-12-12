@@ -28,55 +28,76 @@ export class AuctionsRepository {
     return id;
   }
 
-  async findAll(findAllAuctionsDto: FindAllAuctionsDto) {
-    const auctions = await this.prisma.auctions.findMany({
-      where: {
-        card_instance: {
-          cards: {
-            location_id: findAllAuctionsDto.locationId,
-            name: findAllAuctionsDto.cardName,
+  async findAll({
+    locationId,
+    cardName,
+    fromPrice,
+    toPrice,
+    sortBy,
+    sortOrder,
+    page = 1,
+    take = 20,
+  }: FindAllAuctionsDto) {
+    const conditions = {
+      card_instance: {
+        cards: {
+          location_id: locationId,
+          name: cardName,
+        },
+      },
+      bids: {
+        every: {
+          bid_amount: {
+            gte: fromPrice || 0,
+            lte: toPrice || Number.MAX_VALUE,
           },
         },
-        bids: {
-          every: {
-            bid_amount: {
-              gte: findAllAuctionsDto.fromPrice || 0,
-              lte: findAllAuctionsDto.toPrice || Number.MAX_VALUE,
+      },
+    };
+
+    const [auctions, totalCount] = await this.prisma.$transaction([
+      this.prisma.auctions.findMany({
+        where: conditions,
+        select: {
+          starting_bid: true,
+          min_bid_step: true,
+          max_bid: true,
+          max_length: true,
+          created_by: {
+            select: {
+              id: true,
             },
           },
-        },
-      },
-      select: {
-        starting_bid: true,
-        min_bid_step: true,
-        max_bid: true,
-        max_length: true,
-        created_by: {
-          select: {
-            id: true,
+          card_instance: {
+            select: {
+              cards: true,
+            },
+          },
+          bids: {
+            select: {
+              user_id: true,
+              bid_amount: true,
+            },
+            orderBy: {
+              bid_amount: 'desc',
+            },
+            take: 1,
           },
         },
-        card_instance: {
-          select: {
-            cards: true,
-          },
+        orderBy: {
+          ...(sortBy === 'creationDate' && {
+            created_at: sortOrder,
+          }),
+          ...(sortBy === 'finishDate' && {
+            max_length: sortOrder,
+          }),
         },
-        bids: {
-          select: {
-            user_id: true,
-            bid_amount: true,
-          },
-        },
-      },
-    });
-    return auctions.sort((a, b) => {
-      const highestBidA = Math.max(...a.bids.map((bid) => +bid.bid_amount));
-      const highestBidB = Math.max(...b.bids.map((bid) => +bid.bid_amount));
-
-      return findAllAuctionsDto.sortOrder === 'asc'
-        ? highestBidA - highestBidB
-        : highestBidB - highestBidA;
-    });
+        skip: (page - 1) * take,
+        take: take,
+      }),
+      this.prisma.auctions.count({ where: conditions }),
+    ]);
+    return { auctions, totalCount };
   }
 
   findFinishedByNow() {

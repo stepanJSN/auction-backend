@@ -77,8 +77,8 @@ export class AuctionsService {
         ...card_instance.cards,
       },
       highestBid: {
-        amount: highestBid.bid_amount,
-        isThisUserBid: highestBid.user_id === userId,
+        amount: highestBid?.bid_amount,
+        isThisUserBid: highestBid && highestBid.user_id === userId,
       },
     };
   }

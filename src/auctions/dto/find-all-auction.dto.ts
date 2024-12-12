@@ -31,6 +31,10 @@ export class FindAllAuctionsDto {
   sortOrder: 'asc' | 'desc';
 
   @IsOptional()
+  @IsIn(['creationDate', 'finishDate', 'highestBid'])
+  sortBy: 'creationDate' | 'finishDate' | 'highestBid';
+
+  @IsOptional()
   @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
   @Min(1)
   @Max(50)
