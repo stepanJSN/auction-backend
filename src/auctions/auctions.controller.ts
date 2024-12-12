@@ -33,7 +33,15 @@ export class AuctionsController {
   }
 
   @Get()
-  findAll(
+  findAll(@Query() findAllAuctionsDto: FindAllAuctionsDto) {
+    return this.auctionsService.findAll({
+      ...findAllAuctionsDto,
+      isCompleted: false,
+    });
+  }
+
+  @Get('/myAuctions')
+  findAllByUser(
     @CurrentUser('id') userId: string,
     @Query() findAllAuctionsDto: FindAllAuctionsDto,
   ) {

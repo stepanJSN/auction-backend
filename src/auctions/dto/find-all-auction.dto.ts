@@ -1,16 +1,9 @@
 import { Transform } from 'class-transformer';
-import {
-  IsDecimal,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class FindAllAuctionsDto {
   @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
   locationId: number;
 
@@ -19,11 +12,13 @@ export class FindAllAuctionsDto {
   cardName: string;
 
   @IsOptional()
-  @IsDecimal()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt()
   fromPrice: number;
 
   @IsOptional()
-  @IsDecimal()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt()
   toPrice: number;
 
   @IsOptional()
