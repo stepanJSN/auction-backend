@@ -1,34 +1,57 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
 import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
+import { CurrentUser } from 'src/decorators/user.decorator';
+import { JWTPayload } from 'src/auth/types/auth.type';
+import { FindAllAuctionsDto } from './dto/find-all-auction.dto';
 
 @Controller('auctions')
 export class AuctionsController {
   constructor(private readonly auctionsService: AuctionsService) {}
 
   @Post()
-  create(@Body() createAuctionDto: CreateAuctionDto) {
-    return this.auctionsService.create(createAuctionDto);
+  create(
+    @CurrentUser() user: JWTPayload,
+    @Body() createAuctionDto: CreateAuctionDto,
+  ) {
+    return this.auctionsService.create({
+      ...createAuctionDto,
+      createdBy: user.id,
+      role: user.role,
+    });
   }
 
   @Get()
-  findAll() {
-    return this.auctionsService.findAll();
+  findAll(@Query() findAllAuctionsDto: FindAllAuctionsDto) {
+    return this.auctionsService.findAll(findAllAuctionsDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.auctionsService.findOne(+id);
+  findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
+    return this.auctionsService.findOne(id, userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAuctionDto: UpdateAuctionDto) {
-    return this.auctionsService.update(+id, updateAuctionDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateAuctionDto: UpdateAuctionDto,
+  ) {
+    return this.auctionsService.update(id, updateAuctionDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.auctionsService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.auctionsService.remove(id);
   }
 }
