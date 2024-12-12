@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { FindAllAuctionsDto } from './dto/find-all-auction.dto';
 import { CreateAuctionRepositoryType } from './types/create-auction-repository.type';
+import { UpdateAuctionRepositoryType } from './types/update-auction-repositroy.type';
 
 @Injectable()
 export class AuctionsRepository {
@@ -11,11 +11,11 @@ export class AuctionsRepository {
   async create(createAuctionDto: CreateAuctionRepositoryType) {
     const { id } = await this.prisma.auctions.create({
       data: {
-        starting_bid: createAuctionDto.starting_bid,
-        min_bid_step: createAuctionDto.min_bid_step,
-        max_bid: createAuctionDto.max_bid,
-        min_length: createAuctionDto.min_length,
-        max_length: createAuctionDto.max_length,
+        starting_bid: createAuctionDto.startingBid,
+        min_bid_step: createAuctionDto.minBidStep,
+        max_bid: createAuctionDto.maxBid,
+        min_length: createAuctionDto.minLength,
+        max_length: createAuctionDto.maxLength,
         created_by: {
           connect: { id: createAuctionDto.createdBy },
         },
@@ -48,6 +48,7 @@ export class AuctionsRepository {
       },
       include: {
         bids: true,
+        created_by: true,
       },
     });
     return auctions.sort((a, b) => {
@@ -86,6 +87,7 @@ export class AuctionsRepository {
         },
         card_instance: {
           select: {
+            user_id: true,
             cards: true,
           },
         },
@@ -103,15 +105,16 @@ export class AuctionsRepository {
     return auction;
   }
 
-  update(id: string, updateAuctionDto: UpdateAuctionDto) {
+  update(id: string, updateAuctionDto: UpdateAuctionRepositoryType) {
     return this.prisma.auctions.update({
       where: { id },
       data: {
-        starting_bid: updateAuctionDto.starting_bid,
-        min_bid_step: updateAuctionDto.min_bid_step,
-        max_bid: updateAuctionDto.max_bid,
-        min_length: updateAuctionDto.min_length,
-        max_length: updateAuctionDto.max_length,
+        starting_bid: updateAuctionDto.startingBid,
+        min_bid_step: updateAuctionDto.minBidStep,
+        max_bid: updateAuctionDto.maxBid,
+        min_length: updateAuctionDto.minLength,
+        max_length: updateAuctionDto.maxLength,
+        is_completed: updateAuctionDto.isCompleted,
       },
     });
   }
