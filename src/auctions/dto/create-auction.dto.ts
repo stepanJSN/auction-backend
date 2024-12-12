@@ -5,17 +5,17 @@ export class CreateAuctionDto {
   cardId: string;
 
   @IsInt()
-  starting_bid: number;
+  startingBid: number;
 
   @IsInt()
-  min_bid_step: number;
+  minBidStep: number;
 
   @IsInt()
-  max_bid: number;
+  maxBid: number;
 
   @IsInt()
-  min_length: number;
+  minLength: number;
 
   @IsDate()
-  max_length: Date;
+  maxLength: Date;
 }
