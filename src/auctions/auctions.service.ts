@@ -5,7 +5,7 @@ import { CardInstancesService } from 'src/card-instances/card-instances.service'
 import { CreateAuctionServiceType } from './types/create-auction-service.type';
 import { AuctionsFinishedEvent } from './events/auction-finished.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { FindAllAuctionsServiceType } from './types/find-all-auctions-service.type';
+import { FindAllAuctionsType } from './types/find-all-auctions.type';
 
 @Injectable()
 export class AuctionsService {
@@ -44,33 +44,24 @@ export class AuctionsService {
     });
   }
 
-  private findHighestBid(bids: { user_id: string; bid_amount: number }[]) {
-    return bids.reduce(
-      (maxBid, currentBid) =>
-        currentBid.bid_amount > maxBid.bid_amount ? currentBid : maxBid,
-      bids[0],
-    );
-  }
-
-  async findAll(findAllAuctionsData: FindAllAuctionsServiceType) {
-    const auctions = await this.auctionRepository.findAll(findAllAuctionsData);
-    return auctions.map(({ bids, ...restAuctionData }) => {
-      const highestBid = this.findHighestBid(bids);
-      return {
-        ...restAuctionData,
-        highestBid: {
-          amount: highestBid.bid_amount,
-          isThisUserBid: highestBid.user_id === findAllAuctionsData.userId,
-        },
-      };
-    });
+  async findAll(findAllAuctionsData: FindAllAuctionsType) {
+    const { auctions, totalCount } =
+      await this.auctionRepository.findAll(findAllAuctionsData);
+    return {
+      data: auctions,
+      info: {
+        page: findAllAuctionsData.page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / findAllAuctionsData.take),
+      },
+    };
   }
 
   async findOne(id: string, userId: string) {
     const { bids, card_instance, ...restAuctionData } =
       await this.auctionRepository.findOne(id);
 
-    const highestBid = this.findHighestBid(bids);
+    const highestBid = bids[0];
     return {
       ...restAuctionData,
       card: {
@@ -97,13 +88,13 @@ export class AuctionsService {
     const { bids, card_instance_id } = await this.auctionRepository.update(id, {
       isCompleted: true,
     });
-    const highestBid = this.findHighestBid(bids);
+    const highestBid = bids[0];
     this.eventEmitter.emit(
       'auction.finished',
       new AuctionsFinishedEvent({
         id,
         cardInstanceId: card_instance_id,
-        winnerId: highestBid.user_id,
+        winnerId: highestBid?.user_id,
       }),
     );
   }
