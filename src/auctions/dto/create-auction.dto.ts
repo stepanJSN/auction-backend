@@ -1,24 +1,21 @@
-import { IsDecimal, IsUUID } from 'class-validator';
+import { IsDate, IsInt, IsUUID } from 'class-validator';
 
 export class CreateAuctionDto {
   @IsUUID()
-  cardInstanceId: string;
+  cardId: string;
 
-  @IsDecimal()
+  @IsInt()
   starting_bid: number;
 
-  @IsDecimal()
+  @IsInt()
   min_bid_step: number;
 
-  @IsDecimal()
+  @IsInt()
   max_bid: number;
 
   @IsInt()
   min_length: number;
 
-  @IsInt()
+  @IsDate()
   max_length: Date;
-
-  @IsUUID()
-  createdBy: string;
 }
