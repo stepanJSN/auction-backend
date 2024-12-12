@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsDate, IsInt, IsUUID } from 'class-validator';
 
 export class CreateAuctionDto {
@@ -16,6 +17,7 @@ export class CreateAuctionDto {
   @IsInt()
   minLength: number;
 
+  @Type(() => Date)
   @IsDate()
   maxLength: Date;
 }
