@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateAuctionDto } from './dto/create-auction.dto';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { FindAllAuctionsDto } from './dto/find-all-auction.dto';
+import { CreateAuctionRepositoryType } from './types/create-auction-repository.type';
 
 @Injectable()
 export class AuctionsRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(createAuctionDto: CreateAuctionDto) {
+  async create(createAuctionDto: CreateAuctionRepositoryType) {
     const { id } = await this.prisma.auctions.create({
       data: {
         starting_bid: createAuctionDto.starting_bid,
@@ -86,7 +86,7 @@ export class AuctionsRepository {
         },
         card_instance: {
           select: {
-            id: true,
+            cards: true,
           },
         },
         bids: {
@@ -112,12 +112,6 @@ export class AuctionsRepository {
         max_bid: updateAuctionDto.max_bid,
         min_length: updateAuctionDto.min_length,
         max_length: updateAuctionDto.max_length,
-        created_by: {
-          connect: { id: updateAuctionDto.createdBy },
-        },
-        card_instance: {
-          connect: { id: updateAuctionDto.cardInstanceId },
-        },
       },
     });
   }
