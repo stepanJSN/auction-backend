@@ -46,9 +46,27 @@ export class AuctionsRepository {
           },
         },
       },
-      include: {
-        bids: true,
-        created_by: true,
+      select: {
+        starting_bid: true,
+        min_bid_step: true,
+        max_bid: true,
+        max_length: true,
+        created_by: {
+          select: {
+            id: true,
+          },
+        },
+        card_instance: {
+          select: {
+            cards: true,
+          },
+        },
+        bids: {
+          select: {
+            user_id: true,
+            bid_amount: true,
+          },
+        },
       },
     });
     return auctions.sort((a, b) => {
@@ -115,6 +133,15 @@ export class AuctionsRepository {
         min_length: updateAuctionDto.minLength,
         max_length: updateAuctionDto.maxLength,
         is_completed: updateAuctionDto.isCompleted,
+      },
+      select: {
+        card_instance_id: true,
+        bids: {
+          select: {
+            user_id: true,
+            bid_amount: true,
+          },
+        },
       },
     });
   }

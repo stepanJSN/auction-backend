@@ -94,10 +94,17 @@ export class AuctionsService {
   }
 
   async finishAuction(id: string) {
-    await this.auctionRepository.update(id, { isCompleted: true });
+    const { bids, card_instance_id } = await this.auctionRepository.update(id, {
+      isCompleted: true,
+    });
+    const highestBid = this.findHighestBid(bids);
     this.eventEmitter.emit(
       'auction.finished',
-      new AuctionsFinishedEvent({ id }),
+      new AuctionsFinishedEvent({
+        id,
+        cardInstanceId: card_instance_id,
+        winnerId: highestBid.user_id,
+      }),
     );
   }
 }
