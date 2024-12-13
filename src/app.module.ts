@@ -10,6 +10,7 @@ import { ImagesModule } from './images/images.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuctionsModule } from './auctions/auctions.module';
 import { SetsModule } from './sets/sets.module';
+import { BidsModule } from './bids/bids.module';
 import configuration from 'config/configuration';
 
 @Module({
@@ -28,6 +29,7 @@ import configuration from 'config/configuration';
     }),
     AuctionsModule,
     SetsModule,
+    BidsModule,
   ],
 })
 export class AppModule {}
