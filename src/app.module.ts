@@ -12,6 +12,7 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { SetsModule } from './sets/sets.module';
 import { BidsModule } from './bids/bids.module';
 import configuration from 'config/configuration';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import configuration from 'config/configuration';
       isGlobal: true,
       load: [configuration],
     }),
+    EventEmitterModule.forRoot(),
     AuctionsModule,
     SetsModule,
     BidsModule,
