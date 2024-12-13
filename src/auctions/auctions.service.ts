@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionsRepository } from './auctions.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
@@ -59,8 +63,12 @@ export class AuctionsService {
   }
 
   async findOne(id: string, userId: string) {
-    const { bids, card_instance, ...restAuctionData } =
-      await this.auctionRepository.findOne(id);
+    const auction = await this.auctionRepository.findOne(id);
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+    const { bids, card_instance, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
     return {
@@ -76,12 +84,10 @@ export class AuctionsService {
   }
 
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
-    await this.auctionRepository.findOne(id);
     return this.auctionRepository.update(id, updateAuctionDto);
   }
 
   async remove(id: string) {
-    // await this.auctionRepository.findOne(id);
     return this.auctionRepository.remove(id);
   }
 

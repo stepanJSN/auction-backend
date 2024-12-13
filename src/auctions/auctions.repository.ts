@@ -115,8 +115,8 @@ export class AuctionsRepository {
     });
   }
 
-  async findOne(id: string) {
-    const auction = await this.prisma.auctions.findUnique({
+  findOne(id: string) {
+    return this.prisma.auctions.findUnique({
       where: { id },
       select: {
         starting_bid: true,
@@ -147,36 +147,38 @@ export class AuctionsRepository {
         },
       },
     });
-    if (!auction) {
-      throw new NotFoundException('Auction not found');
-    }
-    return auction;
   }
 
-  update(id: string, updateAuctionDto: UpdateAuctionRepositoryType) {
-    return this.prisma.auctions.update({
-      where: { id },
-      data: {
-        starting_bid: updateAuctionDto.startingBid,
-        min_bid_step: updateAuctionDto.minBidStep,
-        max_bid: updateAuctionDto.maxBid,
-        min_length: updateAuctionDto.minLength,
-        max_length: updateAuctionDto.maxLength,
-        is_completed: updateAuctionDto.isCompleted,
-      },
-      select: {
-        card_instance_id: true,
-        bids: {
-          select: {
-            user_id: true,
-            bid_amount: true,
+  async update(id: string, updateAuctionDto: UpdateAuctionRepositoryType) {
+    try {
+      return await this.prisma.auctions.update({
+        where: { id },
+        data: {
+          starting_bid: updateAuctionDto.startingBid,
+          min_bid_step: updateAuctionDto.minBidStep,
+          max_bid: updateAuctionDto.maxBid,
+          min_length: updateAuctionDto.minLength,
+          max_length: updateAuctionDto.maxLength,
+          is_completed: updateAuctionDto.isCompleted,
+        },
+        select: {
+          card_instance_id: true,
+          bids: {
+            select: {
+              user_id: true,
+              bid_amount: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch {
+      throw new NotFoundException('Auction not found');
+    }
   }
 
-  remove(id: string) {
-    return this.prisma.auctions.delete({ where: { id } });
+  async remove(id: string) {
+    try {
+      return await this.prisma.auctions.delete({ where: { id } });
+    } catch {}
   }
 }
