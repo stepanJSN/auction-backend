@@ -16,5 +16,6 @@ import { AuctionsCronService } from './auctions-cron.service';
     AuctionsGateway,
     AuctionsCronService,
   ],
+  exports: [AuctionsService],
 })
 export class AuctionsModule {}
