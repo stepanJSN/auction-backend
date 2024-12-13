@@ -16,7 +16,7 @@ export class AuctionsRepository {
         min_bid_step: createAuctionDto.minBidStep,
         max_bid: createAuctionDto.maxBid,
         min_length: createAuctionDto.minLength,
-        max_length: createAuctionDto.maxLength,
+        end_time: createAuctionDto.endTime,
         created_by: {
           connect: { id: createAuctionDto.createdBy },
         },
@@ -43,7 +43,7 @@ export class AuctionsRepository {
   }: FindAllAuctionsType) {
     const sortColumn = {
       creationDate: 'a.created_at',
-      finishDate: 'a.max_length',
+      finishDate: 'a.end_time',
       highestBid: 'highest_bid',
     }[sortBy];
     const sortDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
@@ -55,7 +55,7 @@ export class AuctionsRepository {
         a.starting_bid,
         a.min_bid_step,
         a.max_bid,
-        a.max_length,
+        a.end_time,
         a.created_at,
         a.created_by_id,
         a.is_completed,
@@ -110,7 +110,7 @@ export class AuctionsRepository {
     return this.prisma.auctions.findMany({
       where: {
         is_completed: false,
-        max_length: { lte: now },
+        end_time: { lte: now },
       },
     });
   }
@@ -123,7 +123,7 @@ export class AuctionsRepository {
         min_bid_step: true,
         max_bid: true,
         min_length: true,
-        max_length: true,
+        end_time: true,
         is_completed: true,
         created_by: {
           select: {
@@ -162,7 +162,7 @@ export class AuctionsRepository {
         min_bid_step: updateAuctionDto.minBidStep,
         max_bid: updateAuctionDto.maxBid,
         min_length: updateAuctionDto.minLength,
-        max_length: updateAuctionDto.maxLength,
+        end_time: updateAuctionDto.endTime,
         is_completed: updateAuctionDto.isCompleted,
       },
       select: {

@@ -3,7 +3,7 @@ export type AuctionsPrismaType = {
   starting_bid: number;
   min_bid_step: number;
   max_bid: number;
-  max_length: string;
+  end_time: string;
   created_at: string;
   created_by_id: string;
   is_completed: number;
