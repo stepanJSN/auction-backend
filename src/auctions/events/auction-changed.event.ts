@@ -1,10 +1,14 @@
 import { UpdateAuctionDto } from '../dto/update-auction.dto';
 
-export class AuctionChangedEvent extends UpdateAuctionDto {
+export class AuctionChangedEvent {
   id: string;
+  startingBid?: number;
+  minBidStep?: number;
+  maxBid?: number;
+  minLength?: number;
+  endTime?: Date;
 
-  constructor(payload: UpdateAuctionDto & { id: string }) {
-    super();
-    this.id = payload.id;
+  constructor(data: UpdateAuctionDto & { id: string }) {
+    Object.assign(this, data);
   }
 }
