@@ -19,6 +19,10 @@ export class BidsService {
       createBidData.userId,
     );
 
+    if (!auction) {
+      throw new BadRequestException('The auction not found!');
+    }
+
     if (auction.is_completed) {
       throw new BadRequestException('The auction has already ended!');
     }
@@ -34,22 +38,14 @@ export class BidsService {
       throw new BadRequestException('You cannot bid less than starting bid!');
     }
 
-    if (
-      auction.highestBid.amount &&
-      auction.highestBid.amount >= createBidData.bidAmount
-    ) {
-      throw new BadRequestException(
-        'You cannot bid less than your previous bid!',
-      );
-    }
-
     if (auction.max_bid && auction.max_bid < createBidData.bidAmount) {
       throw new BadRequestException('Your bid exceeds the maximum allowed!');
     }
 
     if (
-      auction.min_bid_step <=
-      createBidData.bidAmount - auction.highestBid.amount
+      auction.min_bid_step >
+      createBidData.bidAmount -
+        (auction.highestBid.amount ?? auction.starting_bid)
     ) {
       throw new BadRequestException(
         'Your bid does not exceed the minimum bid step!',
