@@ -4,8 +4,10 @@ import { AuctionsRepository } from './auctions.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
 import { CreateAuctionServiceType } from './types/create-auction-service.type';
 import { AuctionsFinishedEvent } from './events/auction-finished.event';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { FindAllAuctionsType } from './types/find-all-auctions.type';
+import { NewBidEvent } from 'src/bids/events/new-bid.event';
+import { AuctionChangedEndTimeEvent } from './events/auction-changed-end-time.event';
 
 @Injectable()
 export class AuctionsService {
@@ -106,5 +108,32 @@ export class AuctionsService {
         winnerId: highestBid?.user_id,
       }),
     );
+  }
+
+  @OnEvent('bid.new')
+  async extendAuctionIfNecessary(event: NewBidEvent) {
+    const { max_length, min_length } = await this.auctionRepository.findOne(
+      event.auctionId,
+    );
+
+    const diffInMilliseconds = max_length.getTime() - event.createdAt.getTime();
+    const diffInMinutes = Math.ceil(diffInMilliseconds / 1000 / 60);
+
+    if (diffInMinutes < min_length) {
+      const newEndTime = new Date(
+        event.createdAt.getTime() + min_length * 1000,
+      );
+      await this.auctionRepository.update(event.auctionId, {
+        maxLength: newEndTime,
+      });
+
+      this.eventEmitter.emit(
+        'auction.changedEndTime',
+        new AuctionChangedEndTimeEvent({
+          id: event.auctionId,
+          endTime: newEndTime,
+        }),
+      );
+    }
   }
 }
