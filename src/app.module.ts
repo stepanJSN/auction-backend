@@ -9,6 +9,7 @@ import { CardInstancesModule } from './card-instances/card-instances.module';
 import { ImagesModule } from './images/images.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuctionsModule } from './auctions/auctions.module';
+import { SetsModule } from './sets/sets.module';
 import configuration from 'config/configuration';
 
 @Module({
@@ -26,6 +27,7 @@ import configuration from 'config/configuration';
       load: [configuration],
     }),
     AuctionsModule,
+    SetsModule,
   ],
 })
 export class AppModule {}
