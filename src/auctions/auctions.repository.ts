@@ -72,7 +72,7 @@ export class AuctionsRepository {
         (${isCompleted === false ? `a.is_completed = 0` : '1'})
         AND (${userId ? `a.created_by_id = '${userId}'` : '1'})
         AND (${locationId ? `c.location_id = ${locationId}` : '1'})
-        AND (${cardName ? `c.name = '${cardName}'` : '1'})
+        AND (${cardName ? `c.name LIKE '%${cardName}%'` : '1'})
         AND (${fromPrice ? `b.bid_amount >= ${fromPrice}` : '1'})
         AND (${toPrice ? `b.bid_amount <= ${toPrice}` : '1'})
       GROUP BY 
