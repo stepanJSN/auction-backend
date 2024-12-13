@@ -7,7 +7,7 @@ import { AuctionsFinishedEvent } from './events/auction-finished.event';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { FindAllAuctionsType } from './types/find-all-auctions.type';
 import { NewBidEvent } from 'src/bids/events/new-bid.event';
-import { AuctionChangedEndTimeEvent } from './events/auction-changed.event';
+import { AuctionChangedEvent } from './events/auction-changed.event';
 
 @Injectable()
 export class AuctionsService {
@@ -87,7 +87,15 @@ export class AuctionsService {
 
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
     await this.auctionRepository.findOne(id);
-    return this.auctionRepository.update(id, updateAuctionDto);
+    const auction = await this.auctionRepository.update(id, updateAuctionDto);
+    this.eventEmitter.emit(
+      'auction.changed',
+      new AuctionChangedEvent({
+        id: id,
+        ...updateAuctionDto,
+      }),
+    );
+    return auction;
   }
 
   async remove(id: string) {
@@ -123,17 +131,9 @@ export class AuctionsService {
       const newEndTime = new Date(
         event.createdAt.getTime() + min_length * 1000,
       );
-      await this.auctionRepository.update(event.auctionId, {
+      await this.update(event.auctionId, {
         endTime: newEndTime,
       });
-
-      this.eventEmitter.emit(
-        'auction.changedEndTime',
-        new AuctionChangedEndTimeEvent({
-          id: event.auctionId,
-          endTime: newEndTime,
-        }),
-      );
     }
   }
 }
