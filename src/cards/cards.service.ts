@@ -5,6 +5,7 @@ import { CardInstancesService } from 'src/card-instances/card-instances.service'
 import { CardsRepository } from './cards.repository';
 import { ImagesService } from 'src/images/images.service';
 import { FindAllCardsServiceType } from './types/find-all-cards-service.type';
+import { Role } from '@prisma/client';
 
 const CARD_PER_ITERATION = 20;
 
@@ -51,7 +52,7 @@ export class CardsService {
 
   async findAll({ userId, role, page, take }: FindAllCardsServiceType) {
     const { cards, totalCount } = await this.cardsRepository.findAll({
-      active: role === 'User',
+      active: role === Role.User,
       page,
       take,
     });
@@ -60,7 +61,7 @@ export class CardsService {
       totalCount,
       totalPages: Math.ceil(totalCount / take),
     };
-    if (role !== 'User') {
+    if (role !== Role.User) {
       return { data: cards, info };
     }
 

@@ -6,6 +6,7 @@ import { CreateAuctionServiceType } from './types/create-auction-service.type';
 import { AuctionsFinishedEvent } from './events/auction-finished.event';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FindAllAuctionsType } from './types/find-all-auctions.type';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuctionsService {
@@ -16,7 +17,7 @@ export class AuctionsService {
   ) {}
 
   async create(createAuctionDto: CreateAuctionServiceType) {
-    if (createAuctionDto.role === 'Admin') {
+    if (createAuctionDto.role === Role.Admin) {
       const { id: cardInstanceId } = await this.cardInstancesService.create({
         userId: createAuctionDto.createdBy,
         cardId: createAuctionDto.cardId,
@@ -80,7 +81,7 @@ export class AuctionsService {
   }
 
   async remove(id: string) {
-    await this.auctionRepository.findOne(id);
+    // await this.auctionRepository.findOne(id);
     return this.auctionRepository.remove(id);
   }
 

@@ -4,6 +4,7 @@ import { UpdateSetDto } from './dto/update-set.dto';
 import { SetsRepository } from './sets.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
 import { FindAllSetsServiceType } from './types/find-all-sets-serivce.type';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class SetsService {
@@ -24,7 +25,7 @@ export class SetsService {
       totalCount,
       totalPages: Math.ceil(totalCount / take),
     };
-    if (role !== 'User') {
+    if (role !== Role.User) {
       return { data: sets, info };
     }
 
