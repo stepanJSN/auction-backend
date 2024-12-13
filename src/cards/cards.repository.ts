@@ -77,7 +77,9 @@ export class CardsRepository {
     });
   }
 
-  delete(cardId: string) {
-    return this.prisma.cards.delete({ where: { id: cardId } });
+  async delete(cardId: string) {
+    try {
+      return await this.prisma.cards.delete({ where: { id: cardId } });
+    } catch {}
   }
 }

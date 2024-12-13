@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateCardDto } from './dto/create-card.dto';
 import { UpdateCardDto } from './dto/update-card.dto';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
@@ -77,7 +81,7 @@ export class CardsService {
   async findOne(id: string, includeEpisodes = false) {
     const card = await this.cardsRepository.findOneById(id, includeEpisodes);
     if (!card) {
-      throw new BadRequestException('Card not found');
+      throw new NotFoundException('Card not found');
     }
     return card;
   }
@@ -100,8 +104,10 @@ export class CardsService {
   }
 
   async remove(id: string) {
-    const { image_url } = await this.findOne(id);
-    await this.imagesService.delete(image_url);
+    const { image_url } = await this.cardsRepository.findOneById(id);
+    if (image_url) {
+      await this.imagesService.delete(image_url);
+    }
     this.cardsRepository.delete(id);
   }
 }
