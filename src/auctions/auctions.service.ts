@@ -62,9 +62,18 @@ export class AuctionsService {
       await this.auctionRepository.findOne(id);
 
     const highestBid = bids[0];
+
+    const isUserHasThisCard = await this.cardInstancesService
+      .findAll({
+        userId,
+        cardsId: [card_instance.cards.id],
+      })
+      .then((cardInstances) => !!cardInstances.pop());
+
     return {
       ...restAuctionData,
       card: {
+        isUserHasThisCard,
         ...card_instance.cards,
       },
       highestBid: {

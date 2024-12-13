@@ -124,6 +124,7 @@ export class AuctionsRepository {
         max_bid: true,
         min_length: true,
         max_length: true,
+        is_completed: true,
         created_by: {
           select: {
             id: true,
