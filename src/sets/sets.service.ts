@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSetDto } from './dto/create-set.dto';
 import { UpdateSetDto } from './dto/update-set.dto';
 import { SetsRepository } from './sets.repository';
@@ -54,18 +54,16 @@ export class SetsService {
   async findOne(id: string) {
     const set = await this.setsRepository.findOne(id);
     if (!set) {
-      throw new BadRequestException('Set not found');
+      throw new NotFoundException('Set not found');
     }
     return set;
   }
 
-  async update(id: string, updateSetDto: UpdateSetDto) {
-    await this.findOne(id);
+  update(id: string, updateSetDto: UpdateSetDto) {
     return this.setsRepository.update(id, updateSetDto);
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  remove(id: string) {
     return this.setsRepository.remove(id);
   }
 }
