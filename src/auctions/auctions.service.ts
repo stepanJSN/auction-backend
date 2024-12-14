@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionsRepository } from './auctions.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
@@ -99,7 +103,12 @@ export class AuctionsService {
   }
 
   async remove(id: string) {
-    await this.auctionRepository.findOne(id);
+    const auction = await this.auctionRepository.findOne(id);
+    if (auction.is_completed) {
+      throw new ForbiddenException(
+        'You cannot delete an auction that has already ended!',
+      );
+    }
     return this.auctionRepository.remove(id);
   }
 
