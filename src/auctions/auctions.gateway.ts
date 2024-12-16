@@ -12,11 +12,14 @@ import { NewBidEvent } from 'src/bids/events/new-bid.event';
 import { AuctionChangedEvent } from './events/auction-changed.event';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { AuctionsService } from './auctions.service';
+import { CurrentUser } from 'src/decorators/user.decorator';
 
 @WebSocketGateway()
 export class AuctionsGateway {
   @WebSocketServer()
   private server: Server;
+  constructor(private readonly auctionsService: AuctionsService) {}
 
   @OnEvent('auction.finished')
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {
@@ -44,10 +47,14 @@ export class AuctionsGateway {
 
   @UseGuards(AuthGuard)
   @SubscribeMessage('subscribeToAuction')
-  handleSubscription(
+  async handleSubscription(
     @MessageBody('id') id: string,
+    @CurrentUser('id') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
     client.join(`auction-${id}`);
+
+    const auction = await this.auctionsService.findOne(id, userId);
+    client.emit('auctionSubscribed', auction);
   }
 }
