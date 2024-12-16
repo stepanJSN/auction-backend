@@ -10,6 +10,8 @@ import { Server, Socket } from 'socket.io';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NewBidEvent } from 'src/bids/events/new-bid.event';
 import { AuctionChangedEvent } from './events/auction-changed.event';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @WebSocketGateway()
 export class AuctionsGateway {
@@ -40,6 +42,7 @@ export class AuctionsGateway {
     });
   }
 
+  @UseGuards(AuthGuard)
   @SubscribeMessage('subscribeToAuction')
   handleSubscription(
     @MessageBody('id') id: string,

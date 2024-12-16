@@ -6,9 +6,20 @@ import { AuctionsRepository } from './auctions.repository';
 import { AuctionsGateway } from './auctions.gateway';
 import { CardInstancesModule } from 'src/card-instances/card-instances.module';
 import { AuctionsCronService } from './auctions-cron.service';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
-  imports: [ScheduleModule.forRoot(), CardInstancesModule],
+  imports: [
+    ScheduleModule.forRoot(),
+    CardInstancesModule,
+    JwtModule.registerAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get<string>('jwt_key'),
+      }),
+    }),
+  ],
   controllers: [AuctionsController],
   providers: [
     AuctionsService,

@@ -3,8 +3,15 @@ import { JWTPayload } from 'src/auth/types/auth.type';
 
 export const CurrentUser = createParamDecorator(
   (data: keyof JWTPayload, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user;
+    let user: JWTPayload;
+
+    if (ctx.getType() === 'http') {
+      const request = ctx.switchToHttp().getRequest();
+      user = request.user;
+    } else if (ctx.getType() === 'ws') {
+      const client = ctx.switchToWs().getClient();
+      user = client.user;
+    }
 
     return data ? user[data] : user;
   },
