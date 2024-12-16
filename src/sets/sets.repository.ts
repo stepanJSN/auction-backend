@@ -33,6 +33,33 @@ export class SetsRepository {
     return { sets, totalCount };
   }
 
+  async findAllWithCard(cardId: string, page = 1, take = 20) {
+    const condition = {
+      cards: {
+        some: {
+          id: cardId,
+        },
+      },
+    };
+    const [sets, totalCount] = await this.prisma.$transaction([
+      this.prisma.sets.findMany({
+        where: condition,
+        select: {
+          bonus: true,
+          cards: {
+            select: {
+              id: true,
+            },
+          },
+        },
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.sets.count({ where: condition }),
+    ]);
+    return { sets, totalCount };
+  }
+
   findOne(id: string) {
     return this.prisma.sets.findUnique({
       where: { id },
