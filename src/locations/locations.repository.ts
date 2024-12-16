@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllLocationsDto } from './dto/find-all-locations.dto';
 import { CreateLocationDto } from './dto/create-location.dto';
@@ -40,14 +40,20 @@ export class LocationsRepository {
     });
   }
 
-  update(id: number, updateLocationDto: UpdateLocationDto) {
-    return this.prisma.locations.update({
-      where: { id },
-      data: updateLocationDto,
-    });
+  async update(id: number, updateLocationDto: UpdateLocationDto) {
+    try {
+      return await this.prisma.locations.update({
+        where: { id },
+        data: updateLocationDto,
+      });
+    } catch {
+      throw new NotFoundException('Location not found');
+    }
   }
 
-  delete(id: number) {
-    return this.prisma.locations.delete({ where: { id } });
+  async delete(id: number) {
+    try {
+      return await this.prisma.locations.delete({ where: { id } });
+    } catch {}
   }
 }

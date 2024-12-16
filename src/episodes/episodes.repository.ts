@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllEpisodesDto } from './dto/find-all-episodes.dto';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
@@ -39,14 +39,20 @@ export class EpisodesRepository {
     });
   }
 
-  update(id: number, updateEpisodeDto: UpdateEpisodeDto) {
-    return this.prisma.episodes.update({
-      where: { id },
-      data: updateEpisodeDto,
-    });
+  async update(id: number, updateEpisodeDto: UpdateEpisodeDto) {
+    try {
+      return await this.prisma.episodes.update({
+        where: { id },
+        data: updateEpisodeDto,
+      });
+    } catch {
+      throw new NotFoundException('Episode not found');
+    }
   }
 
-  delete(id: number) {
-    return this.prisma.episodes.delete({ where: { id } });
+  async delete(id: number) {
+    try {
+      return await this.prisma.episodes.delete({ where: { id } });
+    } catch {}
   }
 }
