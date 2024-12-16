@@ -4,6 +4,6 @@ model bids {
   user_id    String
   auctions   auctions @relation(fields: [auction_id], references: [id], onDelete: Cascade)
   auction_id String
-  bid_amount Decimal
+  bid_amount Int
   created_at DateTime
 }
