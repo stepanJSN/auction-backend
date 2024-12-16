@@ -3,6 +3,8 @@ import { CardInstancesRepository } from './card-instances.repository';
 import { FindAllCardInstancesType } from './types/find-all-card-instances.type';
 import { CreateCardInstanceType } from './types/create-card-instance.type';
 import type { cards as CardType } from '@prisma/client';
+import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
+import { OnEvent } from '@nestjs/event-emitter';
 
 @Injectable()
 export class CardInstancesService {
@@ -14,6 +16,13 @@ export class CardInstancesService {
 
   findAll(findAllCardInstances: FindAllCardInstancesType) {
     return this.cardInstancesRepository.findAll(findAllCardInstances);
+  }
+
+  @OnEvent('auction.finished')
+  async updateCardOwner(event: AuctionsFinishedEvent) {
+    this.cardInstancesRepository.update(event.cardInstanceId, {
+      userId: event.winnerId,
+    });
   }
 
   async attachOwnershipFlag(cards: CardType[], userId: string) {
