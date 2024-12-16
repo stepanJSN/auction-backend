@@ -19,5 +19,5 @@ export class CreateAuctionDto {
 
   @Type(() => Date)
   @IsDate()
-  maxLength: Date;
+  endTime: Date;
 }

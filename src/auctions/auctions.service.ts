@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,8 +9,10 @@ import { AuctionsRepository } from './auctions.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
 import { CreateAuctionServiceType } from './types/create-auction-service.type';
 import { AuctionsFinishedEvent } from './events/auction-finished.event';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { FindAllAuctionsType } from './types/find-all-auctions.type';
+import { NewBidEvent } from 'src/bids/events/new-bid.event';
+import { AuctionChangedEvent } from './events/auction-changed.event';
 import { Role } from '@prisma/client';
 
 @Injectable()
@@ -71,9 +74,18 @@ export class AuctionsService {
     const { bids, card_instance, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
+
+    const isUserHasThisCard = await this.cardInstancesService
+      .findAll({
+        userId,
+        cardsId: [card_instance.cards.id],
+      })
+      .then((cardInstances) => !!cardInstances.pop());
+
     return {
       ...restAuctionData,
       card: {
+        isUserHasThisCard,
         ...card_instance.cards,
       },
       highestBid: {
@@ -84,11 +96,25 @@ export class AuctionsService {
   }
 
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
-    return this.auctionRepository.update(id, updateAuctionDto);
+    const auction = await this.auctionRepository.update(id, updateAuctionDto);
+    this.eventEmitter.emit(
+      'auction.changed',
+      new AuctionChangedEvent({
+        id: id,
+        ...updateAuctionDto,
+      }),
+    );
+    return auction;
   }
 
   async remove(id: string) {
-    return this.auctionRepository.remove(id);
+    const auction = await this.auctionRepository.findOne(id);
+    if (auction.is_completed) {
+      throw new ForbiddenException(
+        'You cannot delete an auction that has already ended!',
+      );
+    }
+    return auction;
   }
 
   async finishAuction(id: string) {
@@ -104,5 +130,24 @@ export class AuctionsService {
         winnerId: highestBid?.user_id,
       }),
     );
+  }
+
+  @OnEvent('bid.new')
+  async extendAuctionIfNecessary(event: NewBidEvent) {
+    const { end_time, min_length } = await this.auctionRepository.findOne(
+      event.auctionId,
+    );
+
+    const diffInMilliseconds = end_time.getTime() - event.createdAt.getTime();
+    const diffInMinutes = Math.ceil(diffInMilliseconds / 1000 / 60);
+
+    if (diffInMinutes < min_length) {
+      const newEndTime = new Date(
+        event.createdAt.getTime() + min_length * 1000,
+      );
+      await this.update(event.auctionId, {
+        endTime: newEndTime,
+      });
+    }
   }
 }

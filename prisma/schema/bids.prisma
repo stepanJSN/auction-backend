@@ -5,5 +5,5 @@ model bids {
   auctions   auctions @relation(fields: [auction_id], references: [id], onDelete: Cascade)
   auction_id String
   bid_amount Int
-  created_at DateTime
+  created_at DateTime @default(now())
 }
