@@ -14,13 +14,18 @@ export class CardInstancesService {
     return this.cardInstancesRepository.create(cardInstanceData);
   }
 
+  findOne(cardInstanceId: string) {
+    return this.cardInstancesRepository.findOne(cardInstanceId);
+  }
+
   findAll(findAllCardInstances: FindAllCardInstancesType) {
     return this.cardInstancesRepository.findAll(findAllCardInstances);
   }
 
   @OnEvent('auction.finished')
   async updateCardOwner(event: AuctionsFinishedEvent) {
-    this.cardInstancesRepository.update(event.cardInstanceId, {
+    if (!event.winnerId) return;
+    await this.cardInstancesRepository.update(event.cardInstanceId, {
       userId: event.winnerId,
     });
   }

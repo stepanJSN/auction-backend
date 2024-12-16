@@ -17,6 +17,12 @@ export class CardInstancesRepository {
     });
   }
 
+  findOne(cardInstanceId: string) {
+    return this.prisma.card_instances.findUnique({
+      where: { id: cardInstanceId },
+    });
+  }
+
   findAll({ cardsId, userId }: FindAllCardInstancesType) {
     return this.prisma.card_instances.findMany({
       where: {

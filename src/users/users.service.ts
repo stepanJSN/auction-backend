@@ -77,15 +77,16 @@ export class UsersService {
     return this.usersRepository.update(userId, { role });
   }
 
-  async updateRating(userId: string, rating: number) {
-    await this.findOneById(userId);
-    return this.usersRepository.update(userId, { rating });
+  async updateRating(userId: string, addedPoints: number) {
+    const { rating } = await this.findOneById(userId);
+    return this.usersRepository.update(userId, {
+      rating: rating + addedPoints,
+    });
   }
 
   @OnEvent('auction.finished')
   async increaseRating(event: AuctionsFinishedEvent) {
-    const { rating } = await this.findOneById(event.winnerId);
-    await this.updateRating(event.winnerId, rating + 1);
+    await this.updateRating(event.winnerId, 1);
   }
 
   async delete(userId: string) {
