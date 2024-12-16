@@ -78,7 +78,7 @@ export class UsersService {
     return this.usersRepository.update(userId, { role });
   }
 
-  @OnEvent('rating.changed')
+  @OnEvent('rating.update')
   async updateRating({ userId, pointsAmount, action }: UpdateRatingEvent) {
     const { rating } = await this.findOneById(userId);
     return this.usersRepository.update(userId, {

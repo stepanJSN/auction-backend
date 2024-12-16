@@ -14,6 +14,10 @@ import { FindAllAuctionsType } from './types/find-all-auctions.type';
 import { NewBidEvent } from 'src/bids/events/new-bid.event';
 import { AuctionChangedEvent } from './events/auction-changed.event';
 import { Role } from '@prisma/client';
+import {
+  RatingAction,
+  UpdateRatingEvent,
+} from 'src/users/events/update-rating.event';
 
 @Injectable()
 export class AuctionsService {
@@ -118,16 +122,36 @@ export class AuctionsService {
   }
 
   async finishAuction(id: string) {
-    const { bids, card_instance_id } = await this.auctionRepository.update(id, {
-      isCompleted: true,
-    });
+    const { bids, card_instance_id, created_by_id } =
+      await this.auctionRepository.update(id, {
+        isCompleted: true,
+      });
     const highestBid = bids[0];
+    if (!highestBid) return;
     this.eventEmitter.emit(
       'auction.finished',
       new AuctionsFinishedEvent({
         id,
         cardInstanceId: card_instance_id,
-        winnerId: highestBid?.user_id,
+        winnerId: highestBid.user_id,
+      }),
+    );
+
+    this.eventEmitter.emit(
+      'rating.update',
+      new UpdateRatingEvent({
+        userId: created_by_id,
+        pointsAmount: 1,
+        action: RatingAction.DECREASE,
+      }),
+    );
+
+    this.eventEmitter.emit(
+      'rating.update',
+      new UpdateRatingEvent({
+        userId: highestBid.user_id,
+        pointsAmount: 1,
+        action: RatingAction.INCREASE,
       }),
     );
   }

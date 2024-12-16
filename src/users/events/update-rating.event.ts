@@ -4,9 +4,14 @@ export enum RatingAction {
 }
 
 export class UpdateRatingEvent {
-  constructor(
-    public userId: string,
-    public pointsAmount: number,
-    public action: RatingAction,
-  ) {}
+  userId: string;
+  pointsAmount: number;
+  action: RatingAction;
+  constructor(data: {
+    userId: string;
+    pointsAmount: number;
+    action: RatingAction;
+  }) {
+    Object.assign(this, data);
+  }
 }

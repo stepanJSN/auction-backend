@@ -4,10 +4,13 @@ import { UpdateSetDto } from './dto/update-set.dto';
 import { SetsRepository } from './sets.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
 import { FindAllSetsServiceType } from './types/find-all-sets-service.type';
-import { OnEvent } from '@nestjs/event-emitter';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
-import { UsersService } from 'src/users/users.service';
 import { Role } from '@prisma/client';
+import {
+  UpdateRatingEvent,
+  RatingAction,
+} from 'src/users/events/update-rating.event';
 
 const SETS_PER_ITERATION = 30;
 
@@ -16,7 +19,7 @@ export class SetsService {
   constructor(
     private setsRepository: SetsRepository,
     private cardInstancesService: CardInstancesService,
-    private usersService: UsersService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createSetDto: CreateSetDto) {
@@ -93,7 +96,14 @@ export class SetsService {
             userId,
           });
           if (cardInstances.length === set.cards.length - 1) {
-            await this.usersService.updateRating(userId, set.bonus);
+            this.eventEmitter.emit(
+              'rating.update',
+              new UpdateRatingEvent({
+                userId: userId,
+                pointsAmount: set.bonus,
+                action: RatingAction.INCREASE,
+              }),
+            );
           }
         }),
       );
