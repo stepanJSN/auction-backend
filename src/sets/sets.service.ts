@@ -1,12 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSetDto } from './dto/create-set.dto';
 import { UpdateSetDto } from './dto/update-set.dto';
 import { SetsRepository } from './sets.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
-import { FindAllSetsServiceType } from './types/find-all-sets-serivce.type';
+import { FindAllSetsServiceType } from './types/find-all-sets-service.type';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 import { UsersService } from 'src/users/users.service';
+import { Role } from '@prisma/client';
 
 const SETS_PER_ITERATION = 30;
 
@@ -30,7 +31,7 @@ export class SetsService {
       totalCount,
       totalPages: Math.ceil(totalCount / take),
     };
-    if (role !== 'User') {
+    if (role !== Role.User) {
       return { data: sets, info };
     }
 
@@ -63,7 +64,7 @@ export class SetsService {
   async findOne(id: string) {
     const set = await this.setsRepository.findOne(id);
     if (!set) {
-      throw new BadRequestException('Set not found');
+      throw new NotFoundException('Set not found');
     }
     return set;
   }
@@ -103,13 +104,11 @@ export class SetsService {
     }
   }
 
-  async update(id: string, updateSetDto: UpdateSetDto) {
-    await this.findOne(id);
+  update(id: string, updateSetDto: UpdateSetDto) {
     return this.setsRepository.update(id, updateSetDto);
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  remove(id: string) {
     return this.setsRepository.remove(id);
   }
 }

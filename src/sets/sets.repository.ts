@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSetDto } from './dto/create-set.dto';
 import { UpdateSetDto } from './dto/update-set.dto';
@@ -69,23 +69,29 @@ export class SetsRepository {
     });
   }
 
-  update(id: string, { name, bonus, cardsId }: UpdateSetDto) {
-    return this.prisma.sets.update({
-      where: { id },
-      data: {
-        name,
-        bonus,
-        cards: {
-          set: cardsId?.map((cardId) => ({ id: cardId })),
+  async update(id: string, { name, bonus, cardsId }: UpdateSetDto) {
+    try {
+      return await this.prisma.sets.update({
+        where: { id },
+        data: {
+          name,
+          bonus,
+          cards: {
+            set: cardsId?.map((cardId) => ({ id: cardId })),
+          },
         },
-      },
-      include: {
-        cards: true,
-      },
-    });
+        include: {
+          cards: true,
+        },
+      });
+    } catch {
+      throw new NotFoundException('Set not found');
+    }
   }
 
-  remove(id: string) {
-    return this.prisma.sets.delete({ where: { id } });
+  async remove(id: string) {
+    try {
+      return await this.prisma.sets.delete({ where: { id } });
+    } catch {}
   }
 }

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hash } from 'bcrypt';
@@ -53,15 +57,13 @@ export class UsersService {
   async findOneById(userId: string) {
     const user = await this.usersRepository.findOneById(userId);
     if (!user) {
-      throw new BadRequestException('User not found');
+      throw new NotFoundException('User not found');
     }
 
     return user;
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {
-    await this.findOneById(userId);
-
     const userPassword =
       updateUsersDto.password &&
       (await this.hashPassword(updateUsersDto.password));
@@ -72,8 +74,7 @@ export class UsersService {
     });
   }
 
-  async changeRole({ userId, role }: ChangeRoleDto) {
-    await this.findOneById(userId);
+  changeRole({ userId, role }: ChangeRoleDto) {
     return this.usersRepository.update(userId, { role });
   }
 
@@ -89,8 +90,7 @@ export class UsersService {
     await this.updateRating(event.winnerId, 1);
   }
 
-  async delete(userId: string) {
-    await this.findOneById(userId);
+  delete(userId: string) {
     return this.usersRepository.deleteUser(userId);
   }
 }

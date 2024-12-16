@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { AuctionsRepository } from './auctions.repository';
@@ -12,6 +13,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { FindAllAuctionsType } from './types/find-all-auctions.type';
 import { NewBidEvent } from 'src/bids/events/new-bid.event';
 import { AuctionChangedEvent } from './events/auction-changed.event';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuctionsService {
@@ -22,7 +24,7 @@ export class AuctionsService {
   ) {}
 
   async create(createAuctionDto: CreateAuctionServiceType) {
-    if (createAuctionDto.role === 'Admin') {
+    if (createAuctionDto.role === Role.Admin) {
       const { id: cardInstanceId } = await this.cardInstancesService.create({
         userId: createAuctionDto.createdBy,
         cardId: createAuctionDto.cardId,
@@ -64,8 +66,12 @@ export class AuctionsService {
   }
 
   async findOne(id: string, userId: string) {
-    const { bids, card_instance, ...restAuctionData } =
-      await this.auctionRepository.findOne(id);
+    const auction = await this.auctionRepository.findOne(id);
+
+    if (!auction) {
+      throw new NotFoundException('Auction not found');
+    }
+    const { bids, card_instance, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
 
@@ -90,7 +96,6 @@ export class AuctionsService {
   }
 
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
-    await this.auctionRepository.findOne(id);
     const auction = await this.auctionRepository.update(id, updateAuctionDto);
     this.eventEmitter.emit(
       'auction.changed',
@@ -109,7 +114,7 @@ export class AuctionsService {
         'You cannot delete an auction that has already ended!',
       );
     }
-    return this.auctionRepository.remove(id);
+    return auction;
   }
 
   async finishAuction(id: string) {
