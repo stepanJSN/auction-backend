@@ -87,6 +87,7 @@ export class UsersService {
 
   @OnEvent('auction.finished')
   async increaseRating(event: AuctionsFinishedEvent) {
+    if (!event.winnerId) return;
     await this.updateRating(event.winnerId, 1);
   }
 
