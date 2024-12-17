@@ -1,30 +1,30 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { TransactionsRepository } from './transactions.repository';
 import { CreateTransferType } from './types/create-transfer.type';
+import { CreateTransactionServiceType } from './types/create-transaction-service.type';
 
 @Injectable()
 export class TransactionsService {
   constructor(private transactionsRepository: TransactionsRepository) {}
 
-  toUp(createTransactionDto: CreateTransactionDto) {
+  toUp(createTransaction: CreateTransactionServiceType) {
     return this.transactionsRepository.create({
-      toId: createTransactionDto.userId,
-      amount: createTransactionDto.amount,
+      toId: createTransaction.userId,
+      amount: createTransaction.amount,
     });
   }
 
-  async withdraw(createTransactionDto: CreateTransactionDto) {
+  async withdraw(createTransaction: CreateTransactionServiceType) {
     const currentBalance = await this.calculateBalance(
-      createTransactionDto.userId,
+      createTransaction.userId,
     );
-    if (currentBalance < createTransactionDto.amount) {
+    if (currentBalance < createTransaction.amount) {
       throw new BadRequestException('Not enough balance');
     }
 
     return this.transactionsRepository.create({
-      fromId: createTransactionDto.userId,
-      amount: createTransactionDto.amount,
+      fromId: createTransaction.userId,
+      amount: createTransaction.amount,
     });
   }
 

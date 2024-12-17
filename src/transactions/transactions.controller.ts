@@ -1,19 +1,26 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { CurrentUser } from 'src/decorators/user.decorator';
 
 @Controller('transactions')
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post('/toUp')
-  toUp(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionsService.toUp(createTransactionDto);
+  toUp(
+    @Body() { amount }: CreateTransactionDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.transactionsService.toUp({ amount, userId });
   }
 
   @Post('/withdraw')
-  withdraw(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionsService.withdraw(createTransactionDto);
+  withdraw(
+    @Body() { amount }: CreateTransactionDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.transactionsService.withdraw({ amount, userId });
   }
 
   @Get('/calculateBalance/:userId')
