@@ -1,26 +1,56 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { TransactionsRepository } from './transactions.repository';
+import { CreateTransferType } from './types/create-transfer.type';
 
 @Injectable()
 export class TransactionsService {
-  create(createTransactionDto: CreateTransactionDto) {
-    return 'This action adds a new transaction';
+  constructor(private transactionsRepository: TransactionsRepository) {}
+
+  toUp(createTransactionDto: CreateTransactionDto) {
+    return this.transactionsRepository.create({
+      toId: createTransactionDto.userId,
+      amount: createTransactionDto.amount,
+    });
   }
 
-  findAll() {
-    return `This action returns all transactions`;
+  async withdraw(createTransactionDto: CreateTransactionDto) {
+    const currentBalance = await this.calculateBalance(
+      createTransactionDto.userId,
+    );
+    if (currentBalance < createTransactionDto.amount) {
+      throw new BadRequestException('Not enough balance');
+    }
+
+    return this.transactionsRepository.create({
+      fromId: createTransactionDto.userId,
+      amount: createTransactionDto.amount,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} transaction`;
+  async createTransfer({ fromId, toId, amount }: CreateTransferType) {
+    const currentBalance = await this.calculateBalance(fromId);
+    if (currentBalance < amount) {
+      throw new Error('Not enough balance');
+    }
+
+    return this.transactionsRepository.create({
+      fromId,
+      toId,
+      amount,
+    });
   }
 
-  update(id: number, updateTransactionDto: UpdateTransactionDto) {
-    return `This action updates a #${id} transaction`;
-  }
+  async calculateBalance(userId: string) {
+    const transactions = await this.transactionsRepository.findAll(userId);
+    const income = transactions
+      .filter((transaction) => transaction.to_id === userId)
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
-  remove(id: number) {
-    return `This action removes a #${id} transaction`;
+    const expense = transactions
+      .filter((transaction) => transaction.from_id === userId)
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+
+    return income - expense;
   }
 }

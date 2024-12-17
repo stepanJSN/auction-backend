@@ -1,5 +1,5 @@
 export type CreateTransactionRepositoryType = {
-  fromId: string;
-  toId: string;
+  fromId?: string;
+  toId?: string;
   amount: number;
 };
