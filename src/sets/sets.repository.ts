@@ -91,7 +91,17 @@ export class SetsRepository {
 
   async remove(id: string) {
     try {
-      return await this.prisma.sets.delete({ where: { id } });
+      return await this.prisma.sets.delete({
+        where: { id },
+        select: {
+          bonus: true,
+          cards: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
     } catch {}
   }
 }

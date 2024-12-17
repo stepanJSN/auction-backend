@@ -118,7 +118,26 @@ export class SetsService {
     return this.setsRepository.update(id, updateSetDto);
   }
 
-  remove(id: string) {
-    return this.setsRepository.remove(id);
+  async remove(id: string) {
+    const { cards, bonus } = await this.setsRepository.remove(id);
+
+    const cardInstances = await this.cardInstancesService.findAll({
+      cardsId: cards.map((card) => card.id),
+    });
+
+    cardInstances.reduce((users, cardInstance) => {
+      users[cardInstance.user_id] = (users[cardInstance.user_id] || 0) + 1;
+      if (users[cardInstance.user_id] === cards.length) {
+        this.eventEmitter.emit(
+          'rating.update',
+          new UpdateRatingEvent({
+            userId: cardInstance.user_id,
+            pointsAmount: bonus,
+            action: RatingAction.DECREASE,
+          }),
+        );
+      }
+      return users;
+    }, {});
   }
 }
