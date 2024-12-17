@@ -24,7 +24,6 @@ export class CardInstancesService {
 
   @OnEvent('auction.finished')
   async updateCardOwner(event: AuctionsFinishedEvent) {
-    if (!event.winnerId) return;
     await this.cardInstancesRepository.update(event.cardInstanceId, {
       userId: event.winnerId,
     });

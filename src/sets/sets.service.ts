@@ -78,7 +78,6 @@ export class SetsService {
     cardInstanceId,
     winnerId: userId,
   }: AuctionsFinishedEvent) {
-    if (!userId) return;
     const { card_id } = await this.cardInstancesService.findOne(cardInstanceId);
 
     let currentPage = 1;

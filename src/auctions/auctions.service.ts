@@ -128,6 +128,7 @@ export class AuctionsService {
       });
     const highestBid = bids[0];
     if (!highestBid) return;
+
     this.eventEmitter.emit(
       'auction.finished',
       new AuctionsFinishedEvent({
