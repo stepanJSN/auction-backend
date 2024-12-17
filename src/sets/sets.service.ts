@@ -11,6 +11,7 @@ import {
   UpdateRatingEvent,
   RatingAction,
 } from 'src/users/events/update-rating.event';
+import { FindAllUsersWithSetType } from './types/find-all-users-with-set.type';
 
 const SETS_PER_ITERATION = 30;
 
@@ -114,13 +115,10 @@ export class SetsService {
     }
   }
 
-  update(id: string, updateSetDto: UpdateSetDto) {
-    return this.setsRepository.update(id, updateSetDto);
-  }
-
-  async remove(id: string) {
-    const { cards, bonus } = await this.setsRepository.remove(id);
-
+  async findAllUsersWithCardsId({
+    cards,
+    forEachUserWithSet,
+  }: FindAllUsersWithSetType) {
     const cardInstances = await this.cardInstancesService.findAll({
       cardsId: cards.map((card) => card.id),
     });
@@ -128,16 +126,50 @@ export class SetsService {
     cardInstances.reduce((users, cardInstance) => {
       users[cardInstance.user_id] = (users[cardInstance.user_id] || 0) + 1;
       if (users[cardInstance.user_id] === cards.length) {
+        forEachUserWithSet(cardInstance.user_id);
+      }
+      return users;
+    }, {});
+  }
+
+  async update(id: string, updateSetDto: UpdateSetDto) {
+    if (updateSetDto.bonus) {
+      const { cards, bonus } = await this.findOne(id);
+      const newBonus = updateSetDto.bonus - bonus;
+      await this.findAllUsersWithCardsId({
+        cards,
+        forEachUserWithSet: (userId) => {
+          this.eventEmitter.emit(
+            'rating.update',
+            new UpdateRatingEvent({
+              userId,
+              pointsAmount: Math.abs(newBonus),
+              action:
+                newBonus > 0 ? RatingAction.INCREASE : RatingAction.DECREASE,
+            }),
+          );
+        },
+      });
+    }
+
+    return this.setsRepository.update(id, updateSetDto);
+  }
+
+  async remove(id: string) {
+    const { cards, bonus } = await this.setsRepository.remove(id);
+
+    await this.findAllUsersWithCardsId({
+      cards,
+      forEachUserWithSet: (userId) => {
         this.eventEmitter.emit(
           'rating.update',
           new UpdateRatingEvent({
-            userId: cardInstance.user_id,
+            userId,
             pointsAmount: bonus,
             action: RatingAction.DECREASE,
           }),
         );
-      }
-      return users;
-    }, {});
+      },
+    });
   }
 }
