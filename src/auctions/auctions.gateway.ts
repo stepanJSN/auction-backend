@@ -14,6 +14,8 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { AuctionsService } from './auctions.service';
 import { CurrentUser } from 'src/decorators/user.decorator';
+import { AuctionEvent } from './enums/auction-event.enum';
+import { BidEvent } from 'src/bids/enums/bid-event.enum';
 
 @WebSocketGateway()
 export class AuctionsGateway {
@@ -21,7 +23,7 @@ export class AuctionsGateway {
   private server: Server;
   constructor(private readonly auctionsService: AuctionsService) {}
 
-  @OnEvent('auction.finished')
+  @OnEvent(AuctionEvent.FINISHED)
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {
     this.server.to(`auction-${event.id}`).emit('auctionFinished', {
       auctionId: event.id,
@@ -29,7 +31,7 @@ export class AuctionsGateway {
     });
   }
 
-  @OnEvent('auction.changed')
+  @OnEvent(AuctionEvent.CHANGED)
   notifyClientsAboutAuctionChanged({ id, ...restData }: AuctionChangedEvent) {
     this.server.to(`auction-${id}`).emit('auctionChanged', {
       auctionId: id,
@@ -37,7 +39,7 @@ export class AuctionsGateway {
     });
   }
 
-  @OnEvent('bid.new')
+  @OnEvent(BidEvent.NEW)
   notifyClientsAboutNewBid(event: NewBidEvent) {
     this.server.to(`auction-${event.auctionId}`).emit('newBid', {
       auctionId: event.auctionId,

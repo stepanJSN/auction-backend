@@ -14,6 +14,13 @@ import { FindAllAuctionsType } from './types/find-all-auctions.type';
 import { NewBidEvent } from 'src/bids/events/new-bid.event';
 import { AuctionChangedEvent } from './events/auction-changed.event';
 import { Role } from '@prisma/client';
+import {
+  RatingAction,
+  UpdateRatingEvent,
+} from 'src/users/events/update-rating.event';
+import { AuctionEvent } from './enums/auction-event.enum';
+import { BidEvent } from 'src/bids/enums/bid-event.enum';
+import { RatingEvent } from 'src/users/enums/rating-event.enum';
 
 @Injectable()
 export class AuctionsService {
@@ -98,7 +105,7 @@ export class AuctionsService {
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
     const auction = await this.auctionRepository.update(id, updateAuctionDto);
     this.eventEmitter.emit(
-      'auction.changed',
+      AuctionEvent.CHANGED,
       new AuctionChangedEvent({
         id: id,
         ...updateAuctionDto,
@@ -118,21 +125,43 @@ export class AuctionsService {
   }
 
   async finishAuction(id: string) {
-    const { bids, card_instance_id } = await this.auctionRepository.update(id, {
-      isCompleted: true,
-    });
+    const { bids, card_instance_id, created_by_id } =
+      await this.auctionRepository.update(id, {
+        isCompleted: true,
+      });
     const highestBid = bids[0];
+    if (!highestBid) return;
+
     this.eventEmitter.emit(
-      'auction.finished',
+      AuctionEvent.FINISHED,
       new AuctionsFinishedEvent({
         id,
         cardInstanceId: card_instance_id,
-        winnerId: highestBid?.user_id,
+        winnerId: highestBid.user_id,
+        sellerId: created_by_id,
+      }),
+    );
+
+    this.eventEmitter.emit(
+      RatingEvent.UPDATE,
+      new UpdateRatingEvent({
+        userId: created_by_id,
+        pointsAmount: 1,
+        action: RatingAction.DECREASE,
+      }),
+    );
+
+    this.eventEmitter.emit(
+      RatingEvent.UPDATE,
+      new UpdateRatingEvent({
+        userId: highestBid.user_id,
+        pointsAmount: 1,
+        action: RatingAction.INCREASE,
       }),
     );
   }
 
-  @OnEvent('bid.new')
+  @OnEvent(BidEvent.NEW)
   async extendAuctionIfNecessary(event: NewBidEvent) {
     const { end_time, min_length } = await this.auctionRepository.findOne(
       event.auctionId,

@@ -164,6 +164,7 @@ export class AuctionsRepository {
         },
         select: {
           card_instance_id: true,
+          created_by_id: true,
           bids: {
             select: {
               user_id: true,

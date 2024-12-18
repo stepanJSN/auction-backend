@@ -16,6 +16,9 @@ export class SetsRepository {
           connect: cardsId.map((cardId) => ({ id: cardId })),
         },
       },
+      include: {
+        cards: true,
+      },
     });
   }
 
@@ -33,6 +36,33 @@ export class SetsRepository {
     return { sets, totalCount };
   }
 
+  async findAllWithCard(cardId: string, page = 1, take = 20) {
+    const condition = {
+      cards: {
+        some: {
+          id: cardId,
+        },
+      },
+    };
+    const [sets, totalCount] = await this.prisma.$transaction([
+      this.prisma.sets.findMany({
+        where: condition,
+        select: {
+          bonus: true,
+          cards: {
+            select: {
+              id: true,
+            },
+          },
+        },
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.sets.count({ where: condition }),
+    ]);
+    return { sets, totalCount };
+  }
+
   findOne(id: string) {
     return this.prisma.sets.findUnique({
       where: { id },
@@ -42,16 +72,13 @@ export class SetsRepository {
     });
   }
 
-  async update(id: string, { name, bonus, cardsId }: UpdateSetDto) {
+  async update(id: string, { name, bonus }: UpdateSetDto) {
     try {
       return await this.prisma.sets.update({
         where: { id },
         data: {
           name,
           bonus,
-          cards: {
-            set: cardsId?.map((cardId) => ({ id: cardId })),
-          },
         },
         include: {
           cards: true,
@@ -64,7 +91,17 @@ export class SetsRepository {
 
   async remove(id: string) {
     try {
-      return await this.prisma.sets.delete({ where: { id } });
+      return await this.prisma.sets.delete({
+        where: { id },
+        select: {
+          bonus: true,
+          cards: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
     } catch {}
   }
 }

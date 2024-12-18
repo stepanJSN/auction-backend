@@ -3,18 +3,41 @@ import { CreateSetDto } from './dto/create-set.dto';
 import { UpdateSetDto } from './dto/update-set.dto';
 import { SetsRepository } from './sets.repository';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
-import { FindAllSetsServiceType } from './types/find-all-sets-serivce.type';
+import { FindAllSetsServiceType } from './types/find-all-sets-service.type';
+import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
+import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 import { Role } from '@prisma/client';
+import {
+  UpdateRatingEvent,
+  RatingAction,
+} from 'src/users/events/update-rating.event';
+import { SetEventPayload } from './events/set.event';
+import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
+import { RatingEvent } from 'src/users/enums/rating-event.enum';
+import { SetEvent } from './enums/set-event.enum';
+import { UserSetType } from './types/user-sets.type';
+
+const SETS_PER_ITERATION = 30;
 
 @Injectable()
 export class SetsService {
   constructor(
     private setsRepository: SetsRepository,
     private cardInstancesService: CardInstancesService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createSetDto: CreateSetDto) {
-    const { id } = await this.setsRepository.create(createSetDto);
+    const { id, cards, bonus } = await this.setsRepository.create(createSetDto);
+
+    this.eventEmitter.emit(
+      SetEvent.CREATE,
+      new SetEventPayload({
+        cardsId: cards.map((card) => card.id),
+        bonus,
+      }),
+    );
+
     return id;
   }
 
@@ -51,6 +74,10 @@ export class SetsService {
     };
   }
 
+  findAllWithCard(cardId: string, page: number, take: number) {
+    return this.setsRepository.findAllWithCard(cardId, page, take);
+  }
+
   async findOne(id: string) {
     const set = await this.setsRepository.findOne(id);
     if (!set) {
@@ -59,11 +86,107 @@ export class SetsService {
     return set;
   }
 
-  update(id: string, updateSetDto: UpdateSetDto) {
+  @OnEvent(AuctionEvent.FINISHED)
+  async checkUserCollectedSets({
+    cardInstanceId,
+    winnerId,
+    sellerId,
+  }: AuctionsFinishedEvent) {
+    const { card_id } = await this.cardInstancesService.findOne(cardInstanceId);
+
+    let currentPage = 1;
+    while (true) {
+      const { sets, totalCount } = await this.findAllWithCard(
+        card_id,
+        currentPage,
+        SETS_PER_ITERATION,
+      );
+      await Promise.all(
+        sets.map(async (set) => {
+          await this.checkWinnerCards(set, winnerId, card_id);
+          await this.checkSellerCards(set, sellerId, card_id);
+        }),
+      );
+
+      const totalPages = Math.ceil(totalCount / SETS_PER_ITERATION);
+      if (currentPage >= totalPages) break;
+      currentPage++;
+    }
+  }
+
+  private async checkWinnerCards(
+    set: UserSetType,
+    winnerId: string,
+    card_id: string,
+  ) {
+    const winnerCardInstances = await this.cardInstancesService.findAll({
+      cardsId: set.cards
+        .filter((card) => card.id !== card_id)
+        .map((card) => card.id),
+      userId: winnerId,
+    });
+    if (winnerCardInstances.length === set.cards.length - 1) {
+      this.eventEmitter.emit(
+        RatingEvent.UPDATE,
+        new UpdateRatingEvent({
+          userId: winnerId,
+          pointsAmount: set.bonus,
+          action: RatingAction.INCREASE,
+        }),
+      );
+    }
+  }
+
+  private async checkSellerCards(
+    set: UserSetType,
+    sellerId: string,
+    card_id: string,
+  ) {
+    const sellerCardInstances = await this.cardInstancesService.findAll({
+      cardsId: set.cards
+        .filter((card) => card.id !== card_id)
+        .map((card) => card.id),
+      userId: sellerId,
+    });
+
+    if (sellerCardInstances.length === set.cards.length - 1) {
+      this.eventEmitter.emit(
+        RatingEvent.UPDATE,
+        new UpdateRatingEvent({
+          userId: sellerId,
+          pointsAmount: set.bonus,
+          action: RatingAction.DECREASE,
+        }),
+      );
+    }
+  }
+
+  async update(id: string, updateSetDto: UpdateSetDto) {
+    if (updateSetDto.bonus) {
+      const { cards, bonus } = await this.findOne(id);
+      const newBonus = updateSetDto.bonus - bonus;
+
+      this.eventEmitter.emit(
+        SetEvent.UPDATE,
+        new SetEventPayload({
+          cardsId: cards.map((card) => card.id),
+          bonus: newBonus,
+        }),
+      );
+    }
+
     return this.setsRepository.update(id, updateSetDto);
   }
 
-  remove(id: string) {
-    return this.setsRepository.remove(id);
+  async remove(id: string) {
+    const { cards, bonus } = await this.setsRepository.remove(id);
+
+    this.eventEmitter.emit(
+      SetEvent.REMOVE,
+      new SetEventPayload({
+        cardsId: cards.map((card) => card.id),
+        bonus,
+      }),
+    );
   }
 }

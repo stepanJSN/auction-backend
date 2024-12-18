@@ -8,6 +8,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { hash } from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
+import { OnEvent } from '@nestjs/event-emitter';
+import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
+import { RatingEvent } from './enums/rating-event.enum';
 
 @Injectable()
 export class UsersService {
@@ -62,8 +65,6 @@ export class UsersService {
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {
-    await this.findOneById(userId);
-
     const userPassword =
       updateUsersDto.password &&
       (await this.hashPassword(updateUsersDto.password));
@@ -74,13 +75,19 @@ export class UsersService {
     });
   }
 
-  async changeRole({ userId, role }: ChangeRoleDto) {
-    await this.findOneById(userId);
+  changeRole({ userId, role }: ChangeRoleDto) {
     return this.usersRepository.update(userId, { role });
   }
 
-  updateRating(userId: string, rating: number) {
-    return this.usersRepository.update(userId, { rating });
+  @OnEvent(RatingEvent.UPDATE)
+  async updateRating({ userId, pointsAmount, action }: UpdateRatingEvent) {
+    const { rating } = await this.findOneById(userId);
+    return this.usersRepository.update(userId, {
+      rating:
+        action === RatingAction.INCREASE
+          ? rating + pointsAmount
+          : rating - pointsAmount,
+    });
   }
 
   delete(userId: string) {
