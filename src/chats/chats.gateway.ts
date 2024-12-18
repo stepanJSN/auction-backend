@@ -4,10 +4,11 @@ import {
   MessageBody,
   ConnectedSocket,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { ChatsService } from './chats.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { Server, Socket } from 'socket.io';
@@ -16,6 +17,9 @@ import { FindAllChatMessagesDto } from './dto/find-all-chat-messages.dto';
 import { FindAllChatsDto } from './dto/find-all-chats.dto';
 
 @UseGuards(AuthGuard)
+@UsePipes(
+  new ValidationPipe({ exceptionFactory: (errors) => new WsException(errors) }),
+)
 @WebSocketGateway()
 export class ChatsGateway {
   @WebSocketServer()
