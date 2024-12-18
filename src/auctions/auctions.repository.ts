@@ -40,8 +40,8 @@ export class AuctionsRepository {
     participantId,
     isUserLeader,
     isCompleted,
-    page = 1,
-    take = 20,
+    page,
+    take,
   }: FindAllAuctionsType) {
     const sortColumn = {
       creationDate: 'a.created_at',
@@ -110,30 +110,61 @@ export class AuctionsRepository {
         a.id, b_highest.bid_amount, b_highest.user_id
       ORDER BY
         ${sortColumn} ${sortDirection}
-      LIMIT ${take} OFFSET ${(page - 1) * take};
+      ${take && page ? `LIMIT ${take} OFFSET ${(page - 1) * take}` : ''};
     `,
     )) as unknown as AuctionsPrismaType[];
 
-    const totalCount = await this.prisma.auctions.count({
-      where: {
-        card_instance: {
-          cards: {
-            location_id: locationId,
-            name: cardName,
-          },
-        },
-        bids: {
-          every: {
-            bid_amount: {
-              gte: fromPrice || 0,
-              lte: toPrice,
-            },
-          },
-        },
-        is_completed: isCompleted,
-      },
-    });
-    return { auctions, totalCount };
+    const totalCount = (
+      await this.prisma.$queryRawUnsafe(
+        `
+        SELECT 
+          COUNT(*) AS total
+        FROM 
+          auctions a
+        JOIN 
+          card_instances ci ON ci.id = a.card_instance_id
+        JOIN 
+          cards c ON c.id = ci.card_id
+        LEFT JOIN 
+          (
+            SELECT 
+              b.auction_id,
+              b.bid_amount,
+              b.user_id
+            FROM 
+              bids b
+            JOIN 
+              (
+                SELECT 
+                  auction_id, 
+                  MAX(bid_amount) AS max_bid
+                FROM 
+                  bids
+                GROUP BY 
+                  auction_id
+              ) b_max ON b.auction_id = b_max.auction_id AND b.bid_amount = b_max.max_bid
+          ) b_highest ON b_highest.auction_id = a.id
+        WHERE 
+          (${isCompleted === false ? `a.is_completed = 0` : '1'})
+          AND (${createdById ? `a.created_by_id = '${createdById}'` : '1'})
+          AND (${locationId ? `c.location_id = ${locationId}` : '1'})
+          AND (${cardName ? `c.name LIKE '%${cardName}%'` : '1'})
+          AND (${fromPrice ? `b_highest.bid_amount >= ${fromPrice}` : '1'})
+          AND (${toPrice ? `b_highest.bid_amount <= ${toPrice}` : '1'})
+          AND (${
+            participantId && !isUserLeader
+              ? `EXISTS (
+                SELECT 1 
+                FROM bids b 
+                WHERE b.auction_id = a.id AND b.user_id = '${participantId}'
+              )`
+              : '1'
+          })
+          AND (${participantId && isUserLeader ? `b_highest.user_id = '${participantId}'` : '1'});
+      `,
+      )
+    )[0].total as number;
+    return { auctions, totalCount: Number(totalCount) };
   }
 
   findFinishedByNow() {

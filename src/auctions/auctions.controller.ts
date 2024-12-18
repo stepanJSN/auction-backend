@@ -40,7 +40,9 @@ export class AuctionsController {
     return this.auctionsService.findAll({
       ...findAllAuctionsDto,
       participantId: userId,
-      isCompleted: false,
+      take: findAllAuctionsDto.take ?? 20,
+      page: findAllAuctionsDto.page ?? 1,
+      // isCompleted: false,
     });
   }
 
@@ -52,6 +54,8 @@ export class AuctionsController {
     return this.auctionsService.findAll({
       ...findAllAuctionsDto,
       createdById: userId,
+      take: findAllAuctionsDto.take ?? 20,
+      page: findAllAuctionsDto.page ?? 1,
     });
   }
 
