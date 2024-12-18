@@ -138,6 +138,7 @@ export class AuctionsService {
         id,
         cardInstanceId: card_instance_id,
         winnerId: highestBid.user_id,
+        sellerId: created_by_id,
       }),
     );
 

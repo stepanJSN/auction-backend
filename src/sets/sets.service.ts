@@ -15,6 +15,7 @@ import { SetEventPayload } from './events/set.event';
 import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { SetEvent } from './enums/set-event.enum';
+import { UserSetType } from './types/user-sets.type';
 
 const SETS_PER_ITERATION = 30;
 
@@ -88,7 +89,8 @@ export class SetsService {
   @OnEvent(AuctionEvent.FINISHED)
   async checkUserCollectedSets({
     cardInstanceId,
-    winnerId: userId,
+    winnerId,
+    sellerId,
   }: AuctionsFinishedEvent) {
     const { card_id } = await this.cardInstancesService.findOne(cardInstanceId);
 
@@ -101,28 +103,61 @@ export class SetsService {
       );
       await Promise.all(
         sets.map(async (set) => {
-          const cardInstances = await this.cardInstancesService.findAll({
-            cardsId: set.cards
-              .filter((card) => card.id !== card_id)
-              .map((card) => card.id),
-            userId,
-          });
-          if (cardInstances.length === set.cards.length - 1) {
-            this.eventEmitter.emit(
-              RatingEvent.UPDATE,
-              new UpdateRatingEvent({
-                userId: userId,
-                pointsAmount: set.bonus,
-                action: RatingAction.INCREASE,
-              }),
-            );
-          }
+          await this.checkWinnerCards(set, winnerId, card_id);
+          await this.checkSellerCards(set, sellerId, card_id);
         }),
       );
 
       const totalPages = Math.ceil(totalCount / SETS_PER_ITERATION);
       if (currentPage >= totalPages) break;
       currentPage++;
+    }
+  }
+
+  private async checkWinnerCards(
+    set: UserSetType,
+    winnerId: string,
+    card_id: string,
+  ) {
+    const winnerCardInstances = await this.cardInstancesService.findAll({
+      cardsId: set.cards
+        .filter((card) => card.id !== card_id)
+        .map((card) => card.id),
+      userId: winnerId,
+    });
+    if (winnerCardInstances.length === set.cards.length - 1) {
+      this.eventEmitter.emit(
+        RatingEvent.UPDATE,
+        new UpdateRatingEvent({
+          userId: winnerId,
+          pointsAmount: set.bonus,
+          action: RatingAction.INCREASE,
+        }),
+      );
+    }
+  }
+
+  private async checkSellerCards(
+    set: UserSetType,
+    sellerId: string,
+    card_id: string,
+  ) {
+    const sellerCardInstances = await this.cardInstancesService.findAll({
+      cardsId: set.cards
+        .filter((card) => card.id !== card_id)
+        .map((card) => card.id),
+      userId: sellerId,
+    });
+
+    if (sellerCardInstances.length === set.cards.length - 1) {
+      this.eventEmitter.emit(
+        RatingEvent.UPDATE,
+        new UpdateRatingEvent({
+          userId: sellerId,
+          pointsAmount: set.bonus,
+          action: RatingAction.DECREASE,
+        }),
+      );
     }
   }
 
