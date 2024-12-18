@@ -69,16 +69,13 @@ export class SetsRepository {
     });
   }
 
-  async update(id: string, { name, bonus, cardsId }: UpdateSetDto) {
+  async update(id: string, { name, bonus }: UpdateSetDto) {
     try {
       return await this.prisma.sets.update({
         where: { id },
         data: {
           name,
           bonus,
-          cards: {
-            set: cardsId?.map((cardId) => ({ id: cardId })),
-          },
         },
         include: {
           cards: true,
