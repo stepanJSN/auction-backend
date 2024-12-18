@@ -11,7 +11,10 @@ import {
   UpdateRatingEvent,
   RatingAction,
 } from 'src/users/events/update-rating.event';
-import { SetAction, SetEventPayload } from './events/set.event';
+import { SetEventPayload } from './events/set.event';
+import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
+import { RatingEvent } from 'src/users/enums/rating-event.enum';
+import { SetEvent } from './enums/set-event.enum';
 
 const SETS_PER_ITERATION = 30;
 
@@ -27,7 +30,7 @@ export class SetsService {
     const { id, cards, bonus } = await this.setsRepository.create(createSetDto);
 
     this.eventEmitter.emit(
-      SetAction.CREATE,
+      SetEvent.CREATE,
       new SetEventPayload({
         cardsId: cards.map((card) => card.id),
         bonus,
@@ -82,7 +85,7 @@ export class SetsService {
     return set;
   }
 
-  @OnEvent('auction.finished')
+  @OnEvent(AuctionEvent.FINISHED)
   async checkUserCollectedSets({
     cardInstanceId,
     winnerId: userId,
@@ -106,7 +109,7 @@ export class SetsService {
           });
           if (cardInstances.length === set.cards.length - 1) {
             this.eventEmitter.emit(
-              'rating.update',
+              RatingEvent.UPDATE,
               new UpdateRatingEvent({
                 userId: userId,
                 pointsAmount: set.bonus,
@@ -129,7 +132,7 @@ export class SetsService {
       const newBonus = updateSetDto.bonus - bonus;
 
       this.eventEmitter.emit(
-        SetAction.UPDATE,
+        SetEvent.UPDATE,
         new SetEventPayload({
           cardsId: cards.map((card) => card.id),
           bonus: newBonus,
@@ -144,7 +147,7 @@ export class SetsService {
     const { cards, bonus } = await this.setsRepository.remove(id);
 
     this.eventEmitter.emit(
-      SetAction.REMOVE,
+      SetEvent.REMOVE,
       new SetEventPayload({
         cardsId: cards.map((card) => card.id),
         bonus,

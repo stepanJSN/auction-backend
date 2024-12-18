@@ -5,9 +5,3 @@ export class SetEventPayload {
     Object.assign(this, data);
   }
 }
-
-export enum SetAction {
-  CREATE = 'set.create',
-  UPDATE = 'set.update',
-  REMOVE = 'set.remove',
-}

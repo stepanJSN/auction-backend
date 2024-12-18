@@ -18,6 +18,9 @@ import {
   RatingAction,
   UpdateRatingEvent,
 } from 'src/users/events/update-rating.event';
+import { AuctionEvent } from './enums/auction-event.enum';
+import { BidEvent } from 'src/bids/enums/bid-event.enum';
+import { RatingEvent } from 'src/users/enums/rating-event.enum';
 
 @Injectable()
 export class AuctionsService {
@@ -102,7 +105,7 @@ export class AuctionsService {
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
     const auction = await this.auctionRepository.update(id, updateAuctionDto);
     this.eventEmitter.emit(
-      'auction.changed',
+      AuctionEvent.CHANGED,
       new AuctionChangedEvent({
         id: id,
         ...updateAuctionDto,
@@ -130,7 +133,7 @@ export class AuctionsService {
     if (!highestBid) return;
 
     this.eventEmitter.emit(
-      'auction.finished',
+      AuctionEvent.FINISHED,
       new AuctionsFinishedEvent({
         id,
         cardInstanceId: card_instance_id,
@@ -139,7 +142,7 @@ export class AuctionsService {
     );
 
     this.eventEmitter.emit(
-      'rating.update',
+      RatingEvent.UPDATE,
       new UpdateRatingEvent({
         userId: created_by_id,
         pointsAmount: 1,
@@ -148,7 +151,7 @@ export class AuctionsService {
     );
 
     this.eventEmitter.emit(
-      'rating.update',
+      RatingEvent.UPDATE,
       new UpdateRatingEvent({
         userId: highestBid.user_id,
         pointsAmount: 1,
@@ -157,7 +160,7 @@ export class AuctionsService {
     );
   }
 
-  @OnEvent('bid.new')
+  @OnEvent(BidEvent.NEW)
   async extendAuctionIfNecessary(event: NewBidEvent) {
     const { end_time, min_length } = await this.auctionRepository.findOne(
       event.auctionId,

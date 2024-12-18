@@ -10,6 +10,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { OnEvent } from '@nestjs/event-emitter';
 import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
+import { RatingEvent } from './enums/rating-event.enum';
 
 @Injectable()
 export class UsersService {
@@ -78,7 +79,7 @@ export class UsersService {
     return this.usersRepository.update(userId, { role });
   }
 
-  @OnEvent('rating.update')
+  @OnEvent(RatingEvent.UPDATE)
   async updateRating({ userId, pointsAmount, action }: UpdateRatingEvent) {
     const { rating } = await this.findOneById(userId);
     return this.usersRepository.update(userId, {

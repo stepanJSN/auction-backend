@@ -5,12 +5,15 @@ import { CreateCardInstanceType } from './types/create-card-instance.type';
 import type { cards as CardType } from '@prisma/client';
 import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { SetAction, SetEventPayload } from 'src/sets/events/set.event';
+import { SetEventPayload } from 'src/sets/events/set.event';
 import { FindAllUsersWithSetType } from './types/find-all-users-with-set.type';
 import {
   RatingAction,
   UpdateRatingEvent,
 } from 'src/users/events/update-rating.event';
+import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
+import { RatingEvent } from 'src/users/enums/rating-event.enum';
+import { SetEvent } from 'src/sets/enums/set-event.enum';
 
 @Injectable()
 export class CardInstancesService {
@@ -31,20 +34,20 @@ export class CardInstancesService {
     return this.cardInstancesRepository.findAll(findAllCardInstances);
   }
 
-  @OnEvent('auction.finished')
+  @OnEvent(AuctionEvent.FINISHED)
   async updateCardOwner(event: AuctionsFinishedEvent) {
     await this.cardInstancesRepository.update(event.cardInstanceId, {
       userId: event.winnerId,
     });
   }
 
-  @OnEvent(SetAction.CREATE)
+  @OnEvent(SetEvent.CREATE)
   async handleSetCreate({ cardsId, bonus }: SetEventPayload) {
     await this.findAllUsersWithCardsId({
       cardsId,
       forEachUserWithSet: (userId) => {
         this.eventEmitter.emit(
-          'rating.update',
+          RatingEvent.UPDATE,
           new UpdateRatingEvent({
             userId,
             pointsAmount: bonus,
@@ -55,13 +58,13 @@ export class CardInstancesService {
     });
   }
 
-  @OnEvent(SetAction.REMOVE)
+  @OnEvent(SetEvent.REMOVE)
   async handleSetRemove({ cardsId, bonus }: SetEventPayload) {
     await this.findAllUsersWithCardsId({
       cardsId,
       forEachUserWithSet: (userId) => {
         this.eventEmitter.emit(
-          'rating.update',
+          RatingEvent.UPDATE,
           new UpdateRatingEvent({
             userId,
             pointsAmount: bonus,
@@ -72,13 +75,13 @@ export class CardInstancesService {
     });
   }
 
-  @OnEvent(SetAction.UPDATE)
+  @OnEvent(SetEvent.UPDATE)
   async handleSetUpdate({ cardsId, bonus }: SetEventPayload) {
     await this.findAllUsersWithCardsId({
       cardsId,
       forEachUserWithSet: (userId) => {
         this.eventEmitter.emit(
-          'rating.update',
+          RatingEvent.UPDATE,
           new UpdateRatingEvent({
             userId,
             pointsAmount: Math.abs(bonus),

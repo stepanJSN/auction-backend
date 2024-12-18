@@ -9,6 +9,7 @@ import { AuctionsService } from 'src/auctions/auctions.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NewBidEvent } from './events/new-bid.event';
 import { BidExceptionCode } from './enums/bid-exception.enum';
+import { BidEvent } from './enums/bid-event.enum';
 
 @Injectable()
 export class BidsService {
@@ -85,7 +86,7 @@ export class BidsService {
     const { created_at, bid_amount, auction_id } =
       await this.bidsRepository.create(createBidData);
     this.eventEmitter.emit(
-      'bid.new',
+      BidEvent.NEW,
       new NewBidEvent({
         createdAt: created_at,
         bidAmount: bid_amount,
