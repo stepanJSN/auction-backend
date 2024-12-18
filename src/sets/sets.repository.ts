@@ -16,6 +16,9 @@ export class SetsRepository {
           connect: cardsId.map((cardId) => ({ id: cardId })),
         },
       },
+      include: {
+        cards: true,
+      },
     });
   }
 
@@ -69,16 +72,13 @@ export class SetsRepository {
     });
   }
 
-  async update(id: string, { name, bonus, cardsId }: UpdateSetDto) {
+  async update(id: string, { name, bonus }: UpdateSetDto) {
     try {
       return await this.prisma.sets.update({
         where: { id },
         data: {
           name,
           bonus,
-          cards: {
-            set: cardsId?.map((cardId) => ({ id: cardId })),
-          },
         },
         include: {
           cards: true,
@@ -91,7 +91,17 @@ export class SetsRepository {
 
   async remove(id: string) {
     try {
-      return await this.prisma.sets.delete({ where: { id } });
+      return await this.prisma.sets.delete({
+        where: { id },
+        select: {
+          bonus: true,
+          cards: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
     } catch {}
   }
 }

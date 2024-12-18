@@ -8,8 +8,9 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { hash } from 'bcrypt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
-import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 import { OnEvent } from '@nestjs/event-emitter';
+import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
+import { RatingEvent } from './enums/rating-event.enum';
 
 @Injectable()
 export class UsersService {
@@ -78,17 +79,15 @@ export class UsersService {
     return this.usersRepository.update(userId, { role });
   }
 
-  async updateRating(userId: string, addedPoints: number) {
+  @OnEvent(RatingEvent.UPDATE)
+  async updateRating({ userId, pointsAmount, action }: UpdateRatingEvent) {
     const { rating } = await this.findOneById(userId);
     return this.usersRepository.update(userId, {
-      rating: rating + addedPoints,
+      rating:
+        action === RatingAction.INCREASE
+          ? rating + pointsAmount
+          : rating - pointsAmount,
     });
-  }
-
-  @OnEvent('auction.finished')
-  async increaseRating(event: AuctionsFinishedEvent) {
-    if (!event.winnerId) return;
-    await this.updateRating(event.winnerId, 1);
   }
 
   delete(userId: string) {
