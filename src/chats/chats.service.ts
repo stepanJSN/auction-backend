@@ -1,26 +1,62 @@
 import { Injectable } from '@nestjs/common';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
+import { ChatsRepository } from './chats.repository';
+import { CreateMessageType } from './types/create-message.type';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class ChatsService {
-  create(createChatDto: CreateChatDto) {
-    return 'This action adds a new chat';
+  constructor(
+    private readonly chatsRepository: ChatsRepository,
+    private readonly usersService: UsersService,
+  ) {}
+  create(createChat: CreateMessageType) {
+    return this.chatsRepository.create(createChat);
   }
 
-  findAll() {
-    return `This action returns all chats`;
+  async findAll(userId: string) {
+    const chats = await this.chatsRepository.findAll(userId);
+    const mappedChats = chats.map((chat) => {
+      if (chat.sender.id === userId) {
+        return {
+          peer: {
+            ...chat.receiver,
+            type: 'receiver',
+          },
+          message: chat.message,
+          createdAt: chat.created_at,
+        };
+      }
+      return {
+        peer: {
+          ...chat.sender,
+          type: 'sender',
+        },
+        message: chat.message,
+        createdAt: chat.created_at,
+      };
+    });
+    return mappedChats.filter(
+      (message1, i, chatsArr) =>
+        chatsArr.findIndex(
+          (message2) => message2.peer.id === message1.peer.id,
+        ) === i,
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
+  async findOne(thisUserId: string, peerId: string) {
+    const { id, name, surname } = await this.usersService.findOneById(peerId);
+    const chat = await this.chatsRepository.findOne(thisUserId, peerId);
+    return {
+      peerData: { id, name, surname },
+      chat,
+    };
   }
 
-  update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
+  update(id: string, message: string) {
+    return this.chatsRepository.update(id, message);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+  remove(id: string) {
+    return this.chatsRepository.remove(id);
   }
 }
