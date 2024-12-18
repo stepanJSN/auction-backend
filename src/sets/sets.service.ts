@@ -24,7 +24,20 @@ export class SetsService {
   ) {}
 
   async create(createSetDto: CreateSetDto) {
-    const { id } = await this.setsRepository.create(createSetDto);
+    const { id, cards, bonus } = await this.setsRepository.create(createSetDto);
+    await this.findAllUsersWithCardsId({
+      cards,
+      forEachUserWithSet: (userId) => {
+        this.eventEmitter.emit(
+          'rating.update',
+          new UpdateRatingEvent({
+            userId,
+            pointsAmount: bonus,
+            action: RatingAction.INCREASE,
+          }),
+        );
+      },
+    });
     return id;
   }
 

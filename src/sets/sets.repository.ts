@@ -16,6 +16,9 @@ export class SetsRepository {
           connect: cardsId.map((cardId) => ({ id: cardId })),
         },
       },
+      include: {
+        cards: true,
+      },
     });
   }
 
