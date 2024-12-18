@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageType } from './types/create-message.type';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
 export class ChatsRepository {
@@ -28,31 +27,51 @@ export class ChatsRepository {
       orderBy: {
         created_at: 'desc',
       },
-      take: 1,
+      distinct: ['sender_id', 'receiver_id'],
+      select: {
+        message: true,
+        created_at: true,
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+        receiver: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+      },
     });
   }
 
-  findOne(senderId: string, receiverId: string) {
+  findOne(user1: string, user2: string) {
     return this.prisma.chats.findMany({
       where: {
         OR: [
           {
-            sender_id: senderId,
-            receiver_id: receiverId,
+            sender_id: user1,
+            receiver_id: user2,
           },
           {
-            sender_id: receiverId,
-            receiver_id: senderId,
+            sender_id: user2,
+            receiver_id: user1,
           },
         ],
       },
     });
   }
 
-  update(id: string, updateMessageDto: UpdateMessageDto) {
+  update(id: string, message: string) {
     return this.prisma.chats.update({
       where: { id },
-      data: updateMessageDto,
+      data: {
+        message,
+      },
     });
   }
 
