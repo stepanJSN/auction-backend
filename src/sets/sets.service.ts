@@ -11,7 +11,7 @@ import {
   UpdateRatingEvent,
   RatingAction,
 } from 'src/users/events/update-rating.event';
-import { FindAllUsersWithSetType } from './types/find-all-users-with-set.type';
+import { SetAction, SetEventPayload } from './events/set.event';
 
 const SETS_PER_ITERATION = 30;
 
@@ -25,19 +25,15 @@ export class SetsService {
 
   async create(createSetDto: CreateSetDto) {
     const { id, cards, bonus } = await this.setsRepository.create(createSetDto);
-    await this.findAllUsersWithCardsId({
-      cards,
-      forEachUserWithSet: (userId) => {
-        this.eventEmitter.emit(
-          'rating.update',
-          new UpdateRatingEvent({
-            userId,
-            pointsAmount: bonus,
-            action: RatingAction.INCREASE,
-          }),
-        );
-      },
-    });
+
+    this.eventEmitter.emit(
+      SetAction.CREATE,
+      new SetEventPayload({
+        cardsId: cards.map((card) => card.id),
+        bonus,
+      }),
+    );
+
     return id;
   }
 
@@ -127,41 +123,18 @@ export class SetsService {
     }
   }
 
-  async findAllUsersWithCardsId({
-    cards,
-    forEachUserWithSet,
-  }: FindAllUsersWithSetType) {
-    const cardInstances = await this.cardInstancesService.findAll({
-      cardsId: cards.map((card) => card.id),
-    });
-
-    cardInstances.reduce((users, cardInstance) => {
-      users[cardInstance.user_id] = (users[cardInstance.user_id] || 0) + 1;
-      if (users[cardInstance.user_id] === cards.length) {
-        forEachUserWithSet(cardInstance.user_id);
-      }
-      return users;
-    }, {});
-  }
-
   async update(id: string, updateSetDto: UpdateSetDto) {
     if (updateSetDto.bonus) {
       const { cards, bonus } = await this.findOne(id);
       const newBonus = updateSetDto.bonus - bonus;
-      await this.findAllUsersWithCardsId({
-        cards,
-        forEachUserWithSet: (userId) => {
-          this.eventEmitter.emit(
-            'rating.update',
-            new UpdateRatingEvent({
-              userId,
-              pointsAmount: Math.abs(newBonus),
-              action:
-                newBonus > 0 ? RatingAction.INCREASE : RatingAction.DECREASE,
-            }),
-          );
-        },
-      });
+
+      this.eventEmitter.emit(
+        SetAction.UPDATE,
+        new SetEventPayload({
+          cardsId: cards.map((card) => card.id),
+          bonus: newBonus,
+        }),
+      );
     }
 
     return this.setsRepository.update(id, updateSetDto);
@@ -170,18 +143,12 @@ export class SetsService {
   async remove(id: string) {
     const { cards, bonus } = await this.setsRepository.remove(id);
 
-    await this.findAllUsersWithCardsId({
-      cards,
-      forEachUserWithSet: (userId) => {
-        this.eventEmitter.emit(
-          'rating.update',
-          new UpdateRatingEvent({
-            userId,
-            pointsAmount: bonus,
-            action: RatingAction.DECREASE,
-          }),
-        );
-      },
-    });
+    this.eventEmitter.emit(
+      SetAction.REMOVE,
+      new SetEventPayload({
+        cardsId: cards.map((card) => card.id),
+        bonus,
+      }),
+    );
   }
 }

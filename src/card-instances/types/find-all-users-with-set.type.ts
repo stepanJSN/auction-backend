@@ -1,4 +1,4 @@
 export type FindAllUsersWithSetType = {
-  cards: { id: string }[];
+  cardsId: string[];
   forEachUserWithSet: (userId: string) => void;
 };
