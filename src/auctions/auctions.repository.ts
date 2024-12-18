@@ -112,7 +112,7 @@ export class AuctionsRepository {
         ${sortColumn} ${sortDirection}
       LIMIT ${take} OFFSET ${(page - 1) * take};
     `,
-    )) as unknown as Promise<AuctionsPrismaType[]>;
+    )) as unknown as AuctionsPrismaType[];
 
     const totalCount = await this.prisma.auctions.count({
       where: {

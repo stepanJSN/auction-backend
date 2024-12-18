@@ -32,20 +32,20 @@ export class FindAllAuctionsDto {
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
-  isUserTakePart: boolean;
+  isUserTakePart?: boolean;
 
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
-  isUserLeader: boolean;
+  isUserLeader?: boolean;
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortOrder: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
 
   @IsOptional()
   @IsIn(['creationDate', 'finishDate', 'highestBid'])
-  sortBy: 'creationDate' | 'finishDate' | 'highestBid';
+  sortBy?: 'creationDate' | 'finishDate' | 'highestBid';
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
