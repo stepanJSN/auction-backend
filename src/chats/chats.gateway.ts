@@ -12,6 +12,8 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { Server, Socket } from 'socket.io';
 import { UpdateMessageDto } from './dto/update-message.dto';
+import { FindAllChatMessagesDto } from './dto/find-all-chat-messages.dto';
+import { FindAllChatsDto } from './dto/find-all-chats.dto';
 
 @UseGuards(AuthGuard)
 @WebSocketGateway()
@@ -49,19 +51,35 @@ export class ChatsGateway {
 
   @SubscribeMessage('findAllChats')
   async findAll(
+    @MessageBody() findAllChats: FindAllChatsDto,
     @CurrentUser('id') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
-    client.emit('chats', await this.chatsService.findAll(userId));
+    client.emit(
+      'chats',
+      await this.chatsService.findAll(
+        userId,
+        findAllChats.page ?? 1,
+        findAllChats.take ?? 50,
+      ),
+    );
   }
 
   @SubscribeMessage('findChat')
   async findOne(
-    @MessageBody('peerId') peerId: string,
+    @MessageBody() findAllChatMessages: FindAllChatMessagesDto,
     @CurrentUser('id') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
-    client.emit('chat', await this.chatsService.findOne(userId, peerId));
+    client.emit(
+      'chat',
+      await this.chatsService.findAllChatMessages({
+        thisUserId: userId,
+        peerId: findAllChatMessages.peerId,
+        page: findAllChatMessages.page ?? 1,
+        take: findAllChatMessages.take ?? 50,
+      }),
+    );
   }
 
   @SubscribeMessage('subscribeToChats')
@@ -70,11 +88,10 @@ export class ChatsGateway {
     @ConnectedSocket() client: Socket,
   ) {
     client.data.id = userId;
-    const userChats = await this.chatsService.findAll(userId);
+    const { data: userChats } = await this.chatsService.findAll(userId);
     for (const chat of userChats) {
       const secondUserId = chat.peer.id;
       const roomName = this.generateRoomName(userId, secondUserId);
-      console.log('Stepan', roomName);
       client.join(roomName);
     }
 
@@ -102,8 +119,6 @@ export class ChatsGateway {
       updatedMessage.receiver_id,
       updatedMessage.sender_id,
     );
-    console.log(roomName);
-    console.log(updatedMessage);
     this.server.to(roomName).emit('updatedMessage', updatedMessage);
   }
 
@@ -114,7 +129,6 @@ export class ChatsGateway {
       deletedMessage.receiver_id,
       deletedMessage.sender_id,
     );
-    console.log(roomName);
     this.server.to(roomName).emit('deletedMessage', deletedMessage);
   }
 }

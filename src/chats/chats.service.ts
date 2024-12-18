@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ChatsRepository } from './chats.repository';
 import { CreateMessageType } from './types/create-message.type';
 import { UsersService } from 'src/users/users.service';
+import { FindAllChatMessagesType } from './types/find-all-chat-messages.type';
 
 @Injectable()
 export class ChatsService {
@@ -13,8 +14,12 @@ export class ChatsService {
     return this.chatsRepository.create(createChat);
   }
 
-  async findAll(userId: string) {
-    const chats = await this.chatsRepository.findAll(userId);
+  async findAll(userId: string, page?: number, take?: number) {
+    const { chats, totalCount } = await this.chatsRepository.findAll(
+      userId,
+      page,
+      take,
+    );
     const mappedChats = chats.map((chat) => {
       if (chat.sender.id === userId) {
         return {
@@ -35,20 +40,36 @@ export class ChatsService {
         createdAt: chat.created_at,
       };
     });
-    return mappedChats.filter(
+    const uniqueChats = mappedChats.filter(
       (message1, i, chatsArr) =>
         chatsArr.findIndex(
           (message2) => message2.peer.id === message1.peer.id,
         ) === i,
     );
+    return {
+      data: uniqueChats,
+      info: {
+        page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / take),
+      },
+    };
   }
 
-  async findOne(thisUserId: string, peerId: string) {
-    const { id, name, surname } = await this.usersService.findOneById(peerId);
-    const chat = await this.chatsRepository.findOne(thisUserId, peerId);
+  async findAllChatMessages(findAllChatMessages: FindAllChatMessagesType) {
+    const { id, name, surname } = await this.usersService.findOneById(
+      findAllChatMessages.peerId,
+    );
+    const chat =
+      await this.chatsRepository.findAllChatMessages(findAllChatMessages);
     return {
       peerData: { id, name, surname },
-      chat,
+      messages: chat.messages,
+      info: {
+        page: findAllChatMessages.page,
+        totalCount: chat.totalCount,
+        totalPages: Math.ceil(chat.totalCount / findAllChatMessages.take),
+      },
     };
   }
 

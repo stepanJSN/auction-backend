@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateMessageType } from './types/create-message.type';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { FindAllChatMessagesType } from './types/find-all-chat-messages.type';
 
 @Injectable()
 export class ChatsRepository {
@@ -19,51 +20,70 @@ export class ChatsRepository {
     });
   }
 
-  findAll(senderId: string) {
-    return this.prisma.chats.findMany({
-      where: {
-        OR: [{ sender_id: senderId }, { receiver_id: senderId }],
-      },
-      orderBy: {
-        created_at: 'desc',
-      },
-      distinct: ['sender_id', 'receiver_id'],
-      select: {
-        message: true,
-        created_at: true,
-        sender: {
-          select: {
-            id: true,
-            name: true,
-            surname: true,
+  async findAll(senderId: string, page?: number, take?: number) {
+    const conditions = {
+      OR: [{ sender_id: senderId }, { receiver_id: senderId }],
+    };
+    const [chats, totalCount] = await this.prisma.$transaction([
+      this.prisma.chats.findMany({
+        where: conditions,
+        orderBy: {
+          created_at: 'desc',
+        },
+        distinct: ['sender_id', 'receiver_id'],
+        select: {
+          message: true,
+          created_at: true,
+          sender: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+            },
+          },
+          receiver: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+            },
           },
         },
-        receiver: {
-          select: {
-            id: true,
-            name: true,
-            surname: true,
-          },
-        },
-      },
-    });
+        skip: take ? (page - 1) * take : 0,
+        take,
+      }),
+      this.prisma.chats.count({ where: conditions }),
+    ]);
+    return { chats, totalCount };
   }
 
-  findOne(user1: string, user2: string) {
-    return this.prisma.chats.findMany({
-      where: {
-        OR: [
-          {
-            sender_id: user1,
-            receiver_id: user2,
-          },
-          {
-            sender_id: user2,
-            receiver_id: user1,
-          },
-        ],
-      },
-    });
+  async findAllChatMessages({
+    thisUserId,
+    peerId,
+    page,
+    take,
+  }: FindAllChatMessagesType) {
+    const conditions = {
+      OR: [
+        {
+          sender_id: thisUserId,
+          receiver_id: peerId,
+        },
+        {
+          sender_id: peerId,
+          receiver_id: thisUserId,
+        },
+      ],
+    };
+    const [messages, totalCount] = await this.prisma.$transaction([
+      this.prisma.chats.findMany({
+        where: conditions,
+        skip: (page - 1) * take,
+        take,
+      }),
+      this.prisma.chats.count({ where: conditions }),
+    ]);
+    return { messages, totalCount };
   }
 
   update(id: string, message: string) {
