@@ -1,6 +1,7 @@
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -22,10 +23,22 @@ import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 
 @WebSocketGateway()
-export class AuctionsGateway {
+export class AuctionsGateway implements OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
-  constructor(private readonly auctionsService: AuctionsService) {}
+  constructor(
+    private readonly auctionsService: AuctionsService,
+    private readonly authGuard: AuthGuard,
+  ) {}
+
+  async handleConnection(client: Socket) {
+    const context = { switchToWs: () => ({ getClient: () => client }) } as any;
+    try {
+      await this.authGuard.validateWsRequest(context);
+    } catch {
+      client.disconnect();
+    }
+  }
 
   @OnEvent(AuctionEvent.FINISHED)
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {

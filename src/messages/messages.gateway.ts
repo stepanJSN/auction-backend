@@ -5,6 +5,7 @@ import {
   WebSocketServer,
   WsException,
   ConnectedSocket,
+  OnGatewayConnection,
 } from '@nestjs/websockets';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -24,10 +25,22 @@ import {
   new ValidationPipe({ exceptionFactory: (errors) => new WsException(errors) }),
 )
 @WebSocketGateway()
-export class MessagesGateway {
+export class MessagesGateway implements OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly authGuard: AuthGuard,
+  ) {}
+
+  async handleConnection(client: Socket) {
+    const context = { switchToWs: () => ({ getClient: () => client }) } as any;
+    try {
+      await this.authGuard.validateWsRequest(context);
+    } catch {
+      client.disconnect();
+    }
+  }
 
   @SubscribeMessage(MessagesWsIncomingEventsEnum.CREATE)
   async newMessage(
