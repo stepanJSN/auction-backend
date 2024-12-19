@@ -26,8 +26,8 @@ export class MessagesService {
     };
   }
 
-  update(id: string, updateMessageDto: UpdateMessageDto) {
-    return this.messagesRepository.update(id, updateMessageDto);
+  update(updateMessageDto: UpdateMessageDto) {
+    return this.messagesRepository.update(updateMessageDto);
   }
 
   remove(id: string) {

@@ -18,16 +18,30 @@ export class MessagesRepository {
           connect: { id: createMessage.chatId },
         },
       },
+      select: {
+        id: true,
+        chat_id: true,
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+        message: true,
+        created_at: true,
+      },
     });
   }
 
-  findAll({ chatId, take, cursor }: FindAllMessagesOfChatDto) {
+  findAll({ chatId, take = 10, cursor }: FindAllMessagesOfChatDto) {
     return this.prisma.messages.findMany({
       where: { chat_id: chatId },
       select: {
         id: true,
         sender: {
           select: {
+            id: true,
             name: true,
             surname: true,
           },
@@ -43,12 +57,25 @@ export class MessagesRepository {
     });
   }
 
-  async update(id: string, updateMessageDto: UpdateMessageDto) {
+  async update({ id, message }: UpdateMessageDto) {
     try {
       return this.prisma.messages.update({
         where: { id },
         data: {
-          message: updateMessageDto.message,
+          message,
+        },
+        select: {
+          id: true,
+          chat_id: true,
+          sender: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+            },
+          },
+          message: true,
+          created_at: true,
         },
       });
     } catch {
@@ -58,7 +85,22 @@ export class MessagesRepository {
 
   async remove(id: string) {
     try {
-      return this.prisma.messages.delete({ where: { id } });
+      return this.prisma.messages.delete({
+        where: { id },
+        select: {
+          id: true,
+          chat_id: true,
+          sender: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+            },
+          },
+          message: true,
+          created_at: true,
+        },
+      });
     } catch {}
   }
 }
