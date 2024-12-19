@@ -4,4 +4,5 @@ export type FindAllAuctionsType = FindAllAuctionsDto & {
   createdById?: string;
   participantId?: string;
   isCompleted?: boolean;
+  cardId: string;
 };
