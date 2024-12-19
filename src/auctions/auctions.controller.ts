@@ -33,9 +33,15 @@ export class AuctionsController {
   }
 
   @Get()
-  findAll(@Query() findAllAuctionsDto: FindAllAuctionsDto) {
+  findAll(
+    @CurrentUser('id') userId: string,
+    @Query() findAllAuctionsDto: FindAllAuctionsDto,
+  ) {
     return this.auctionsService.findAll({
       ...findAllAuctionsDto,
+      participantId: userId,
+      take: findAllAuctionsDto.take ?? 20,
+      page: findAllAuctionsDto.page ?? 1,
       isCompleted: false,
     });
   }
@@ -45,7 +51,12 @@ export class AuctionsController {
     @CurrentUser('id') userId: string,
     @Query() findAllAuctionsDto: FindAllAuctionsDto,
   ) {
-    return this.auctionsService.findAll({ ...findAllAuctionsDto, userId });
+    return this.auctionsService.findAll({
+      ...findAllAuctionsDto,
+      createdById: userId,
+      take: findAllAuctionsDto.take ?? 20,
+      page: findAllAuctionsDto.page ?? 1,
+    });
   }
 
   @Get(':id')

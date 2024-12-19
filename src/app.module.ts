@@ -15,6 +15,7 @@ import configuration from 'config/configuration';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ChatsModule } from './chats/chats.module';
 import { MessagesModule } from './messages/messages.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { MessagesModule } from './messages/messages.module';
     BidsModule,
     ChatsModule,
     MessagesModule,
+    TransactionsModule,
   ],
 })
 export class AppModule {}

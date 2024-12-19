@@ -18,6 +18,8 @@ import {
   AuctionsWsIncomingEventsEnum,
   AuctionsWsOutgoingEventsEnum,
 } from './enums/auctions-ws-events.enum';
+import { AuctionEvent } from './enums/auction-event.enum';
+import { BidEvent } from 'src/bids/enums/bid-event.enum';
 
 @WebSocketGateway()
 export class AuctionsGateway {
@@ -25,7 +27,7 @@ export class AuctionsGateway {
   private server: Server;
   constructor(private readonly auctionsService: AuctionsService) {}
 
-  @OnEvent('auction.finished')
+  @OnEvent(AuctionEvent.FINISHED)
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {
     this.server
       .to(`auction-${event.id}`)
@@ -35,7 +37,7 @@ export class AuctionsGateway {
       });
   }
 
-  @OnEvent('auction.changed')
+  @OnEvent(AuctionEvent.CHANGED)
   notifyClientsAboutAuctionChanged({ id, ...restData }: AuctionChangedEvent) {
     this.server.to(`auction-${id}`).emit(AuctionsWsOutgoingEventsEnum.CHANGED, {
       auctionId: id,
@@ -43,7 +45,7 @@ export class AuctionsGateway {
     });
   }
 
-  @OnEvent('bid.new')
+  @OnEvent(BidEvent.NEW)
   notifyClientsAboutNewBid(event: NewBidEvent) {
     this.server
       .to(`auction-${event.auctionId}`)
