@@ -5,48 +5,52 @@ import {
   ConnectedSocket,
   WebSocketServer,
   WsException,
+  OnGatewayConnection,
 } from '@nestjs/websockets';
 import { ChatsService } from './chats.service';
-import { CreateMessageDto } from './dto/create-message.dto';
 import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { Server, Socket } from 'socket.io';
-import { UpdateMessageDto } from './dto/update-message.dto';
-import { FindAllChatMessagesDto } from './dto/find-all-chat-messages.dto';
 import { FindAllChatsDto } from './dto/find-all-chats.dto';
+import { CreateChatDto } from './dto/create-chat.dto';
+import { UpdateChatDto } from './dto/update-chat.dto';
 
 @UseGuards(AuthGuard)
 @UsePipes(
   new ValidationPipe({ exceptionFactory: (errors) => new WsException(errors) }),
 )
 @WebSocketGateway()
-export class ChatsGateway {
+export class ChatsGateway implements OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
-  constructor(private readonly chatsService: ChatsService) {}
+  constructor(
+    private readonly chatsService: ChatsService,
+    private readonly authGuard: AuthGuard,
+  ) {}
 
   @SubscribeMessage('createChat')
-  create(
-    @MessageBody() createMessageDto: CreateMessageDto,
+  async create(
+    @MessageBody() createChatDto: CreateChatDto,
     @CurrentUser('id') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
-    const roomName = this.generateRoomName(createMessageDto.receiverId, userId);
-    client.join(roomName);
-    const receiverSocketId = this.findReceiverSocket(
-      createMessageDto.receiverId,
-    );
-    if (receiverSocketId) {
-      this.server.sockets.sockets.get(receiverSocketId)?.join(roomName);
-    }
-    this.server.to(roomName).emit('newMessage', createMessageDto);
-    return this.chatsService.create({ ...createMessageDto, senderId: userId });
+    const { id } = await this.chatsService.create({
+      participants: createChatDto.participants,
+      userId,
+    });
+    client.join(id);
+    createChatDto.participants.forEach((participant) => {
+      const receiverSocketId = this.findReceiverSocket(participant);
+      if (receiverSocketId) {
+        this.server.sockets.sockets.get(receiverSocketId)?.join(id);
+      }
+    });
   }
 
   private findReceiverSocket(receiverId: string): string | null {
     for (const [socketId, socket] of this.server.sockets.sockets) {
-      if (socket.data.id === receiverId) {
+      if (socket['user'].id === receiverId) {
         return socketId;
       }
     }
@@ -61,78 +65,46 @@ export class ChatsGateway {
   ) {
     client.emit(
       'chats',
-      await this.chatsService.findAll(
+      await this.chatsService.findAll({
         userId,
-        findAllChats.page ?? 1,
-        findAllChats.take ?? 50,
-      ),
-    );
-  }
-
-  @SubscribeMessage('findChat')
-  async findOne(
-    @MessageBody() findAllChatMessages: FindAllChatMessagesDto,
-    @CurrentUser('id') userId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    client.emit(
-      'chat',
-      await this.chatsService.findAllChatMessages({
-        thisUserId: userId,
-        peerId: findAllChatMessages.peerId,
-        page: findAllChatMessages.page ?? 1,
-        take: findAllChatMessages.take ?? 50,
+        page: findAllChats.page,
+        take: findAllChats.take,
       }),
     );
   }
 
-  @SubscribeMessage('subscribeToChats')
-  async subscribe(
-    @CurrentUser('id') userId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    client.data.id = userId;
-    const { data: userChats } = await this.chatsService.findAll(userId);
-    for (const chat of userChats) {
-      const secondUserId = chat.peer.id;
-      const roomName = this.generateRoomName(userId, secondUserId);
-      client.join(roomName);
+  async handleConnection(client: Socket) {
+    const context = { switchToWs: () => ({ getClient: () => client }) } as any;
+    try {
+      await this.authGuard.validateWsRequest(context);
+    } catch {
+      client.disconnect();
     }
+    const userId = client['user'].id;
+    let currentPage = 1;
+    while (true) {
+      const { data: userChats, info } = await this.chatsService.findAll({
+        userId,
+        page: currentPage,
+      });
+      for (const chat of userChats) {
+        client.join(chat.id);
+      }
 
-    return 'subscribed';
+      if (currentPage >= info.totalPages) break;
+      currentPage++;
+    }
   }
 
-  private generateRoomName(userId1: string, userId2: string): string {
-    return `chat-${[userId1, userId2].sort().join('-')}`;
+  @SubscribeMessage('updateChat')
+  async update(@MessageBody() updateChatDto: UpdateChatDto) {
+    await this.chatsService.update(updateChatDto);
   }
 
-  @SubscribeMessage('newMessage')
-  updateChat(
-    @MessageBody() createMessageDto: CreateMessageDto,
-    @CurrentUser('id') userId: string,
-  ) {
-    const roomName = this.generateRoomName(createMessageDto.receiverId, userId);
-    this.server.to(roomName).emit('newMessage', createMessageDto);
-    return this.chatsService.create({ ...createMessageDto, senderId: userId });
-  }
-
-  @SubscribeMessage('editMessage')
-  async editMessage(@MessageBody() { messageId, message }: UpdateMessageDto) {
-    const updatedMessage = await this.chatsService.update(messageId, message);
-    const roomName = this.generateRoomName(
-      updatedMessage.receiver_id,
-      updatedMessage.sender_id,
-    );
-    this.server.to(roomName).emit('updatedMessage', updatedMessage);
-  }
-
-  @SubscribeMessage('deleteMessage')
-  async remove(@MessageBody('messageId') id: string) {
-    const deletedMessage = await this.chatsService.remove(id);
-    const roomName = this.generateRoomName(
-      deletedMessage.receiver_id,
-      deletedMessage.sender_id,
-    );
-    this.server.to(roomName).emit('deletedMessage', deletedMessage);
+  @SubscribeMessage('deleteChat')
+  async remove(@MessageBody('id') id: string) {
+    await this.chatsService.remove(id);
+    this.server.to(id).emit('chatDeleted', id);
+    this.server.in(id).socketsLeave(id);
   }
 }
