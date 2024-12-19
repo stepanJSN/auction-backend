@@ -60,8 +60,13 @@ export class AuctionsService {
   }
 
   async findAll(findAllAuctionsData: FindAllAuctionsType) {
-    const { auctions, totalCount } =
-      await this.auctionRepository.findAll(findAllAuctionsData);
+    const { auctions, totalCount } = await this.auctionRepository.findAll({
+      ...findAllAuctionsData,
+      participantId:
+        findAllAuctionsData.isUserTakePart || findAllAuctionsData.isUserLeader
+          ? findAllAuctionsData.participantId
+          : undefined,
+    });
     return {
       data: auctions,
       info: {

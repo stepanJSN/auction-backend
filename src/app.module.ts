@@ -14,6 +14,7 @@ import { BidsModule } from './bids/bids.module';
 import configuration from 'config/configuration';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StatisticsModule } from './statistics/statistics.module';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     SetsModule,
     BidsModule,
     StatisticsModule,
+    TransactionsModule,
   ],
 })
 export class AppModule {}

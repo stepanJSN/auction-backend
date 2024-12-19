@@ -10,4 +10,5 @@ export type AuctionsPrismaType = {
   name: string;
   image_url: string;
   highest_bid: number | null;
+  highest_bid_user: string | null;
 };
