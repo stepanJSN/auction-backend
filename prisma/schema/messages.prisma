@@ -1,0 +1,10 @@
+model messages {
+  id         String   @id @default(uuid())
+  sender     users    @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+  sender_id  String
+  chat       chats    @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  chat_id    String
+  message    String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
