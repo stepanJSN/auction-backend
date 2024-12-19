@@ -13,6 +13,7 @@ import { SetsModule } from './sets/sets.module';
 import { BidsModule } from './bids/bids.module';
 import configuration from 'config/configuration';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     AuctionsModule,
     SetsModule,
     BidsModule,
+    TransactionsModule,
   ],
 })
 export class AppModule {}

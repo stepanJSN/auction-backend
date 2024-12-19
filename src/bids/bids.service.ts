@@ -9,6 +9,7 @@ import { AuctionsService } from 'src/auctions/auctions.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { NewBidEvent } from './events/new-bid.event';
 import { BidExceptionCode } from './enums/bid-exception.enum';
+import { TransactionsService } from 'src/transactions/transactions.service';
 import { BidEvent } from './enums/bid-event.enum';
 
 @Injectable()
@@ -17,6 +18,7 @@ export class BidsService {
     private bidsRepository: BidsRepository,
     private auctionsService: AuctionsService,
     private eventEmitter: EventEmitter2,
+    private transactionsService: TransactionsService,
   ) {}
 
   async create(createBidData: CreateBidType) {
@@ -46,9 +48,9 @@ export class BidsService {
       });
     }
 
-    // Replace with the real method after creating the transaction module
-    const userBalance = 3000;
-    if (userBalance < createBidData.bidAmount) {
+    const { availableBalance } =
+      await this.transactionsService.calculateBalance(createBidData.userId);
+    if (availableBalance < createBidData.bidAmount) {
       throw new BadRequestException({
         code: BidExceptionCode.INSUFFICIENT_BALANCE,
         message: 'You do not have enough money to make this bid!',

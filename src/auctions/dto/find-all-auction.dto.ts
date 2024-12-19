@@ -1,33 +1,51 @@
-import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class FindAllAuctionsDto {
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
-  locationId: number;
+  locationId?: number;
 
   @IsOptional()
   @IsString()
-  cardName: string;
+  cardName?: string;
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
-  fromPrice: number;
+  fromPrice?: number;
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
-  toPrice: number;
+  toPrice?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  isUserTakePart?: boolean;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  isUserLeader?: boolean;
 
   @IsOptional()
   @IsIn(['asc', 'desc'])
-  sortOrder: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc';
 
   @IsOptional()
   @IsIn(['creationDate', 'finishDate', 'highestBid'])
-  sortBy: 'creationDate' | 'finishDate' | 'highestBid';
+  sortBy?: 'creationDate' | 'finishDate' | 'highestBid';
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
