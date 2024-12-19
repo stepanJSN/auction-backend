@@ -41,4 +41,8 @@ export class CardInstancesRepository {
       },
     });
   }
+
+  count(cardId: string) {
+    return this.prisma.card_instances.count({ where: { card_id: cardId } });
+  }
 }

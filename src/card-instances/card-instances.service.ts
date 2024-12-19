@@ -34,6 +34,10 @@ export class CardInstancesService {
     return this.cardInstancesRepository.findAll(findAllCardInstances);
   }
 
+  countAllByCardId(cardId: string) {
+    return this.cardInstancesRepository.count(cardId);
+  }
+
   @OnEvent(AuctionEvent.FINISHED)
   async updateCardOwner(event: AuctionsFinishedEvent) {
     await this.cardInstancesRepository.update(event.cardInstanceId, {
