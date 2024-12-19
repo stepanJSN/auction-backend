@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ChatsRepository } from './chats.repository';
-import { CreateMessageType } from './types/create-message.type';
+import { CreateChatType } from './types/create-chat.type';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { WsException } from '@nestjs/websockets';
 import { FindAllChatsType } from './types/find-all-chats.type';
@@ -8,11 +8,15 @@ import { FindAllChatsType } from './types/find-all-chats.type';
 @Injectable()
 export class ChatsService {
   constructor(private readonly chatsRepository: ChatsRepository) {}
-  async create(createChat: CreateMessageType) {
-    if (createChat.participants.length === 2) {
+  async create(createChat: CreateChatType) {
+    const participantsWithCreator = [
+      createChat.userId,
+      ...createChat.participants,
+    ];
+    if (participantsWithCreator.length === 2) {
       const existingChats = await this.chatsRepository.findAllChatsWithUsers(
-        createChat.participants[0],
-        createChat.participants[1],
+        participantsWithCreator[0],
+        participantsWithCreator[1],
       );
       const existingPrivateChat = existingChats.find(
         (chat) => chat.users.length === 2,
@@ -24,7 +28,9 @@ export class ChatsService {
         });
       }
     }
-    return this.chatsRepository.create(createChat);
+    return this.chatsRepository.create({
+      participants: participantsWithCreator,
+    });
   }
 
   async findAll(findAllChats: FindAllChatsType) {
@@ -33,9 +39,9 @@ export class ChatsService {
     return {
       data: chats,
       info: {
-        page: findAllChats.page,
+        page: findAllChats.page ?? 1,
         totalCount,
-        totalPages: Math.ceil(totalCount / findAllChats.take),
+        totalPages: Math.ceil(totalCount / (findAllChats.take ?? 10)),
       },
     };
   }
