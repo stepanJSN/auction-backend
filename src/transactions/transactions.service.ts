@@ -53,7 +53,7 @@ export class TransactionsService {
       isUserLeader: true,
     });
     const freezedBalance = auctionsWhereUserBidIsLeading.data.reduce(
-      (sum, auction) => sum + Number(auction.highest_bid),
+      (sum, auction) => sum + auction.highest_bid,
       0,
     );
     const income = transactions

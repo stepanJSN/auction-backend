@@ -42,7 +42,7 @@ export class AuctionsController {
       participantId: userId,
       take: findAllAuctionsDto.take ?? 20,
       page: findAllAuctionsDto.page ?? 1,
-      // isCompleted: false,
+      isCompleted: false,
     });
   }
 
