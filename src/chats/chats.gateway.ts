@@ -15,6 +15,10 @@ import { Server, Socket } from 'socket.io';
 import { FindAllChatsDto } from './dto/find-all-chats.dto';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
+import {
+  ChatWsIncomingEventsEnum,
+  ChatWsOutgoingEventsEnum,
+} from './enums/chat-ws-events.enum';
 
 @UseGuards(AuthGuard)
 @UsePipes(
@@ -57,14 +61,14 @@ export class ChatsGateway implements OnGatewayConnection {
     return null;
   }
 
-  @SubscribeMessage('findAllChats')
+  @SubscribeMessage(ChatWsIncomingEventsEnum.CREATE)
   async findAll(
     @MessageBody() findAllChats: FindAllChatsDto,
     @CurrentUser('id') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
     client.emit(
-      'chats',
+      ChatWsOutgoingEventsEnum.ALL,
       await this.chatsService.findAll({
         userId,
         page: findAllChats.page,
@@ -96,15 +100,15 @@ export class ChatsGateway implements OnGatewayConnection {
     }
   }
 
-  @SubscribeMessage('updateChat')
+  @SubscribeMessage(ChatWsIncomingEventsEnum.UPDATE)
   async update(@MessageBody() updateChatDto: UpdateChatDto) {
     await this.chatsService.update(updateChatDto);
   }
 
-  @SubscribeMessage('deleteChat')
+  @SubscribeMessage(ChatWsIncomingEventsEnum.DELETE)
   async remove(@MessageBody('id') id: string) {
     await this.chatsService.remove(id);
-    this.server.to(id).emit('chatDeleted', id);
+    this.server.to(id).emit(ChatWsOutgoingEventsEnum.DELETED, id);
     this.server.in(id).socketsLeave(id);
   }
 }

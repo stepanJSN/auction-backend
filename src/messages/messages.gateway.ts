@@ -14,6 +14,10 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { MessagesService } from './messages.service';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { FindAllMessagesOfChatDto } from './dto/find-all-messages-of-chat.dto';
+import {
+  MessagesWsIncomingEventsEnum,
+  MessagesWsOutgoingEventsEnum,
+} from './enums/messages-ws-events.enum';
 
 @UseGuards(AuthGuard)
 @UsePipes(
@@ -25,7 +29,7 @@ export class MessagesGateway {
   private server: Server;
   constructor(private readonly messagesService: MessagesService) {}
 
-  @SubscribeMessage('newMessage')
+  @SubscribeMessage(MessagesWsIncomingEventsEnum.CREATE)
   async newMessage(
     @MessageBody() createMessageDto: CreateMessageDto,
     @CurrentUser('id') userId: string,
@@ -34,33 +38,35 @@ export class MessagesGateway {
       ...createMessageDto,
       senderId: userId,
     });
-    this.server.to(message.chat_id).emit('newMessage', message);
+    this.server
+      .to(message.chat_id)
+      .emit(MessagesWsOutgoingEventsEnum.NEW, message);
   }
 
-  @SubscribeMessage('getAllMessages')
+  @SubscribeMessage(MessagesWsIncomingEventsEnum.GET_ALL)
   async findAllMessages(
     @MessageBody() findAllMessages: FindAllMessagesOfChatDto,
     @ConnectedSocket() client: Socket,
   ) {
     client.emit(
-      'messages',
+      MessagesWsOutgoingEventsEnum.ALL,
       await this.messagesService.findAll(findAllMessages),
     );
   }
 
-  @SubscribeMessage('editMessage')
+  @SubscribeMessage(MessagesWsIncomingEventsEnum.UPDATE)
   async editMessage(@MessageBody() updatedMessageDto: UpdateMessageDto) {
     const updatedMessage = await this.messagesService.update(updatedMessageDto);
     this.server
       .to(updatedMessage.chat_id)
-      .emit('updatedMessage', updatedMessage);
+      .emit(MessagesWsOutgoingEventsEnum.UPDATED, updatedMessage);
   }
 
-  @SubscribeMessage('deleteMessage')
+  @SubscribeMessage(MessagesWsIncomingEventsEnum.DELETE)
   async remove(@MessageBody('id') id: string) {
     const deletedMessage = await this.messagesService.remove(id);
     this.server
       .to(deletedMessage.chat_id)
-      .emit('deletedMessage', deletedMessage);
+      .emit(MessagesWsOutgoingEventsEnum.DELETED, deletedMessage);
   }
 }

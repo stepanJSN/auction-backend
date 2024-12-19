@@ -14,6 +14,10 @@ import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { AuctionsService } from './auctions.service';
 import { CurrentUser } from 'src/decorators/user.decorator';
+import {
+  AuctionsWsIncomingEventsEnum,
+  AuctionsWsOutgoingEventsEnum,
+} from './enums/auctions-ws-events.enum';
 
 @WebSocketGateway()
 export class AuctionsGateway {
@@ -23,15 +27,17 @@ export class AuctionsGateway {
 
   @OnEvent('auction.finished')
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {
-    this.server.to(`auction-${event.id}`).emit('auctionFinished', {
-      auctionId: event.id,
-      message: 'Auction has been completed.',
-    });
+    this.server
+      .to(`auction-${event.id}`)
+      .emit(AuctionsWsOutgoingEventsEnum.FINISHED, {
+        auctionId: event.id,
+        message: 'Auction has been completed.',
+      });
   }
 
   @OnEvent('auction.changed')
   notifyClientsAboutAuctionChanged({ id, ...restData }: AuctionChangedEvent) {
-    this.server.to(`auction-${id}`).emit('auctionChanged', {
+    this.server.to(`auction-${id}`).emit(AuctionsWsOutgoingEventsEnum.CHANGED, {
       auctionId: id,
       ...restData,
     });
@@ -39,14 +45,16 @@ export class AuctionsGateway {
 
   @OnEvent('bid.new')
   notifyClientsAboutNewBid(event: NewBidEvent) {
-    this.server.to(`auction-${event.auctionId}`).emit('newBid', {
-      auctionId: event.auctionId,
-      bidAmount: event.bidAmount,
-    });
+    this.server
+      .to(`auction-${event.auctionId}`)
+      .emit(AuctionsWsOutgoingEventsEnum.NEW_BID, {
+        auctionId: event.auctionId,
+        bidAmount: event.bidAmount,
+      });
   }
 
   @UseGuards(AuthGuard)
-  @SubscribeMessage('subscribeToAuction')
+  @SubscribeMessage(AuctionsWsIncomingEventsEnum.SUBSCRIBE)
   async handleSubscription(
     @MessageBody('id') id: string,
     @CurrentUser('id') userId: string,
@@ -55,6 +63,6 @@ export class AuctionsGateway {
     client.join(`auction-${id}`);
 
     const auction = await this.auctionsService.findOne(id, userId);
-    client.emit('auctionSubscribed', auction);
+    client.emit(AuctionsWsOutgoingEventsEnum.SUBSCRIBED, auction);
   }
 }
