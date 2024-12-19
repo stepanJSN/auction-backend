@@ -57,7 +57,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private async validateWsRequest(context: ExecutionContext): Promise<boolean> {
+  async validateWsRequest(context: ExecutionContext): Promise<boolean> {
     const client = context.switchToWs().getClient();
     const authHeader = client.handshake.headers.authorization;
 

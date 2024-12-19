@@ -4,7 +4,7 @@ import { ChatsGateway } from './chats.gateway';
 import { ChatsRepository } from './chats.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UsersModule } from 'src/users/users.module';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Module({
   imports: [
@@ -14,8 +14,7 @@ import { UsersModule } from 'src/users/users.module';
         secret: configService.get<string>('jwt_key'),
       }),
     }),
-    UsersModule,
   ],
-  providers: [ChatsGateway, ChatsService, ChatsRepository],
+  providers: [ChatsGateway, ChatsService, ChatsRepository, AuthGuard],
 })
 export class ChatsModule {}
