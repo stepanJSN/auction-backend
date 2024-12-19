@@ -1,15 +1,15 @@
 import { IsOptional, IsUUID, Max, Min } from 'class-validator';
 
-export class FindAllChatMessagesDto {
+export class FindAllMessagesOfChatDto {
   @IsUUID()
-  peerId: string;
+  chatId: string;
 
   @IsOptional()
   @Min(1)
-  @Max(100)
-  page: number;
+  @Max(50)
+  take?: number;
 
   @IsOptional()
-  @Min(1)
-  take: number;
+  @IsUUID()
+  cursor?: string;
 }

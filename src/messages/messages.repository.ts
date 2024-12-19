@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMessageType } from './types/create-message.type';
+import { FindAllMessagesOfChatDto } from './dto/find-all-messages-of-chat.dto';
 
 @Injectable()
 export class MessagesRepository {
@@ -17,6 +18,28 @@ export class MessagesRepository {
           connect: { id: createMessage.chatId },
         },
       },
+    });
+  }
+
+  findAll({ chatId, take, cursor }: FindAllMessagesOfChatDto) {
+    return this.prisma.messages.findMany({
+      where: { chat_id: chatId },
+      select: {
+        id: true,
+        sender: {
+          select: {
+            name: true,
+            surname: true,
+          },
+        },
+        message: true,
+        created_at: true,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      take: take + 1,
+      ...(cursor && { skip: 1, cursor: { id: cursor } }),
     });
   }
 
