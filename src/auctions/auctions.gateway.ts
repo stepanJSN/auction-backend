@@ -1,44 +1,17 @@
-import {
-  ConnectedSocket,
-  MessageBody,
-  OnGatewayConnection,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { AuctionsFinishedEvent } from './events/auction-finished.event';
-import { Server, Socket } from 'socket.io';
+import { Server } from 'socket.io';
 import { OnEvent } from '@nestjs/event-emitter';
 import { NewBidEvent } from 'src/bids/events/new-bid.event';
 import { AuctionChangedEvent } from './events/auction-changed.event';
-import { UseGuards } from '@nestjs/common';
-import { AuthGuard } from 'src/guards/auth.guard';
-import { AuctionsService } from './auctions.service';
-import { CurrentUser } from 'src/decorators/user.decorator';
-import {
-  AuctionsWsIncomingEventsEnum,
-  AuctionsWsOutgoingEventsEnum,
-} from './enums/auctions-ws-events.enum';
+import { AuctionsWsOutgoingEventsEnum } from './enums/auctions-ws-events.enum';
 import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 
 @WebSocketGateway()
-export class AuctionsGateway implements OnGatewayConnection {
+export class AuctionsGateway {
   @WebSocketServer()
   private server: Server;
-  constructor(
-    private readonly auctionsService: AuctionsService,
-    private readonly authGuard: AuthGuard,
-  ) {}
-
-  async handleConnection(client: Socket) {
-    const context = { switchToWs: () => ({ getClient: () => client }) } as any;
-    try {
-      await this.authGuard.validateWsRequest(context);
-    } catch {
-      client.disconnect();
-    }
-  }
 
   @OnEvent(AuctionEvent.FINISHED)
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {
@@ -68,16 +41,17 @@ export class AuctionsGateway implements OnGatewayConnection {
       });
   }
 
-  @UseGuards(AuthGuard)
-  @SubscribeMessage(AuctionsWsIncomingEventsEnum.SUBSCRIBE)
-  async handleSubscription(
-    @MessageBody('id') id: string,
-    @CurrentUser('id') userId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    client.join(`auction-${id}`);
+  async handleSubscription(userId: string, auctionId: string) {
+    const userSocketId = this.findUserSocket(userId);
+    this.server.sockets.sockets.get(userSocketId)?.join(`auction-${auctionId}`);
+  }
 
-    const auction = await this.auctionsService.findOne(id, userId);
-    client.emit(AuctionsWsOutgoingEventsEnum.SUBSCRIBED, auction);
+  private findUserSocket(userId: string): string | null {
+    for (const [socketId, socket] of this.server.sockets.sockets) {
+      if (socket['user'].id === userId) {
+        return socketId;
+      }
+    }
+    return null;
   }
 }
