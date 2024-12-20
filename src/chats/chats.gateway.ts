@@ -33,13 +33,14 @@ export class ChatsGateway implements OnGatewayConnection {
     private readonly authGuard: AuthGuard,
   ) {}
 
-  @SubscribeMessage('createChat')
+  @SubscribeMessage(ChatWsIncomingEventsEnum.CREATE)
   async create(
     @MessageBody() createChatDto: CreateChatDto,
     @CurrentUser('id') userId: string,
     @ConnectedSocket() client: Socket,
   ) {
     const { id } = await this.chatsService.create({
+      name: createChatDto.name,
       participants: createChatDto.participants,
       userId,
     });
@@ -61,7 +62,7 @@ export class ChatsGateway implements OnGatewayConnection {
     return null;
   }
 
-  @SubscribeMessage(ChatWsIncomingEventsEnum.CREATE)
+  @SubscribeMessage(ChatWsIncomingEventsEnum.GET_ALL)
   async findAll(
     @MessageBody() findAllChats: FindAllChatsDto,
     @CurrentUser('id') userId: string,
@@ -71,6 +72,7 @@ export class ChatsGateway implements OnGatewayConnection {
       ChatWsOutgoingEventsEnum.ALL,
       await this.chatsService.findAll({
         userId,
+        name: findAllChats.name,
         page: findAllChats.page,
         take: findAllChats.take,
       }),
@@ -83,6 +85,7 @@ export class ChatsGateway implements OnGatewayConnection {
       await this.authGuard.validateWsRequest(context);
     } catch {
       client.disconnect();
+      return;
     }
     const userId = client['user'].id;
     let currentPage = 1;

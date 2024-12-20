@@ -13,6 +13,7 @@ export class ChatsService {
       createChat.userId,
       ...createChat.participants,
     ];
+
     if (participantsWithCreator.length === 2) {
       const existingChats = await this.chatsRepository.findAllChatsWithUsers(
         participantsWithCreator[0],
@@ -28,7 +29,15 @@ export class ChatsService {
         });
       }
     }
+
+    if (participantsWithCreator.length > 2 && !createChat.name) {
+      throw new WsException(
+        'Chat with more than 2 participants should have name',
+      );
+    }
+
     return this.chatsRepository.create({
+      name: createChat.name,
       participants: participantsWithCreator,
     });
   }

@@ -39,6 +39,7 @@ export class MessagesGateway implements OnGatewayConnection {
       await this.authGuard.validateWsRequest(context);
     } catch {
       client.disconnect();
+      return;
     }
   }
 

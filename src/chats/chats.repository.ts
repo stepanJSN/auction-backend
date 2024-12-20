@@ -8,9 +8,10 @@ import { FindAllChatsType } from './types/find-all-chats.type';
 @Injectable()
 export class ChatsRepository {
   constructor(private prisma: PrismaService) {}
-  create({ participants }: CreateChatDto) {
+  create({ participants, name }: CreateChatDto) {
     return this.prisma.chats.create({
       data: {
+        name,
         users: {
           connect: participants.map((participant) => ({ id: participant })),
         },
@@ -18,13 +19,42 @@ export class ChatsRepository {
     });
   }
 
-  async findAll({ userId, page = 1, take = 10 }: FindAllChatsType) {
+  async findAll({ userId, page = 1, take = 10, name }: FindAllChatsType) {
     const conditions = {
       users: {
         some: {
           id: userId,
         },
       },
+      OR: [
+        {
+          users: {
+            some: {
+              name: { contains: name },
+            },
+          },
+        },
+        {
+          users: {
+            some: {
+              surname: { contains: name },
+            },
+          },
+        },
+        {
+          users: {
+            some: {
+              AND: [
+                { name: { contains: name?.split(' ')[0] } },
+                {
+                  surname: { contains: name?.split(' ')[1] || '' },
+                },
+              ],
+            },
+          },
+        },
+        { name: { contains: name } },
+      ],
     };
     const [chats, totalCount] = await this.prisma.$transaction([
       this.prisma.chats.findMany({
