@@ -21,6 +21,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FindAllCards } from './dto/find-all-cards.dto';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { JWTPayload } from 'src/auth/types/auth.type';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
 @Controller('cards')
 export class CardsController {
@@ -56,6 +57,14 @@ export class CardsController {
       page: page ?? 1,
       take: take ?? 20,
     });
+  }
+
+  @Get('myCards')
+  findMyCards(
+    @CurrentUser('id') userId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.cardsService.findAllByUserId(userId, paginationDto);
   }
 
   @Get(':id')

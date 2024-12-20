@@ -10,6 +10,7 @@ import { CardsRepository } from './cards.repository';
 import { ImagesService } from 'src/images/images.service';
 import { FindAllCardsServiceType } from './types/find-all-cards-service.type';
 import { Role } from '@prisma/client';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
 const CARD_PER_ITERATION = 20;
 
@@ -89,6 +90,10 @@ export class CardsService {
     return this.cardsRepository.countNumberOfCards({
       isCreatedByAdmin: true,
     });
+  }
+
+  findAllByUserId(userId: string, { page = 1, take = 20 }: PaginationDto) {
+    return this.cardsRepository.findAll({ userId, page, take });
   }
 
   async findOne(id: string, includeEpisodes = false) {

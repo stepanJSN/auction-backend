@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllCardsType } from './types/find-all-cards.type';
 import { CreateCardType } from './types/create-card.type';
 import { UpdateCardType } from './types/update-card.type';
+import { CountNumberOfCardsType } from './types/count-number-of-cards.type';
 
 @Injectable()
 export class CardsRepository {
@@ -31,11 +32,22 @@ export class CardsRepository {
     return id;
   }
 
-  findAll({ active, isCreatedByAdmin, page, take }: FindAllCardsType) {
+  async findAll({
+    active,
+    isCreatedByAdmin,
+    page,
+    take,
+    userId,
+  }: FindAllCardsType) {
     return this.prisma.cards.findMany({
       where: {
         is_active: active,
         is_created_by_admin: isCreatedByAdmin,
+        card_instances: {
+          every: {
+            user_id: userId,
+          },
+        },
       },
       skip: (page - 1) * take,
       take,
@@ -45,14 +57,17 @@ export class CardsRepository {
   countNumberOfCards({
     active,
     isCreatedByAdmin,
-  }: {
-    active?: boolean;
-    isCreatedByAdmin?: boolean;
-  }) {
+    userId,
+  }: CountNumberOfCardsType) {
     return this.prisma.cards.count({
       where: {
         is_active: active,
         is_created_by_admin: isCreatedByAdmin,
+        card_instances: {
+          every: {
+            user_id: userId,
+          },
+        },
       },
     });
   }
