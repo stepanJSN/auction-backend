@@ -14,6 +14,7 @@ import {
 import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { SetEvent } from 'src/sets/enums/set-event.enum';
+import { GroupCardByParamType } from './types/group-card-by-param.type';
 
 @Injectable()
 export class CardInstancesService {
@@ -38,16 +39,8 @@ export class CardInstancesService {
     return this.cardInstancesRepository.count(cardId);
   }
 
-  async getTheMostAndTheLeastRepeatedCards() {
-    const mostRepeatedCard =
-      await this.cardInstancesRepository.mostRepeatedCard();
-    const leastRepeatedCard =
-      await this.cardInstancesRepository.leastRepeatedCard();
-
-    return {
-      mostRepeatedCard,
-      leastRepeatedCard,
-    };
+  groupCardByParam(groupCardByParam: GroupCardByParamType) {
+    return this.cardInstancesRepository.groupCardByParam(groupCardByParam);
   }
 
   @OnEvent(AuctionEvent.FINISHED)

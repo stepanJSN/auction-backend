@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllCardInstancesType } from './types/find-all-card-instances.type';
 import { CreateCardInstanceType } from './types/create-card-instance.type';
 import { UpdateCardInstanceType } from './types/update-card-instance.type';
+import { GroupCardByParamType } from './types/group-card-by-param.type';
 
 @Injectable()
 export class CardInstancesRepository {
@@ -46,33 +47,18 @@ export class CardInstancesRepository {
     return this.prisma.card_instances.count({ where: { card_id: cardId } });
   }
 
-  mostRepeatedCard() {
+  groupCardByParam({ param, sortOrder, take }: GroupCardByParamType) {
     return this.prisma.card_instances.groupBy({
-      by: ['card_id'],
+      by: [param],
       _count: {
-        card_id: true,
+        [param]: true,
       },
       orderBy: {
         _count: {
-          card_id: 'desc',
+          [param]: sortOrder,
         },
       },
-      take: 1,
-    });
-  }
-
-  leastRepeatedCard() {
-    return this.prisma.card_instances.groupBy({
-      by: ['card_id'],
-      _count: {
-        card_id: true,
-      },
-      orderBy: {
-        _count: {
-          card_id: 'asc',
-        },
-      },
-      take: 1,
+      take,
     });
   }
 }

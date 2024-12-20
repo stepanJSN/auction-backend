@@ -4,6 +4,7 @@ import { CardsService } from 'src/cards/cards.service';
 import { SetsService } from 'src/sets/sets.service';
 import { SetWithCardsType } from './types/set-with-cards.type';
 import { AuctionsService } from 'src/auctions/auctions.service';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class StatisticsService {
@@ -12,6 +13,7 @@ export class StatisticsService {
     private cardInstancesService: CardInstancesService,
     private setsService: SetsService,
     private auctionsService: AuctionsService,
+    private usersService: UsersService,
   ) {}
 
   async getCardsStatistics(page = 1, take = 20) {
@@ -95,15 +97,48 @@ export class StatisticsService {
     };
   }
 
-  async getGeneral() {
-    const mostAndLeastRepeatedCards =
-      await this.cardInstancesService.getTheMostAndTheLeastRepeatedCards();
+  async getTopUsersByCollectedCards(numberOfUsers: number) {
+    const usersId = await this.cardInstancesService.groupCardByParam({
+      param: 'user_id',
+      sortOrder: 'desc',
+      take: numberOfUsers,
+    });
 
-    const mostRepeatedCard = await this.cardsService.findOne(
-      mostAndLeastRepeatedCards.mostRepeatedCard[0].card_id,
+    return Promise.all(
+      usersId.map(async (userId) => {
+        const { id, name, surname } = await this.usersService.findOneById(
+          userId.user_id,
+        );
+        return {
+          id,
+          name,
+          surname,
+          numberOfCards: userId._count.user_id,
+        };
+      }),
     );
+  }
+
+  async getGeneral() {
+    const mostRepeatedCardId = await this.cardInstancesService.groupCardByParam(
+      {
+        param: 'card_id',
+        sortOrder: 'desc',
+        take: 1,
+      },
+    );
+    const mostRepeatedCard = await this.cardsService.findOne(
+      mostRepeatedCardId[0].card_id,
+    );
+
+    const leastRepeatedCardId =
+      await this.cardInstancesService.groupCardByParam({
+        param: 'card_id',
+        sortOrder: 'asc',
+        take: 1,
+      });
     const leastRepeatedCard = await this.cardsService.findOne(
-      mostAndLeastRepeatedCards.leastRepeatedCard[0].card_id,
+      leastRepeatedCardId[0].card_id,
     );
 
     const numberOfCardsCreatedByAdmin =
@@ -112,14 +147,12 @@ export class StatisticsService {
       mostRepeatedCard: {
         id: mostRepeatedCard.id,
         name: mostRepeatedCard.name,
-        numberOfInstances:
-          mostAndLeastRepeatedCards.mostRepeatedCard[0]._count.card_id,
+        numberOfInstances: mostRepeatedCardId[0]._count.card_id,
       },
       leastRepeatedCard: {
         id: leastRepeatedCard.id,
         name: leastRepeatedCard.name,
-        numberOfInstances:
-          mostAndLeastRepeatedCards.leastRepeatedCard[0]._count.card_id,
+        numberOfInstances: leastRepeatedCardId[0]._count.card_id,
       },
       numberOfCardsCreatedByAdmin,
     };
