@@ -3,12 +3,17 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { MessagesRepository } from './messages.repository';
 import { CreateMessageType } from './types/create-message.type';
 import { FindAllMessagesOfChatDto } from './dto/find-all-messages-of-chat.dto';
+import { MessagesGateway } from './messages.gateway';
 
 @Injectable()
 export class MessagesService {
-  constructor(private messagesRepository: MessagesRepository) {}
-  create(createMessage: CreateMessageType) {
-    return this.messagesRepository.create(createMessage);
+  constructor(
+    private messagesRepository: MessagesRepository,
+    private messagesGateway: MessagesGateway,
+  ) {}
+  async create(createMessage: CreateMessageType) {
+    const message = await this.messagesRepository.create(createMessage);
+    this.messagesGateway.newMessage(message.chat_id, message);
   }
 
   async findAll(findOneChatDto: FindAllMessagesOfChatDto) {
@@ -26,8 +31,8 @@ export class MessagesService {
     };
   }
 
-  update(updateMessageDto: UpdateMessageDto) {
-    return this.messagesRepository.update(updateMessageDto);
+  update(id: string, updateMessageDto: UpdateMessageDto) {
+    return this.messagesRepository.update(id, updateMessageDto);
   }
 
   remove(id: string) {

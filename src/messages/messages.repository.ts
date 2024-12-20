@@ -57,7 +57,7 @@ export class MessagesRepository {
     });
   }
 
-  async update({ id, message }: UpdateMessageDto) {
+  async update(id: string, { message }: UpdateMessageDto) {
     try {
       return this.prisma.messages.update({
         where: { id },

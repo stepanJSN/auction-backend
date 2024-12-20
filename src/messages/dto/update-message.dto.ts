@@ -3,6 +3,4 @@ import { CreateMessageDto } from './create-message.dto';
 
 export class UpdateMessageDto extends PartialType(
   OmitType(CreateMessageDto, ['chatId']),
-) {
-  id: string;
-}
+) {}

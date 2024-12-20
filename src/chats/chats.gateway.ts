@@ -1,25 +1,15 @@
 import {
   WebSocketGateway,
   WebSocketServer,
-  WsException,
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { ChatsService } from './chats.service';
-import {
-  forwardRef,
-  Inject,
-  UseGuards,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { forwardRef, Inject, UseGuards } from '@nestjs/common';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Server, Socket } from 'socket.io';
 import { ChatWsOutgoingEventsEnum } from './enums/chat-ws-events.enum';
 
 @UseGuards(AuthGuard)
-@UsePipes(
-  new ValidationPipe({ exceptionFactory: (errors) => new WsException(errors) }),
-)
 @WebSocketGateway()
 export class ChatsGateway implements OnGatewayConnection {
   @WebSocketServer()
