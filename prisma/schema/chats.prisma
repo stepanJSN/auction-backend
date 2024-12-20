@@ -1,6 +1,6 @@
 model chats {
   id         String   @id @default(uuid())
-  name       String
+  name       String?
   created_at DateTime @default(now())
 
   users    users[]
