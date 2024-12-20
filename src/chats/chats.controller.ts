@@ -36,7 +36,7 @@ export class ChatsController {
     @Query() findAllChats: FindAllChatsDto,
     @CurrentUser('id') userId: string,
   ) {
-    this.chatsService.findAll({
+    return this.chatsService.findAll({
       userId,
       name: findAllChats.name,
       page: findAllChats.page,
