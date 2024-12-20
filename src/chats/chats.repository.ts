@@ -64,6 +64,13 @@ export class ChatsRepository {
         },
         select: {
           id: true,
+          users: {
+            select: {
+              name: true,
+              surname: true,
+            },
+          },
+          name: true,
           messages: {
             select: {
               sender: {
