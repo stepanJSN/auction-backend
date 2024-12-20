@@ -98,12 +98,16 @@ export class StatisticsService {
   async getGeneral() {
     const mostAndLeastRepeatedCards =
       await this.cardInstancesService.getTheMostAndTheLeastRepeatedCards();
+
     const mostRepeatedCard = await this.cardsService.findOne(
       mostAndLeastRepeatedCards.mostRepeatedCard[0].card_id,
     );
     const leastRepeatedCard = await this.cardsService.findOne(
       mostAndLeastRepeatedCards.leastRepeatedCard[0].card_id,
     );
+
+    const numberOfCardsCreatedByAdmin =
+      await this.cardsService.countNumberOfCardsCreatedByAdmin();
     return {
       mostRepeatedCard: {
         id: mostRepeatedCard.id,
@@ -117,6 +121,7 @@ export class StatisticsService {
         numberOfInstances:
           mostAndLeastRepeatedCards.leastRepeatedCard[0]._count.card_id,
       },
+      numberOfCardsCreatedByAdmin,
     };
   }
 }
