@@ -44,7 +44,7 @@ export class CardsRepository {
         is_active: active,
         is_created_by_admin: isCreatedByAdmin,
         card_instances: {
-          every: {
+          some: {
             user_id: userId,
           },
         },
@@ -64,7 +64,7 @@ export class CardsRepository {
         is_active: active,
         is_created_by_admin: isCreatedByAdmin,
         card_instances: {
-          every: {
+          some: {
             user_id: userId,
           },
         },

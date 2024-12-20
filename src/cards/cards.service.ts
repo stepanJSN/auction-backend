@@ -92,8 +92,22 @@ export class CardsService {
     });
   }
 
-  findAllByUserId(userId: string, { page = 1, take = 20 }: PaginationDto) {
-    return this.cardsRepository.findAll({ userId, page, take });
+  async findAllByUserId(
+    userId: string,
+    { page = 1, take = 20 }: PaginationDto,
+  ) {
+    const cards = await this.cardsRepository.findAll({ userId, page, take });
+    const totalCount = await this.cardsRepository.countNumberOfCards({
+      userId,
+    });
+    return {
+      data: cards,
+      info: {
+        page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / take),
+      },
+    };
   }
 
   async findOne(id: string, includeEpisodes = false) {
