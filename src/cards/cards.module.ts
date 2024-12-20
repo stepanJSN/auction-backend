@@ -9,5 +9,6 @@ import { ImagesModule } from 'src/images/images.module';
   imports: [CardInstancesModule, ImagesModule],
   controllers: [CardsController],
   providers: [CardsService, CardsRepository],
+  exports: [CardsService],
 })
 export class CardsModule {}

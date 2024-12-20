@@ -40,6 +40,7 @@ export class AuctionsRepository {
     participantId,
     isUserLeader,
     isCompleted,
+    cardId,
     page,
     take,
   }: FindAllAuctionsType) {
@@ -94,6 +95,7 @@ export class AuctionsRepository {
         AND (${createdById ? `a.created_by_id = '${createdById}'` : '1'})
         AND (${locationId ? `c.location_id = ${locationId}` : '1'})
         AND (${cardName ? `c.name LIKE '%${cardName}%'` : '1'})
+        AND (${cardId ? `c.id = '${cardId}'` : '1'})
         AND (${fromPrice ? `b.bid_amount >= ${fromPrice}` : '1'})
         AND (${toPrice ? `b.bid_amount <= ${toPrice}` : '1'})
         AND (${
@@ -149,6 +151,7 @@ export class AuctionsRepository {
           AND (${createdById ? `a.created_by_id = '${createdById}'` : '1'})
           AND (${locationId ? `c.location_id = ${locationId}` : '1'})
           AND (${cardName ? `c.name LIKE '%${cardName}%'` : '1'})
+          AND (${cardId ? `c.id = '${cardId}'` : '1'})
           AND (${fromPrice ? `b_highest.bid_amount >= ${fromPrice}` : '1'})
           AND (${toPrice ? `b_highest.bid_amount <= ${toPrice}` : '1'})
           AND (${

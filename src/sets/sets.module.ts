@@ -9,5 +9,6 @@ import { UsersModule } from 'src/users/users.module';
   imports: [CardInstancesModule, UsersModule],
   controllers: [SetsController],
   providers: [SetsService, SetsRepository],
+  exports: [SetsService],
 })
 export class SetsModule {}

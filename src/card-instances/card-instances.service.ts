@@ -14,6 +14,7 @@ import {
 import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { SetEvent } from 'src/sets/enums/set-event.enum';
+import { GroupCardByParamType } from './types/group-card-by-param.type';
 
 @Injectable()
 export class CardInstancesService {
@@ -32,6 +33,14 @@ export class CardInstancesService {
 
   findAll(findAllCardInstances: FindAllCardInstancesType) {
     return this.cardInstancesRepository.findAll(findAllCardInstances);
+  }
+
+  countAllByCardId(cardId: string) {
+    return this.cardInstancesRepository.countByCardId(cardId);
+  }
+
+  groupCardByParam(groupCardByParam: GroupCardByParamType) {
+    return this.cardInstancesRepository.groupCardByParam(groupCardByParam);
   }
 
   @OnEvent(AuctionEvent.FINISHED)
