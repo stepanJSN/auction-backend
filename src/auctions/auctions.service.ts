@@ -22,6 +22,7 @@ import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { AuctionsGateway } from './auctions.gateway';
+import { CardsService } from 'src/cards/cards.service';
 
 @Injectable()
 export class AuctionsService {
@@ -30,9 +31,17 @@ export class AuctionsService {
     private cardInstancesService: CardInstancesService,
     private eventEmitter: EventEmitter2,
     private auctionsGateway: AuctionsGateway,
+    private cardsService: CardsService,
   ) {}
 
   async create(createAuctionDto: CreateAuctionServiceType) {
+    const isCardActive = await this.cardsService.isCardActive(
+      createAuctionDto.cardId,
+    );
+    if (!isCardActive) {
+      throw new BadRequestException('Card is not active');
+    }
+
     const cardInstance = await this.cardInstancesService
       .findAll({
         userId: createAuctionDto.createdBy,

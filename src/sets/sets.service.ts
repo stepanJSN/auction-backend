@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateSetDto } from './dto/create-set.dto';
 import { UpdateSetDto } from './dto/update-set.dto';
 import { SetsRepository } from './sets.repository';
@@ -16,6 +20,7 @@ import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { SetEvent } from './enums/set-event.enum';
 import { UserSetType } from './types/user-sets.type';
+import { CardsService } from 'src/cards/cards.service';
 
 const SETS_PER_ITERATION = 30;
 
@@ -25,9 +30,21 @@ export class SetsService {
     private setsRepository: SetsRepository,
     private cardInstancesService: CardInstancesService,
     private eventEmitter: EventEmitter2,
+    private cardsService: CardsService,
   ) {}
 
   async create(createSetDto: CreateSetDto) {
+    await Promise.all(
+      createSetDto.cardsId.map(async (cardId) => {
+        const isCardActive = await this.cardsService.isCardActive(cardId);
+        if (!isCardActive) {
+          throw new BadRequestException(
+            'One of the cards in the set is inactive',
+          );
+        }
+      }),
+    );
+
     const { id, cards, bonus } = await this.setsRepository.create(createSetDto);
 
     this.eventEmitter.emit(

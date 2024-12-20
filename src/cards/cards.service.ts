@@ -86,6 +86,11 @@ export class CardsService {
     return card;
   }
 
+  async isCardActive(id: string) {
+    const card = await this.findOne(id);
+    return card.is_active;
+  }
+
   async update(
     id: string,
     updateCardDto: UpdateCardDto,
