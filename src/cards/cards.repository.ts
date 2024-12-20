@@ -65,6 +65,7 @@ export class CardsRepository {
         type: updateCardData.type,
         gender: updateCardData.gender,
         image_url: updateCardData.imageUrl,
+        is_active: updateCardData.isActive,
         episodes: {
           set: updateCardData.episodesId?.map((episodeId) => ({
             id: episodeId,
