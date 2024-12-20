@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CardInstancesService } from 'src/card-instances/card-instances.service';
 import { CardsService } from 'src/cards/cards.service';
-import { CardInstanceStatisticType } from './types/card-instance-statistic.type';
 import { SetsService } from 'src/sets/sets.service';
 import { SetWithCardsType } from './types/set-with-cards.type';
+import { AuctionsService } from 'src/auctions/auctions.service';
 
 @Injectable()
 export class StatisticsService {
@@ -11,9 +11,10 @@ export class StatisticsService {
     private cardsService: CardsService,
     private cardInstancesService: CardInstancesService,
     private setsService: SetsService,
+    private auctionsService: AuctionsService,
   ) {}
 
-  async getNumberOfCardInstances(page = 1, take = 20) {
+  async getCardsStatistics(page = 1, take = 20) {
     const cards = await this.cardsService.findAll({
       page,
       take,
@@ -26,6 +27,7 @@ export class StatisticsService {
         numberOfInstances: await this.cardInstancesService.countAllByCardId(
           card.id,
         ),
+        averagePrice: await this.getCardAveragePrice(card.id),
       })),
     );
 
@@ -39,39 +41,25 @@ export class StatisticsService {
     };
   }
 
-  async getTheMostAndTheLeastWidespreadCard() {
-    let theMostWidespreadCard: CardInstanceStatisticType;
-    let theLeastWidespreadCard: CardInstanceStatisticType;
+  private async getCardAveragePrice(cardId: string) {
+    const cardHighestBids: number[] = [];
     let currentPage = 1;
-
     while (true) {
-      const { data: numberOfInstances, info } =
-        await this.getNumberOfCardInstances(currentPage, 1);
+      const { data, info } = await this.auctionsService.findAll({
+        cardId,
+        page: currentPage,
+        take: 30,
+      });
 
-      numberOfInstances.forEach((card) => {
-        if (
-          !theMostWidespreadCard ||
-          card.numberOfInstances > theMostWidespreadCard.numberOfInstances
-        ) {
-          theMostWidespreadCard = card;
-        }
-
-        if (
-          !theLeastWidespreadCard ||
-          card.numberOfInstances < theLeastWidespreadCard.numberOfInstances
-        ) {
-          theLeastWidespreadCard = card;
-        }
+      data.forEach((auction) => {
+        cardHighestBids.push(auction.highest_bid);
       });
 
       if (currentPage >= info.totalPages) break;
       currentPage++;
     }
 
-    return {
-      theMostWidespreadCard,
-      theLeastWidespreadCard,
-    };
+    return cardHighestBids.reduce((a, b) => a + b, 0) / cardHighestBids.length;
   }
 
   async getNumberOfUsersPerSet(page = 1, take = 20) {
@@ -103,6 +91,31 @@ export class StatisticsService {
         page,
         totalCount: sets.info.totalCount,
         totalPages: sets.info.totalPages,
+      },
+    };
+  }
+
+  async getGeneral() {
+    const mostAndLeastRepeatedCards =
+      await this.cardInstancesService.getTheMostAndTheLeastRepeatedCards();
+    const mostRepeatedCard = await this.cardsService.findOne(
+      mostAndLeastRepeatedCards.mostRepeatedCard[0].card_id,
+    );
+    const leastRepeatedCard = await this.cardsService.findOne(
+      mostAndLeastRepeatedCards.leastRepeatedCard[0].card_id,
+    );
+    return {
+      mostRepeatedCard: {
+        id: mostRepeatedCard.id,
+        name: mostRepeatedCard.name,
+        numberOfInstances:
+          mostAndLeastRepeatedCards.mostRepeatedCard[0]._count.card_id,
+      },
+      leastRepeatedCard: {
+        id: leastRepeatedCard.id,
+        name: leastRepeatedCard.name,
+        numberOfInstances:
+          mostAndLeastRepeatedCards.leastRepeatedCard[0]._count.card_id,
       },
     };
   }

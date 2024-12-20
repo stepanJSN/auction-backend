@@ -45,4 +45,34 @@ export class CardInstancesRepository {
   count(cardId: string) {
     return this.prisma.card_instances.count({ where: { card_id: cardId } });
   }
+
+  mostRepeatedCard() {
+    return this.prisma.card_instances.groupBy({
+      by: ['card_id'],
+      _count: {
+        card_id: true,
+      },
+      orderBy: {
+        _count: {
+          card_id: 'desc',
+        },
+      },
+      take: 1,
+    });
+  }
+
+  leastRepeatedCard() {
+    return this.prisma.card_instances.groupBy({
+      by: ['card_id'],
+      _count: {
+        card_id: true,
+      },
+      orderBy: {
+        _count: {
+          card_id: 'asc',
+        },
+      },
+      take: 1,
+    });
+  }
 }

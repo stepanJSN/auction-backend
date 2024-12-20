@@ -6,18 +6,18 @@ import { PaginationDto } from 'src/dto/pagination.dto';
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 
-  @Get('/numberOfCardInstances')
-  getNumberOfCardInstances(@Query() { page, take }: PaginationDto) {
-    return this.statisticsService.getNumberOfCardInstances(page, take);
+  @Get('/cardsStatistics')
+  getCardsSt(@Query() { page, take }: PaginationDto) {
+    return this.statisticsService.getCardsStatistics(page, take);
   }
 
-  @Get('/getTheNumberOfUsersPerSet')
+  @Get('/setsStatistics')
   getNumberOfUsersPerSet(@Query() { page, take }: PaginationDto) {
     return this.statisticsService.getNumberOfUsersPerSet(page, take);
   }
 
-  @Get('/cardsStatistics')
-  getCardsStatistics() {
-    return this.statisticsService.getTheMostAndTheLeastWidespreadCard();
+  @Get('/generalStatistics')
+  getGeneral() {
+    return this.statisticsService.getGeneral();
   }
 }

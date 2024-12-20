@@ -38,6 +38,18 @@ export class CardInstancesService {
     return this.cardInstancesRepository.count(cardId);
   }
 
+  async getTheMostAndTheLeastRepeatedCards() {
+    const mostRepeatedCard =
+      await this.cardInstancesRepository.mostRepeatedCard();
+    const leastRepeatedCard =
+      await this.cardInstancesRepository.leastRepeatedCard();
+
+    return {
+      mostRepeatedCard,
+      leastRepeatedCard,
+    };
+  }
+
   @OnEvent(AuctionEvent.FINISHED)
   async updateCardOwner(event: AuctionsFinishedEvent) {
     await this.cardInstancesRepository.update(event.cardInstanceId, {
