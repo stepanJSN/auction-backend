@@ -43,7 +43,7 @@ export class CardInstancesRepository {
     });
   }
 
-  count(cardId: string) {
+  countByCardId(cardId: string) {
     return this.prisma.card_instances.count({ where: { card_id: cardId } });
   }
 

@@ -36,7 +36,7 @@ export class CardInstancesService {
   }
 
   countAllByCardId(cardId: string) {
-    return this.cardInstancesRepository.count(cardId);
+    return this.cardInstancesRepository.countByCardId(cardId);
   }
 
   groupCardByParam(groupCardByParam: GroupCardByParamType) {
