@@ -8,6 +8,7 @@ import { CardInstancesModule } from 'src/card-instances/card-instances.module';
 import { AuctionsCronService } from './auctions-cron.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ConfigService } from '@nestjs/config';
     AuctionsRepository,
     AuctionsGateway,
     AuctionsCronService,
+    AuthGuard,
   ],
   exports: [AuctionsService],
 })

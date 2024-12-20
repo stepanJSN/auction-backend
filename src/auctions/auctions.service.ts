@@ -21,6 +21,7 @@ import {
 import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
+import { AuctionsGateway } from './auctions.gateway';
 
 @Injectable()
 export class AuctionsService {
@@ -28,6 +29,7 @@ export class AuctionsService {
     private auctionRepository: AuctionsRepository,
     private cardInstancesService: CardInstancesService,
     private eventEmitter: EventEmitter2,
+    private auctionsGateway: AuctionsGateway,
   ) {}
 
   async create(createAuctionDto: CreateAuctionServiceType) {
@@ -86,6 +88,7 @@ export class AuctionsService {
     const { bids, card_instance, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
+    this.auctionsGateway.handleSubscription(userId, id);
 
     const isUserHasThisCard = await this.cardInstancesService
       .findAll({
