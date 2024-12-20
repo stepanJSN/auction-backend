@@ -1,13 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { ChatsRepository } from './chats.repository';
 import { CreateChatType } from './types/create-chat.type';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { WsException } from '@nestjs/websockets';
 import { FindAllChatsType } from './types/find-all-chats.type';
+import { ChatsGateway } from './chats.gateway';
 
 @Injectable()
 export class ChatsService {
-  constructor(private readonly chatsRepository: ChatsRepository) {}
+  constructor(
+    private readonly chatsRepository: ChatsRepository,
+    @Inject(forwardRef(() => ChatsGateway))
+    private chatsGateway: ChatsGateway,
+  ) {}
   async create(createChat: CreateChatType) {
     const participantsWithCreator = [
       createChat.userId,
@@ -23,7 +32,7 @@ export class ChatsService {
         (chat) => chat.users.length === 2,
       );
       if (existingPrivateChat) {
-        throw new WsException({
+        throw new BadRequestException({
           id: existingPrivateChat.id,
           message: 'Chat already exists',
         });
@@ -31,15 +40,19 @@ export class ChatsService {
     }
 
     if (participantsWithCreator.length > 2 && !createChat.name) {
-      throw new WsException(
+      throw new BadRequestException(
         'Chat with more than 2 participants should have name',
       );
     }
 
-    return this.chatsRepository.create({
+    const chat = await this.chatsRepository.create({
       name: createChat.name,
       participants: participantsWithCreator,
     });
+
+    this.chatsGateway.create(chat.id, participantsWithCreator);
+
+    return chat;
   }
 
   async findAll(findAllChats: FindAllChatsType) {
@@ -55,11 +68,12 @@ export class ChatsService {
     };
   }
 
-  update(updateChatDto: UpdateChatDto) {
-    return this.chatsRepository.update(updateChatDto);
+  update(id: string, updateChatDto: UpdateChatDto) {
+    return this.chatsRepository.update(id, updateChatDto);
   }
 
-  remove(id: string) {
-    return this.chatsRepository.remove(id);
+  async remove(id: string) {
+    await this.chatsRepository.remove(id);
+    this.chatsGateway.remove(id);
   }
 }

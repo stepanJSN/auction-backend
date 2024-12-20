@@ -1,24 +1,20 @@
 import {
   WebSocketGateway,
-  SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
   WebSocketServer,
   WsException,
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { ChatsService } from './chats.service';
-import { UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
-import { AuthGuard } from 'src/guards/auth.guard';
-import { CurrentUser } from 'src/decorators/user.decorator';
-import { Server, Socket } from 'socket.io';
-import { FindAllChatsDto } from './dto/find-all-chats.dto';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
 import {
-  ChatWsIncomingEventsEnum,
-  ChatWsOutgoingEventsEnum,
-} from './enums/chat-ws-events.enum';
+  forwardRef,
+  Inject,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { Server, Socket } from 'socket.io';
+import { ChatWsOutgoingEventsEnum } from './enums/chat-ws-events.enum';
 
 @UseGuards(AuthGuard)
 @UsePipes(
@@ -29,23 +25,13 @@ export class ChatsGateway implements OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
   constructor(
+    @Inject(forwardRef(() => ChatsService))
     private readonly chatsService: ChatsService,
     private readonly authGuard: AuthGuard,
   ) {}
 
-  @SubscribeMessage(ChatWsIncomingEventsEnum.CREATE)
-  async create(
-    @MessageBody() createChatDto: CreateChatDto,
-    @CurrentUser('id') userId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    const { id } = await this.chatsService.create({
-      name: createChatDto.name,
-      participants: createChatDto.participants,
-      userId,
-    });
-    client.join(id);
-    createChatDto.participants.forEach((participant) => {
+  async create(id: string, participantsId: string[]) {
+    participantsId.forEach((participant) => {
       const receiverSocketId = this.findReceiverSocket(participant);
       if (receiverSocketId) {
         this.server.sockets.sockets.get(receiverSocketId)?.join(id);
@@ -60,23 +46,6 @@ export class ChatsGateway implements OnGatewayConnection {
       }
     }
     return null;
-  }
-
-  @SubscribeMessage(ChatWsIncomingEventsEnum.GET_ALL)
-  async findAll(
-    @MessageBody() findAllChats: FindAllChatsDto,
-    @CurrentUser('id') userId: string,
-    @ConnectedSocket() client: Socket,
-  ) {
-    client.emit(
-      ChatWsOutgoingEventsEnum.ALL,
-      await this.chatsService.findAll({
-        userId,
-        name: findAllChats.name,
-        page: findAllChats.page,
-        take: findAllChats.take,
-      }),
-    );
   }
 
   async handleConnection(client: Socket) {
@@ -103,14 +72,7 @@ export class ChatsGateway implements OnGatewayConnection {
     }
   }
 
-  @SubscribeMessage(ChatWsIncomingEventsEnum.UPDATE)
-  async update(@MessageBody() updateChatDto: UpdateChatDto) {
-    await this.chatsService.update(updateChatDto);
-  }
-
-  @SubscribeMessage(ChatWsIncomingEventsEnum.DELETE)
-  async remove(@MessageBody('id') id: string) {
-    await this.chatsService.remove(id);
+  remove(id: string) {
     this.server.to(id).emit(ChatWsOutgoingEventsEnum.DELETED, id);
     this.server.in(id).socketsLeave(id);
   }

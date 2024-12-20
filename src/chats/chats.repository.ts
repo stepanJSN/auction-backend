@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
-import { WsException } from '@nestjs/websockets';
 import { FindAllChatsType } from './types/find-all-chats.type';
 
 @Injectable()
@@ -113,7 +112,7 @@ export class ChatsRepository {
     });
   }
 
-  async update({ id, participants }: UpdateChatDto) {
+  async update(id: string, { participants }: UpdateChatDto) {
     try {
       return await this.prisma.chats.update({
         where: { id },
@@ -124,7 +123,7 @@ export class ChatsRepository {
         },
       });
     } catch {
-      throw new WsException('Chat not found');
+      throw new NotFoundException('Chat not found');
     }
   }
 

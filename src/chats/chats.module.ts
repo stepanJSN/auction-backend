@@ -5,6 +5,7 @@ import { ChatsRepository } from './chats.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { ChatsController } from './chats.controller';
 
 @Module({
   imports: [
@@ -16,5 +17,6 @@ import { AuthGuard } from 'src/guards/auth.guard';
     }),
   ],
   providers: [ChatsGateway, ChatsService, ChatsRepository, AuthGuard],
+  controllers: [ChatsController],
 })
 export class ChatsModule {}
