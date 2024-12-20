@@ -24,10 +24,14 @@ export class CardsService {
   private async areNotAllCardsSoldByAPI(): Promise<boolean> {
     let currentPage = 1;
     while (true) {
-      const { cards, totalCount } = await this.cardsRepository.findAll({
+      const cards = await this.cardsRepository.findAll({
         isCreatedByAdmin: false,
         page: currentPage,
         take: CARD_PER_ITERATION,
+      });
+
+      const totalCount = await this.cardsRepository.countNumberOfCards({
+        isCreatedByAdmin: false,
       });
 
       const cardInstances = await this.cardInstancesService.findAll({
@@ -55,10 +59,13 @@ export class CardsService {
   }
 
   async findAll({ userId, role, page, take }: FindAllCardsServiceType) {
-    const { cards, totalCount } = await this.cardsRepository.findAll({
+    const cards = await this.cardsRepository.findAll({
       active: role === Role.User,
       page,
       take,
+    });
+    const totalCount = await this.cardsRepository.countNumberOfCards({
+      active: role === Role.User,
     });
     const info = {
       page,
@@ -76,6 +83,12 @@ export class CardsService {
       data: cardsWithOwnershipFlag,
       info,
     };
+  }
+
+  countNumberOfCardsCreatedByAdmin() {
+    return this.cardsRepository.countNumberOfCards({
+      isCreatedByAdmin: true,
+    });
   }
 
   async findOne(id: string, includeEpisodes = false) {

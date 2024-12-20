@@ -31,21 +31,30 @@ export class CardsRepository {
     return id;
   }
 
-  async findAll({ active, isCreatedByAdmin, page, take }: FindAllCardsType) {
-    const conditions = {
-      is_active: active,
-      is_created_by_admin: isCreatedByAdmin,
-    };
+  findAll({ active, isCreatedByAdmin, page, take }: FindAllCardsType) {
+    return this.prisma.cards.findMany({
+      where: {
+        is_active: active,
+        is_created_by_admin: isCreatedByAdmin,
+      },
+      skip: (page - 1) * take,
+      take,
+    });
+  }
 
-    const [cards, totalCount] = await this.prisma.$transaction([
-      this.prisma.cards.findMany({
-        where: conditions,
-        skip: (page - 1) * take,
-        take,
-      }),
-      this.prisma.cards.count({ where: conditions }),
-    ]);
-    return { cards, totalCount };
+  countNumberOfCards({
+    active,
+    isCreatedByAdmin,
+  }: {
+    active?: boolean;
+    isCreatedByAdmin?: boolean;
+  }) {
+    return this.prisma.cards.count({
+      where: {
+        is_active: active,
+        is_created_by_admin: isCreatedByAdmin,
+      },
+    });
   }
 
   findOneById(cardId: string, includeEpisodes = false) {

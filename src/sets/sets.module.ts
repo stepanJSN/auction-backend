@@ -10,5 +10,6 @@ import { CardsModule } from 'src/cards/cards.module';
   imports: [CardInstancesModule, UsersModule, CardsModule],
   controllers: [SetsController],
   providers: [SetsService, SetsRepository],
+  exports: [SetsService],
 })
 export class SetsModule {}
