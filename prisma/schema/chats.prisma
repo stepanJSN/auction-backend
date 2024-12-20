@@ -1,9 +1,8 @@
 model chats {
-  id          String   @id @default(uuid())
-  sender      users    @relation("sender", fields: [sender_id], references: [id], onDelete: Cascade)
-  sender_id   String
-  receiver    users    @relation("receiver", fields: [receiver_id], references: [id], onDelete: Cascade)
-  receiver_id String
-  message     String
-  created_at  DateTime @default(now())
+  id         String   @id @default(uuid())
+  name       String?
+  created_at DateTime @default(now())
+
+  users    users[]
+  messages messages[]
 }
