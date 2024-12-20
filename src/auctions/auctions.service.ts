@@ -33,7 +33,14 @@ export class AuctionsService {
   ) {}
 
   async create(createAuctionDto: CreateAuctionServiceType) {
-    if (createAuctionDto.role === Role.Admin) {
+    const cardInstance = await this.cardInstancesService
+      .findAll({
+        userId: createAuctionDto.createdBy,
+        cardsId: [createAuctionDto.cardId],
+      })
+      .then((cardInstances) => cardInstances.pop());
+
+    if (createAuctionDto.role === Role.Admin && !cardInstance) {
       const { id: cardInstanceId } = await this.cardInstancesService.create({
         userId: createAuctionDto.createdBy,
         cardId: createAuctionDto.cardId,
@@ -43,13 +50,6 @@ export class AuctionsService {
         cardInstanceId,
       });
     }
-
-    const cardInstance = await this.cardInstancesService
-      .findAll({
-        userId: createAuctionDto.createdBy,
-        cardsId: [createAuctionDto.cardId],
-      })
-      .then((cardInstances) => cardInstances.pop());
 
     if (!cardInstance) {
       throw new BadRequestException("You don't have this card");
