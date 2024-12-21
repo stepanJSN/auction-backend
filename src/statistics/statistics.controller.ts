@@ -11,9 +11,9 @@ import { Role } from '@prisma/client';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 
-@Roles(Role.Admin)
-@UseGuards(RoleGuard)
 @Controller('statistics')
+@UseGuards(RoleGuard)
+@Roles(Role.Admin)
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 

@@ -22,6 +22,7 @@ import { Role } from '@prisma/client';
 import { RoleGuard } from 'src/guards/role.guard';
 
 @Controller('users')
+@UseGuards(RoleGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -31,9 +32,8 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Roles(Role.Admin)
-  @UseGuards(RoleGuard)
   @Get()
+  @Roles(Role.Admin)
   findAll(@Query() findAllUsersDto: FindAllUsersDto) {
     return this.usersService.findAll(findAllUsersDto);
   }
@@ -51,9 +51,8 @@ export class UsersController {
     return this.usersService.update(id, updateUserDto);
   }
 
-  @Roles(Role.Admin)
-  @UseGuards(RoleGuard)
   @Patch('/role')
+  @Roles(Role.Admin)
   changeRole(@Body() changeRoleDto: ChangeRoleDto) {
     return this.usersService.changeRole(changeRoleDto);
   }
