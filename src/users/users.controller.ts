@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { FindAllUsers } from './dto/find-all-users.dto';
+import { FindAllUsersDto } from './dto/find-all-users.dto';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -34,8 +34,8 @@ export class UsersController {
   @Roles(Role.Admin)
   @UseGuards(RoleGuard)
   @Get()
-  findAll(@Query() findAllUsers: FindAllUsers) {
-    return this.usersService.findAll(findAllUsers.page, findAllUsers.take);
+  findAll(@Query() findAllUsersDto: FindAllUsersDto) {
+    return this.usersService.findAll(findAllUsersDto);
   }
 
   @Get('/:userId')

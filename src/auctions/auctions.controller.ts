@@ -15,6 +15,7 @@ import { UpdateAuctionDto } from './dto/update-auction.dto';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { JWTPayload } from 'src/auth/types/auth.type';
 import { FindAllAuctionsDto } from './dto/find-all-auction.dto';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
 @Controller('auctions')
 export class AuctionsController {
@@ -46,7 +47,7 @@ export class AuctionsController {
     });
   }
 
-  @Get('/myAuctions')
+  @Get('/createdByMe')
   findAllByUser(
     @CurrentUser('id') userId: string,
     @Query() findAllAuctionsDto: FindAllAuctionsDto,
@@ -56,6 +57,20 @@ export class AuctionsController {
       createdById: userId,
       take: findAllAuctionsDto.take ?? 20,
       page: findAllAuctionsDto.page ?? 1,
+    });
+  }
+
+  @Get('/wonByMe')
+  findAllWonByUser(
+    @CurrentUser('id') userId: string,
+    @Query() { take = 20, page = 1 }: PaginationDto,
+  ) {
+    return this.auctionsService.findAll({
+      participantId: userId,
+      isCompleted: true,
+      isUserLeader: true,
+      take: take,
+      page: page,
     });
   }
 
