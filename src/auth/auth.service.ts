@@ -14,7 +14,7 @@ export class AuthService {
     private jwtService: JwtService,
     private userService: UsersService,
   ) {}
-  private async generateToken(
+  private generateToken(
     payload: JWTPayload,
     expiresIn: number,
   ): Promise<string> {
@@ -60,6 +60,9 @@ export class AuthService {
   async getNewAccessToken(refreshToken: string) {
     const result = await this.jwtService.verifyAsync(refreshToken);
     if (!result) throw new UnauthorizedException('Invalid refresh token');
-    return await this.generateToken(result, TEN_MINUTES_IN_SECONDS);
+    return await this.generateToken(
+      { id: result.id, email: result.email, role: result.role },
+      TEN_MINUTES_IN_SECONDS,
+    );
   }
 }

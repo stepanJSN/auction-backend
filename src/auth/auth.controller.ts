@@ -43,18 +43,19 @@ export class AuthController {
       throw new UnauthorizedException('Refresh token not passed');
     }
 
-    return this.authService.getNewAccessToken(refreshToken);
+    return {
+      accessToken: await this.authService.getNewAccessToken(refreshToken),
+    };
   }
 
   @Public()
   @Get('logout')
-  logout(@Res() response: Response) {
+  logout(@Res({ passthrough: true }) response: Response) {
     response.cookie('refreshToken', '', {
       httpOnly: true,
       sameSite: 'none',
       secure: true,
       expires: new Date(0),
     });
-    return { success: true };
   }
 }
