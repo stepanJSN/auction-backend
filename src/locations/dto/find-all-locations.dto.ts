@@ -1,27 +1,8 @@
-import { Transform } from 'class-transformer';
-import {
-  IsNumberString,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
-export class FindAllLocationsDto {
+export class FindAllLocationsDto extends PaginationDto {
   @IsOptional()
   @IsString()
   name: string;
-
-  @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
-  @Min(1)
-  @Max(50)
-  take?: number;
-
-  @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
-  @Min(1)
-  page?: number;
 }
