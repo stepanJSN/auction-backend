@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserType } from './types/update-user.type';
 import { CreateUserType } from './types/create-user.type';
+import { FindAllUsersDto } from './dto/find-all-users.dto';
 
 @Injectable()
 export class UsersRepository {
@@ -27,7 +28,12 @@ export class UsersRepository {
     });
   }
 
-  async findAll(page: number, take: number) {
+  async findAll({
+    page = 1,
+    take = 10,
+    sortType = 'creationDate',
+    sortOrder = 'desc',
+  }: FindAllUsersDto) {
     const [users, totalCount] = await this.prisma.$transaction([
       this.prisma.users.findMany({
         select: {
@@ -36,6 +42,9 @@ export class UsersRepository {
           surname: true,
           rating: true,
           role: true,
+        },
+        orderBy: {
+          [sortType === 'creationDate' ? 'created_at' : 'rating']: sortOrder,
         },
         skip: (page - 1) * take,
         take,

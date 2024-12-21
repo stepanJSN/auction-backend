@@ -11,6 +11,7 @@ import { ChangeRoleDto } from './dto/change-role.dto';
 import { OnEvent } from '@nestjs/event-emitter';
 import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
 import { RatingEvent } from './enums/rating-event.enum';
+import { FindAllUsersDto } from './dto/find-all-users.dto';
 
 @Injectable()
 export class UsersService {
@@ -40,11 +41,12 @@ export class UsersService {
     return this.usersRepository.findOneByEmail(email);
   }
 
-  async findAll(page = 1, take = 10) {
-    const { users, totalCount } = await this.usersRepository.findAll(
+  async findAll({ page = 1, take = 10, ...findAllUsersDto }: FindAllUsersDto) {
+    const { users, totalCount } = await this.usersRepository.findAll({
       page,
       take,
-    );
+      ...findAllUsersDto,
+    });
     return {
       data: users,
       info: {
