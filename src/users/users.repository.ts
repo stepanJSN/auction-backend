@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UpdateUserType } from './types/update-user.type';
 import { CreateUserType } from './types/create-user.type';
 import { FindAllUsersDto } from './dto/find-all-users.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersRepository {
@@ -31,11 +32,16 @@ export class UsersRepository {
   async findAll({
     page = 1,
     take = 10,
+    isAdmin,
     sortType = 'creationDate',
     sortOrder = 'desc',
   }: FindAllUsersDto) {
+    const condition = {
+      role: isAdmin ? Role.Admin : undefined,
+    };
     const [users, totalCount] = await this.prisma.$transaction([
       this.prisma.users.findMany({
+        where: condition,
         select: {
           id: true,
           name: true,
@@ -49,7 +55,7 @@ export class UsersRepository {
         skip: (page - 1) * take,
         take,
       }),
-      this.prisma.users.count(),
+      this.prisma.users.count({ where: condition }),
     ]);
     return { users, totalCount };
   }
