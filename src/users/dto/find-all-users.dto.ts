@@ -1,17 +1,12 @@
-import { Transform } from 'class-transformer';
-import { IsNumberString, IsOptional, Max, Min } from 'class-validator';
+import { IsIn, IsOptional } from 'class-validator';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
-export class FindAllUsers {
+export class FindAllUsersDto extends PaginationDto {
   @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
-  @Min(1)
-  @Max(50)
-  take?: number;
+  @IsIn(['creationDate', 'rating'])
+  sortType?: 'creationDate' | 'rating';
 
   @IsOptional()
-  @IsNumberString()
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
-  @Min(1)
-  page?: number;
+  @IsIn(['asc', 'desc'])
+  sortOrder?: 'asc' | 'desc';
 }
