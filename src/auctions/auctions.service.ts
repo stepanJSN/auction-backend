@@ -70,20 +70,28 @@ export class AuctionsService {
     });
   }
 
-  async findAll(findAllAuctionsData: FindAllAuctionsType) {
+  async findAll({
+    page = 1,
+    take = 20,
+    isUserTakePart,
+    isUserLeader,
+    participantId,
+    ...findAllAuctionsData
+  }: FindAllAuctionsType) {
     const { auctions, totalCount } = await this.auctionRepository.findAll({
       ...findAllAuctionsData,
-      participantId:
-        findAllAuctionsData.isUserTakePart || findAllAuctionsData.isUserLeader
-          ? findAllAuctionsData.participantId
-          : undefined,
+      page,
+      take,
+      isUserLeader,
+      isUserTakePart,
+      participantId: isUserTakePart || isUserLeader ? participantId : undefined,
     });
     return {
       data: auctions,
       info: {
-        page: findAllAuctionsData.page,
+        page,
         totalCount,
-        totalPages: Math.ceil(totalCount / findAllAuctionsData.take),
+        totalPages: Math.ceil(totalCount / take),
       },
     };
   }
