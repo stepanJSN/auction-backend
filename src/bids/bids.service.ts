@@ -75,9 +75,8 @@ export class BidsService {
     }
 
     if (
-      auction.min_bid_step >
-      createBidData.bidAmount -
-        (auction.highestBid.amount ?? auction.starting_bid)
+      auction.highestBid.amount &&
+      auction.min_bid_step > createBidData.bidAmount - auction.highestBid.amount
     ) {
       throw new BadRequestException({
         code: BidExceptionCode.BID_NOT_EXCEEDS_MINIMUM_STEP,

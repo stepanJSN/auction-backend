@@ -1,15 +1,8 @@
 import { Transform, Type } from 'class-transformer';
-import {
-  IsBoolean,
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString } from 'class-validator';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
-export class FindAllAuctionsDto {
+export class FindAllAuctionsDto extends PaginationDto {
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
   @IsInt()
@@ -46,15 +39,4 @@ export class FindAllAuctionsDto {
   @IsOptional()
   @IsIn(['creationDate', 'finishDate', 'highestBid'])
   sortBy?: 'creationDate' | 'finishDate' | 'highestBid';
-
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
-  @Min(1)
-  @Max(50)
-  take?: number;
-
-  @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10), { toClassOnly: true })
-  @Min(1)
-  page?: number;
 }

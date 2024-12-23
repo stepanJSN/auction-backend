@@ -105,17 +105,13 @@ export class CardInstancesService {
     cardsId,
     forEachUserWithSet,
   }: FindAllUsersWithSetType) {
-    const cardInstances = await this.findAll({
-      cardsId,
-    });
-
-    cardInstances.reduce((users, cardInstance) => {
-      users[cardInstance.user_id] = (users[cardInstance.user_id] || 0) + 1;
-      if (users[cardInstance.user_id] === cardsId.length) {
-        forEachUserWithSet(cardInstance.user_id);
+    const users =
+      await this.cardInstancesRepository.groupByUserIdWithCards(cardsId);
+    users.forEach((user) => {
+      if (user._count.card_id === cardsId.length) {
+        forEachUserWithSet(user.user_id);
       }
-      return users;
-    }, {});
+    });
   }
 
   async attachOwnershipFlag(cards: CardType[], userId: string) {

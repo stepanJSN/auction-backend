@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,9 +13,9 @@ export class LocationsService {
   constructor(private locationsRepository: LocationsRepository) {}
 
   private async checkLocationName(name: string) {
-    const locations = await this.findAll({ name });
-    if (locations) {
-      throw new BadRequestException('Location with this name already exists');
+    const { locations } = await this.locationsRepository.findAll({ name });
+    if (locations.length > 0) {
+      throw new ConflictException('Location with this name already exists');
     }
   }
 
@@ -25,15 +25,22 @@ export class LocationsService {
     return this.locationsRepository.create(createLocationDto);
   }
 
-  async findAll(findAllLocationsDto: FindAllLocationsDto) {
-    const { locations, totalCount } =
-      await this.locationsRepository.findAll(findAllLocationsDto);
+  async findAll({
+    page = 1,
+    take = 20,
+    ...findAllLocationsDto
+  }: FindAllLocationsDto) {
+    const { locations, totalCount } = await this.locationsRepository.findAll({
+      page,
+      take,
+      ...findAllLocationsDto,
+    });
     return {
       data: locations,
       info: {
-        page: findAllLocationsDto.page,
+        page: page,
         totalCount,
-        totalPages: Math.ceil(totalCount / findAllLocationsDto.take),
+        totalPages: Math.ceil(totalCount / take),
       },
     };
   }

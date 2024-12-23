@@ -1,16 +1,8 @@
-import { IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
-export class FindAllChatsDto {
+export class FindAllChatsDto extends PaginationDto {
   @IsOptional()
   @IsString()
   name?: string;
-
-  @IsOptional()
-  @Min(1)
-  @Max(50)
-  take?: number;
-
-  @IsOptional()
-  @Min(1)
-  page?: number;
 }

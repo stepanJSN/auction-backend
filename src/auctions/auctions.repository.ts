@@ -41,8 +41,8 @@ export class AuctionsRepository {
     isUserLeader,
     isCompleted,
     cardId,
-    page,
-    take,
+    page = 1,
+    take = 20,
   }: FindAllAuctionsType) {
     const sortColumn = {
       creationDate: 'a.created_at',
@@ -112,7 +112,7 @@ export class AuctionsRepository {
         a.id, b_highest.bid_amount, b_highest.user_id
       ORDER BY
         ${sortColumn} ${sortDirection}
-      ${take && page ? `LIMIT ${take} OFFSET ${(page - 1) * take}` : ''};
+      LIMIT ${take} OFFSET ${(page - 1) * take};
     `,
     )) as unknown as AuctionsPrismaType[];
 

@@ -22,6 +22,7 @@ import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { AuctionsGateway } from './auctions.gateway';
+import { CardsService } from 'src/cards/cards.service';
 
 @Injectable()
 export class AuctionsService {
@@ -30,10 +31,25 @@ export class AuctionsService {
     private cardInstancesService: CardInstancesService,
     private eventEmitter: EventEmitter2,
     private auctionsGateway: AuctionsGateway,
+    private cardsService: CardsService,
   ) {}
 
   async create(createAuctionDto: CreateAuctionServiceType) {
-    if (createAuctionDto.role === Role.Admin) {
+    const isCardActive = await this.cardsService.isCardActive(
+      createAuctionDto.cardId,
+    );
+    if (!isCardActive) {
+      throw new BadRequestException('Card is not active');
+    }
+
+    const cardInstance = await this.cardInstancesService
+      .findAll({
+        userId: createAuctionDto.createdBy,
+        cardsId: [createAuctionDto.cardId],
+      })
+      .then((cardInstances) => cardInstances.pop());
+
+    if (createAuctionDto.role === Role.Admin && !cardInstance) {
       const { id: cardInstanceId } = await this.cardInstancesService.create({
         userId: createAuctionDto.createdBy,
         cardId: createAuctionDto.cardId,
@@ -43,13 +59,6 @@ export class AuctionsService {
         cardInstanceId,
       });
     }
-
-    const cardInstance = await this.cardInstancesService
-      .findAll({
-        userId: createAuctionDto.createdBy,
-        cardsId: [createAuctionDto.cardId],
-      })
-      .then((cardInstances) => cardInstances.pop());
 
     if (!cardInstance) {
       throw new BadRequestException("You don't have this card");
@@ -61,20 +70,28 @@ export class AuctionsService {
     });
   }
 
-  async findAll(findAllAuctionsData: FindAllAuctionsType) {
+  async findAll({
+    page = 1,
+    take = 20,
+    isUserTakePart,
+    isUserLeader,
+    participantId,
+    ...findAllAuctionsData
+  }: FindAllAuctionsType) {
     const { auctions, totalCount } = await this.auctionRepository.findAll({
       ...findAllAuctionsData,
-      participantId:
-        findAllAuctionsData.isUserTakePart || findAllAuctionsData.isUserLeader
-          ? findAllAuctionsData.participantId
-          : undefined,
+      page,
+      take,
+      isUserLeader,
+      isUserTakePart,
+      participantId: isUserTakePart || isUserLeader ? participantId : undefined,
     });
     return {
       data: auctions,
       info: {
-        page: findAllAuctionsData.page,
+        page,
         totalCount,
-        totalPages: Math.ceil(totalCount / findAllAuctionsData.take),
+        totalPages: Math.ceil(totalCount / take),
       },
     };
   }
@@ -147,6 +164,7 @@ export class AuctionsService {
         cardInstanceId: card_instance_id,
         winnerId: highestBid.user_id,
         sellerId: created_by_id,
+        highestBid: highestBid.bid_amount,
       }),
     );
 
@@ -180,7 +198,7 @@ export class AuctionsService {
 
     if (diffInMinutes < min_length) {
       const newEndTime = new Date(
-        event.createdAt.getTime() + min_length * 1000,
+        event.createdAt.getTime() + min_length * 60 * 1000,
       );
       await this.update(event.auctionId, {
         endTime: newEndTime,

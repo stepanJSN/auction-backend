@@ -10,6 +10,7 @@ import { CardsRepository } from './cards.repository';
 import { ImagesService } from 'src/images/images.service';
 import { FindAllCardsServiceType } from './types/find-all-cards-service.type';
 import { Role } from '@prisma/client';
+import { PaginationDto } from 'src/dto/pagination.dto';
 
 const CARD_PER_ITERATION = 20;
 
@@ -58,14 +59,19 @@ export class CardsService {
     return this.cardsRepository.create({ ...createCardDto, imageUrl });
   }
 
-  async findAll({ userId, role, page, take }: FindAllCardsServiceType) {
+  async findAll({
+    userId,
+    role,
+    page = 1,
+    take = 20,
+  }: FindAllCardsServiceType) {
     const cards = await this.cardsRepository.findAll({
-      active: role === Role.User,
+      active: role === Role.User || undefined,
       page,
       take,
     });
     const totalCount = await this.cardsRepository.countNumberOfCards({
-      active: role === Role.User,
+      active: role === Role.User || undefined,
     });
     const info = {
       page,
@@ -91,12 +97,35 @@ export class CardsService {
     });
   }
 
+  async findAllByUserId(
+    userId: string,
+    { page = 1, take = 20 }: PaginationDto,
+  ) {
+    const cards = await this.cardsRepository.findAll({ userId, page, take });
+    const totalCount = await this.cardsRepository.countNumberOfCards({
+      userId,
+    });
+    return {
+      data: cards,
+      info: {
+        page,
+        totalCount,
+        totalPages: Math.ceil(totalCount / take),
+      },
+    };
+  }
+
   async findOne(id: string, includeEpisodes = false) {
     const card = await this.cardsRepository.findOneById(id, includeEpisodes);
     if (!card) {
       throw new NotFoundException('Card not found');
     }
     return card;
+  }
+
+  async isCardActive(id: string) {
+    const card = await this.findOne(id);
+    return card.is_active;
   }
 
   async update(

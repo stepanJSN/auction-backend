@@ -3,6 +3,9 @@ import { TransactionsRepository } from './transactions.repository';
 import { CreateTransferType } from './types/create-transfer.type';
 import { CreateTransactionServiceType } from './types/create-transaction-service.type';
 import { AuctionsService } from 'src/auctions/auctions.service';
+import { OnEvent } from '@nestjs/event-emitter';
+import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
+import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 
 @Injectable()
 export class TransactionsService {
@@ -32,6 +35,19 @@ export class TransactionsService {
     });
   }
 
+  @OnEvent(AuctionEvent.FINISHED)
+  transferMoneyFromWinnerToOwner({
+    winnerId,
+    sellerId,
+    highestBid,
+  }: AuctionsFinishedEvent) {
+    this.createTransfer({
+      fromId: winnerId,
+      toId: sellerId,
+      amount: highestBid,
+    });
+  }
+
   async createTransfer({ fromId, toId, amount }: CreateTransferType) {
     const { availableBalance } = await this.calculateBalance(fromId);
     if (availableBalance < amount) {
@@ -46,16 +62,25 @@ export class TransactionsService {
   }
 
   async calculateBalance(userId: string) {
+    let freezedBalance = 0;
+    let currentPage = 1;
+    while (true) {
+      const { data: auctions, info } = await this.auctionsService.findAll({
+        participantId: userId,
+        isCompleted: false,
+        isUserLeader: true,
+        page: currentPage,
+      });
+
+      auctions.forEach((auction) => {
+        freezedBalance += auction.highest_bid;
+      });
+
+      if (currentPage >= info.totalPages) break;
+      currentPage++;
+    }
+
     const transactions = await this.transactionsRepository.findAll(userId);
-    const auctionsWhereUserBidIsLeading = await this.auctionsService.findAll({
-      participantId: userId,
-      isCompleted: false,
-      isUserLeader: true,
-    });
-    const freezedBalance = auctionsWhereUserBidIsLeading.data.reduce(
-      (sum, auction) => sum + auction.highest_bid,
-      0,
-    );
     const income = transactions
       .filter((transaction) => transaction.to_id === userId)
       .reduce((sum, transaction) => sum + Number(transaction.amount), 0);

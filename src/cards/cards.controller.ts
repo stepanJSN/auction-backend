@@ -13,6 +13,7 @@ import {
   FileTypeValidator,
   ParseUUIDPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CardsService } from './cards.service';
 import { CreateCardDto } from './dto/create-card.dto';
@@ -21,12 +22,18 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { FindAllCards } from './dto/find-all-cards.dto';
 import { CurrentUser } from 'src/decorators/user.decorator';
 import { JWTPayload } from 'src/auth/types/auth.type';
+import { PaginationDto } from 'src/dto/pagination.dto';
+import { Roles } from 'src/decorators/roles.decorator';
+import { Role } from '@prisma/client';
+import { RoleGuard } from 'src/guards/role.guard';
 
 @Controller('cards')
+@UseGuards(RoleGuard)
 export class CardsController {
   constructor(private readonly cardsService: CardsService) {}
 
   @Post()
+  @Roles(Role.Admin)
   @UseInterceptors(FileInterceptor('image'))
   create(
     @UploadedFile(
@@ -53,9 +60,17 @@ export class CardsController {
     return this.cardsService.findAll({
       userId: user.id,
       role: user.role,
-      page: page ?? 1,
-      take: take ?? 20,
+      page,
+      take,
     });
+  }
+
+  @Get('myCards')
+  findMyCards(
+    @CurrentUser('id') userId: string,
+    @Query() paginationDto: PaginationDto,
+  ) {
+    return this.cardsService.findAllByUserId(userId, paginationDto);
   }
 
   @Get(':id')
@@ -64,6 +79,7 @@ export class CardsController {
   }
 
   @Patch(':id')
+  @Roles(Role.Admin)
   @UseInterceptors(FileInterceptor('image'))
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -85,6 +101,7 @@ export class CardsController {
   }
 
   @Delete(':id')
+  @Roles(Role.Admin)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.cardsService.remove(id);
   }

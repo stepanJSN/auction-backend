@@ -1,5 +1,5 @@
 import {
-  BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -26,7 +26,7 @@ export class UsersService {
     const user = await this.findOneByEmail(createUsersDto.email);
 
     if (user) {
-      throw new BadRequestException('User already exists');
+      throw new ConflictException('User already exists');
     }
 
     return this.usersRepository.create({

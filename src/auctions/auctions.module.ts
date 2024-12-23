@@ -9,11 +9,13 @@ import { AuctionsCronService } from './auctions-cron.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { CardsModule } from 'src/cards/cards.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
     CardInstancesModule,
+    CardsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
