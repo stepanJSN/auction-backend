@@ -60,8 +60,8 @@ export class CardsController {
     return this.cardsService.findAll({
       userId: user.id,
       role: user.role,
-      page: page ?? 1,
-      take: take ?? 20,
+      page,
+      take,
     });
   }
 

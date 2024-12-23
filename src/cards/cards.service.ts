@@ -59,14 +59,19 @@ export class CardsService {
     return this.cardsRepository.create({ ...createCardDto, imageUrl });
   }
 
-  async findAll({ userId, role, page, take }: FindAllCardsServiceType) {
+  async findAll({
+    userId,
+    role,
+    page = 1,
+    take = 20,
+  }: FindAllCardsServiceType) {
     const cards = await this.cardsRepository.findAll({
-      active: role === Role.User,
+      active: role === Role.User || undefined,
       page,
       take,
     });
     const totalCount = await this.cardsRepository.countNumberOfCards({
-      active: role === Role.User,
+      active: role === Role.User || undefined,
     });
     const info = {
       page,

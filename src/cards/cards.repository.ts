@@ -43,11 +43,13 @@ export class CardsRepository {
       where: {
         is_active: active,
         is_created_by_admin: isCreatedByAdmin,
-        card_instances: {
-          some: {
-            user_id: userId,
+        ...(userId && {
+          card_instances: {
+            some: {
+              user_id: userId,
+            },
           },
-        },
+        }),
       },
       skip: (page - 1) * take,
       take,
@@ -63,20 +65,23 @@ export class CardsRepository {
       where: {
         is_active: active,
         is_created_by_admin: isCreatedByAdmin,
-        card_instances: {
-          some: {
-            user_id: userId,
+        ...(userId && {
+          card_instances: {
+            some: {
+              user_id: userId,
+            },
           },
-        },
+        }),
       },
     });
   }
 
-  findOneById(cardId: string, includeEpisodes = false) {
+  findOneById(cardId: string, includeRelations = false) {
     return this.prisma.cards.findUnique({
       where: { id: cardId },
       include: {
-        episodes: includeEpisodes,
+        episodes: includeRelations,
+        location: includeRelations,
       },
     });
   }
