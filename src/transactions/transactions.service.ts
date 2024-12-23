@@ -3,6 +3,9 @@ import { TransactionsRepository } from './transactions.repository';
 import { CreateTransferType } from './types/create-transfer.type';
 import { CreateTransactionServiceType } from './types/create-transaction-service.type';
 import { AuctionsService } from 'src/auctions/auctions.service';
+import { OnEvent } from '@nestjs/event-emitter';
+import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
+import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 
 @Injectable()
 export class TransactionsService {
@@ -29,6 +32,19 @@ export class TransactionsService {
     return this.transactionsRepository.create({
       fromId: createTransaction.userId,
       amount: createTransaction.amount,
+    });
+  }
+
+  @OnEvent(AuctionEvent.FINISHED)
+  transferMoneyFromWinnerToOwner({
+    winnerId,
+    sellerId,
+    highestBid,
+  }: AuctionsFinishedEvent) {
+    this.createTransfer({
+      fromId: winnerId,
+      toId: sellerId,
+      amount: highestBid,
     });
   }
 
