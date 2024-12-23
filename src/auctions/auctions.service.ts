@@ -197,11 +197,9 @@ export class AuctionsService {
     const diffInMinutes = Math.ceil(diffInMilliseconds / 1000 / 60);
 
     if (diffInMinutes < min_length) {
-      console.log(event.createdAt.getTime() + min_length * 1000);
       const newEndTime = new Date(
         event.createdAt.getTime() + min_length * 60 * 1000,
       );
-      console.log(newEndTime);
       await this.update(event.auctionId, {
         endTime: newEndTime,
       });
