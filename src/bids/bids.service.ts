@@ -48,9 +48,10 @@ export class BidsService {
       });
     }
 
-    const { availableBalance } =
-      await this.transactionsService.calculateBalance(createBidData.userId);
-    if (availableBalance < createBidData.bidAmount) {
+    const { available } = await this.transactionsService.calculateBalance(
+      createBidData.userId,
+    );
+    if (available < createBidData.bidAmount) {
       throw new BadRequestException({
         code: BidExceptionCode.INSUFFICIENT_BALANCE,
         message: 'You do not have enough money to make this bid!',
