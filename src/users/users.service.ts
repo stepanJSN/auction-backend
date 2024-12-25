@@ -12,10 +12,14 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
 import { RatingEvent } from './enums/rating-event.enum';
 import { FindAllUsersDto } from './dto/find-all-users.dto';
+import { TransactionsService } from 'src/transactions/transactions.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private transactionsService: TransactionsService,
+  ) {}
 
   private hashPassword(password: string) {
     const saltRounds = 10;
@@ -63,7 +67,12 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    const balance = await this.transactionsService.calculateBalance(userId);
+
+    return {
+      ...user,
+      balance,
+    };
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {

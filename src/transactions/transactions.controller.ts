@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { CurrentUser } from 'src/decorators/user.decorator';
@@ -21,10 +21,5 @@ export class TransactionsController {
     @CurrentUser('id') userId: string,
   ) {
     return this.transactionsService.withdraw({ amount, userId });
-  }
-
-  @Get('/calculateBalance')
-  calculateBalance(@CurrentUser('id') userId: string) {
-    return this.transactionsService.calculateBalance(userId);
   }
 }
