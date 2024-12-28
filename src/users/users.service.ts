@@ -13,6 +13,7 @@ import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
 import { RatingEvent } from './enums/rating-event.enum';
 import { FindAllUsersDto } from './dto/find-all-users.dto';
 import { TransactionsService } from 'src/transactions/transactions.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -66,11 +67,12 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-
+    const { rating, ...userWithoutRating } = user;
     const balance = await this.transactionsService.calculateBalance(userId);
 
     return {
-      ...user,
+      ...userWithoutRating,
+      rating: user.role === Role.User ? rating : null,
       balance,
     };
   }
