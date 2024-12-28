@@ -115,12 +115,15 @@ export class CardsService {
     };
   }
 
-  async findOne(id: string, includeEpisodes = false) {
+  async findOne(id: string, includeEpisodes = false, userId?: string) {
     const card = await this.cardsRepository.findOneById(id, includeEpisodes);
     if (!card) {
       throw new NotFoundException('Card not found');
     }
-    return card;
+    if (!userId) return card;
+    const cardsWithOwnershipFlag =
+      await this.cardInstancesService.attachOwnershipFlag([card], userId);
+    return cardsWithOwnershipFlag[0];
   }
 
   async isCardActive(id: string) {
