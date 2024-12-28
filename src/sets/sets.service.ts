@@ -70,16 +70,23 @@ export class SetsService {
     }
 
     const mappedSets = await Promise.all(
-      sets.map(async (set) => ({
-        id: set.id,
-        name: set.name,
-        bonus: set.bonus,
-        cards: await this.cardInstancesService.attachOwnershipFlag(
-          set.cards,
-          userId,
-        ),
-        createdAt: set.created_at,
-      })),
+      sets.map(async (set) => {
+        const cardsWithOwnershipFlag =
+          await this.cardInstancesService.attachOwnershipFlag(
+            set.cards,
+            userId,
+          );
+        return {
+          id: set.id,
+          name: set.name,
+          bonus: set.bonus,
+          cards: cardsWithOwnershipFlag,
+          is_user_has_set: cardsWithOwnershipFlag.every(
+            (card) => card.is_owned,
+          ),
+          created_at: set.created_at,
+        };
+      }),
     );
     return {
       data: mappedSets,

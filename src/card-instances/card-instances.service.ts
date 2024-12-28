@@ -123,7 +123,7 @@ export class CardInstancesService {
 
     return cards.map((card) => ({
       ...card,
-      isOwned: cardInstances.some(
+      is_owned: cardInstances.some(
         (cardInstance) => cardInstance.card_id === card.id,
       ),
     }));
