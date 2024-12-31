@@ -78,7 +78,7 @@ export class CardsController {
     @CurrentUser('id') userId: string,
     @Param('id', ParseUUIDPipe) id: string,
   ) {
-    return this.cardsService.findOne(id, true);
+    return this.cardsService.findOne(id, true, userId);
   }
 
   @Patch(':id')
