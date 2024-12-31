@@ -14,25 +14,26 @@ export class TransactionsService {
     private auctionsService: AuctionsService,
   ) {}
 
-  toUp(createTransaction: CreateTransactionServiceType) {
-    return this.transactionsRepository.create({
+  async topUp(createTransaction: CreateTransactionServiceType) {
+    await this.transactionsRepository.create({
       toId: createTransaction.userId,
       amount: createTransaction.amount,
     });
+    return this.calculateBalance(createTransaction.userId);
   }
 
   async withdraw(createTransaction: CreateTransactionServiceType) {
-    const { availableBalance } = await this.calculateBalance(
-      createTransaction.userId,
-    );
-    if (availableBalance < createTransaction.amount) {
+    const { available } = await this.calculateBalance(createTransaction.userId);
+    if (available < createTransaction.amount) {
       throw new BadRequestException('Not enough balance');
     }
 
-    return this.transactionsRepository.create({
+    await this.transactionsRepository.create({
       fromId: createTransaction.userId,
       amount: createTransaction.amount,
     });
+
+    return this.calculateBalance(createTransaction.userId);
   }
 
   @OnEvent(AuctionEvent.FINISHED)
@@ -49,8 +50,8 @@ export class TransactionsService {
   }
 
   async createTransfer({ fromId, toId, amount }: CreateTransferType) {
-    const { availableBalance } = await this.calculateBalance(fromId);
-    if (availableBalance < amount) {
+    const { available } = await this.calculateBalance(fromId);
+    if (available < amount) {
       throw new Error('Not enough balance');
     }
 
@@ -90,8 +91,8 @@ export class TransactionsService {
       .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
     return {
-      balance: income - expense,
-      availableBalance: income - expense - freezedBalance,
+      total: income - expense,
+      available: income - expense - freezedBalance,
     };
   }
 }

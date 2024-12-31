@@ -12,10 +12,15 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
 import { RatingEvent } from './enums/rating-event.enum';
 import { FindAllUsersDto } from './dto/find-all-users.dto';
+import { TransactionsService } from 'src/transactions/transactions.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
-  constructor(private usersRepository: UsersRepository) {}
+  constructor(
+    private usersRepository: UsersRepository,
+    private transactionsService: TransactionsService,
+  ) {}
 
   private hashPassword(password: string) {
     const saltRounds = 10;
@@ -62,8 +67,14 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    const { rating, ...userWithoutRating } = user;
+    const balance = await this.transactionsService.calculateBalance(userId);
 
-    return user;
+    return {
+      ...userWithoutRating,
+      rating: user.role === Role.User ? rating : null,
+      balance,
+    };
   }
 
   async update(userId: string, updateUsersDto: UpdateUserDto) {

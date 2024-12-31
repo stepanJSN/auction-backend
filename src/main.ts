@@ -16,7 +16,7 @@ async function bootstrap() {
   const clientUrl = configService.get<string>('client_url');
   const imageFolder = configService.get<string>('image_folder');
 
-  app.useStaticAssets(join(__dirname, '..', imageFolder));
+  app.useStaticAssets(join(__dirname, '../..', imageFolder));
   app.enableCors({
     origin: [clientUrl],
     credentials: true,
