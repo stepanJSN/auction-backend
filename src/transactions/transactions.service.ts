@@ -14,11 +14,12 @@ export class TransactionsService {
     private auctionsService: AuctionsService,
   ) {}
 
-  toUp(createTransaction: CreateTransactionServiceType) {
-    return this.transactionsRepository.create({
+  async toUp(createTransaction: CreateTransactionServiceType) {
+    await this.transactionsRepository.create({
       toId: createTransaction.userId,
       amount: createTransaction.amount,
     });
+    return this.calculateBalance(createTransaction.userId);
   }
 
   async withdraw(createTransaction: CreateTransactionServiceType) {
@@ -27,10 +28,12 @@ export class TransactionsService {
       throw new BadRequestException('Not enough balance');
     }
 
-    return this.transactionsRepository.create({
+    await this.transactionsRepository.create({
       fromId: createTransaction.userId,
       amount: createTransaction.amount,
     });
+
+    return this.calculateBalance(createTransaction.userId);
   }
 
   @OnEvent(AuctionEvent.FINISHED)
