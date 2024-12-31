@@ -14,7 +14,7 @@ export class TransactionsService {
     private auctionsService: AuctionsService,
   ) {}
 
-  async toUp(createTransaction: CreateTransactionServiceType) {
+  async topUp(createTransaction: CreateTransactionServiceType) {
     await this.transactionsRepository.create({
       toId: createTransaction.userId,
       amount: createTransaction.amount,

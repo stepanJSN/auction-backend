@@ -7,12 +7,12 @@ import { CurrentUser } from 'src/decorators/user.decorator';
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
-  @Post('/toUp')
-  toUp(
+  @Post('/topUp')
+  topUp(
     @Body() { amount }: CreateTransactionDto,
     @CurrentUser('id') userId: string,
   ) {
-    return this.transactionsService.toUp({ amount, userId });
+    return this.transactionsService.topUp({ amount, userId });
   }
 
   @Post('/withdraw')
