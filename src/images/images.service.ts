@@ -12,7 +12,7 @@ export class ImagesService {
     this.baseUrl = this.configService.get<string>('server_url');
     const imageFolder = this.configService.get<string>('image_folder');
 
-    this.uploadDir = join(__dirname, '..', '..', imageFolder);
+    this.uploadDir = join(__dirname, '../../..', imageFolder);
   }
 
   async upload(filename: string, content: Express.Multer.File) {
