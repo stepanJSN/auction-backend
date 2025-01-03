@@ -11,7 +11,7 @@ model cards {
   image_url           String
   location            locations? @relation(fields: [location_id], references: [id])
   location_id         Int?
-  type                String
+  type                String?
   gender              Gender     @default(male)
   is_active           Boolean    @default(false)
   is_created_by_admin Boolean    @default(false)
