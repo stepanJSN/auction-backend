@@ -16,6 +16,7 @@ export class CardsRepository {
         type: createCard.type,
         gender: createCard.gender,
         image_url: createCard.imageUrl,
+        is_active: createCard.isActive,
         is_created_by_admin: true,
         episodes: {
           connect: createCard.episodesId.map((episodeId) => ({
@@ -53,6 +54,9 @@ export class CardsRepository {
       },
       skip: (page - 1) * take,
       take,
+      orderBy: {
+        created_at: 'asc',
+      },
     });
   }
 

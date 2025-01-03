@@ -1,6 +1,14 @@
 import { Gender } from '@prisma/client';
-import { Transform } from 'class-transformer';
-import { IsArray, IsIn, IsInt, IsString, Length } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class CreateCardDto {
   @IsString()
@@ -8,6 +16,7 @@ export class CreateCardDto {
   name: string;
 
   @IsString()
+  @IsOptional()
   @Length(2, 20)
   type: string;
 
@@ -17,6 +26,10 @@ export class CreateCardDto {
 
   @IsIn(['unknown', 'female', 'male', 'unknown'])
   gender: Gender;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  isActive: boolean;
 
   @Transform(({ value }) => JSON.parse(value))
   @IsArray()
