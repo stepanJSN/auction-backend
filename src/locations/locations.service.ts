@@ -12,9 +12,12 @@ import { FindAllLocationsDto } from './dto/find-all-locations.dto';
 export class LocationsService {
   constructor(private locationsRepository: LocationsRepository) {}
 
-  private async checkLocationName(name: string) {
+  private async checkLocationName(name: string, id?: number) {
     const { locations } = await this.locationsRepository.findAll({ name });
-    if (locations.length > 0) {
+    if (
+      (!id && locations.length > 0) ||
+      (locations.length > 0 && locations[0].id !== id)
+    ) {
       throw new ConflictException('Location with this name already exists');
     }
   }
@@ -55,7 +58,7 @@ export class LocationsService {
   }
 
   async update(id: number, updateLocationDto: UpdateLocationDto) {
-    await this.checkLocationName(updateLocationDto.name);
+    await this.checkLocationName(updateLocationDto.name, id);
     return this.locationsRepository.update(id, updateLocationDto);
   }
 

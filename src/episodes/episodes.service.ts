@@ -12,9 +12,12 @@ import { UpdateEpisodeDto } from './dto/update-episode.dto';
 export class EpisodesService {
   constructor(private episodesRepository: EpisodesRepository) {}
 
-  private async checkEpisodeName(name: string) {
+  private async checkEpisodeName(name: string, id?: number) {
     const { episodes } = await this.episodesRepository.findAll({ name });
-    if (episodes.length > 0) {
+    if (
+      (!id && episodes.length > 0) ||
+      (episodes.length > 0 && episodes[0].id !== id)
+    ) {
       throw new ConflictException('Episode with this name already exists');
     }
   }
@@ -55,7 +58,7 @@ export class EpisodesService {
   }
 
   async update(id: number, updateLocationDto: UpdateEpisodeDto) {
-    await this.checkEpisodeName(updateLocationDto.name);
+    await this.checkEpisodeName(updateLocationDto.name, id);
     return this.episodesRepository.update(id, updateLocationDto);
   }
 
