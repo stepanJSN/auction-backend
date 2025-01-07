@@ -21,6 +21,7 @@ import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { SetEvent } from './enums/set-event.enum';
 import { UserSetType } from './types/user-sets.type';
 import { CardsService } from 'src/cards/cards.service';
+import areArraysEqual from 'src/helpers/areArrayEquals';
 
 const SETS_PER_ITERATION = 30;
 
@@ -186,8 +187,10 @@ export class SetsService {
   }
 
   async update(id: string, updateSetDto: UpdateSetDto) {
-    if (updateSetDto.bonus) {
-      const { cards, bonus } = await this.findOne(id);
+    const { cards, bonus } = await this.findOne(id);
+    const updateSet = await this.setsRepository.update(id, updateSetDto);
+
+    if (updateSetDto.bonus && updateSetDto.bonus !== bonus) {
       const newBonus = updateSetDto.bonus - bonus;
 
       this.eventEmitter.emit(
@@ -199,7 +202,24 @@ export class SetsService {
       );
     }
 
-    return this.setsRepository.update(id, updateSetDto);
+    if (updateSetDto.cardsId && !areArraysEqual(cards, updateSetDto.cardsId)) {
+      this.eventEmitter.emit(
+        SetEvent.REMOVE,
+        new SetEventPayload({
+          cardsId: cards.map((card) => card.id),
+          bonus: bonus,
+        }),
+      );
+      this.eventEmitter.emit(
+        SetEvent.CREATE,
+        new SetEventPayload({
+          cardsId: updateSetDto.cardsId,
+          bonus: updateSet.bonus,
+        }),
+      );
+    }
+
+    return updateSet;
   }
 
   async remove(id: string) {
