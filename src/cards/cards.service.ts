@@ -62,6 +62,7 @@ export class CardsService {
   async findAll({
     userId,
     role,
+    name,
     page = 1,
     take = 20,
   }: FindAllCardsServiceType) {
@@ -69,9 +70,11 @@ export class CardsService {
       active: role === Role.User || undefined,
       page,
       take,
+      name,
     });
     const totalCount = await this.cardsRepository.countNumberOfCards({
       active: role === Role.User || undefined,
+      name,
     });
     const info = {
       page,
