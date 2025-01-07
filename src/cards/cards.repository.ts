@@ -36,6 +36,7 @@ export class CardsRepository {
   async findAll({
     active,
     isCreatedByAdmin,
+    name,
     page,
     take,
     userId,
@@ -43,6 +44,9 @@ export class CardsRepository {
     return this.prisma.cards.findMany({
       where: {
         is_active: active,
+        name: {
+          contains: name,
+        },
         is_created_by_admin: isCreatedByAdmin,
         ...(userId && {
           card_instances: {
@@ -63,11 +67,15 @@ export class CardsRepository {
   countNumberOfCards({
     active,
     isCreatedByAdmin,
+    name,
     userId,
   }: CountNumberOfCardsType) {
     return this.prisma.cards.count({
       where: {
         is_active: active,
+        name: {
+          contains: name,
+        },
         is_created_by_admin: isCreatedByAdmin,
         ...(userId && {
           card_instances: {

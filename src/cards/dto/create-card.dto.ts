@@ -12,12 +12,12 @@ import {
 
 export class CreateCardDto {
   @IsString()
-  @Length(2, 20)
+  @Length(2, 30)
   name: string;
 
   @IsString()
   @IsOptional()
-  @Length(2, 20)
+  @Length(2, 30)
   type: string;
 
   @Transform(({ value }) => parseInt(value, 10))

@@ -55,13 +55,14 @@ export class CardsController {
   @Get()
   findAll(
     @CurrentUser() user: JWTPayload,
-    @Query() { page, take }: FindAllCards,
+    @Query() { page, take, name }: FindAllCards,
   ) {
     return this.cardsService.findAll({
       userId: user.id,
       role: user.role,
       page,
       take,
+      name,
     });
   }
 
