@@ -87,12 +87,34 @@ export class AuctionsService {
       participantId: isUserTakePart || isUserLeader ? participantId : undefined,
     });
     return {
-      data: auctions,
+      data: auctions.map(({ highest_bid_user, ...restAuctionsData }) => ({
+        ...restAuctionsData,
+        is_user_leader: highest_bid_user === participantId,
+      })),
       info: {
         page,
         totalCount,
         totalPages: Math.ceil(totalCount / take),
       },
+    };
+  }
+
+  async getHighestBidRange() {
+    const auctionWithHighestBid = await this.auctionRepository.findAll({
+      sortOrder: 'desc',
+      sortBy: 'highestBid',
+      take: 1,
+    });
+
+    const auctionWithLowestBid = await this.auctionRepository.findAll({
+      sortOrder: 'asc',
+      sortBy: 'highestBid',
+      take: 1,
+    });
+
+    return {
+      min: auctionWithLowestBid.auctions[0].highest_bid ?? 0,
+      max: auctionWithHighestBid.auctions[0].highest_bid ?? 0,
     };
   }
 

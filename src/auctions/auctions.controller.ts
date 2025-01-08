@@ -74,6 +74,11 @@ export class AuctionsController {
     });
   }
 
+  @Get('/priceRange')
+  getHighestBidRange() {
+    return this.auctionsService.getHighestBidRange();
+  }
+
   @Get(':id')
   findOne(@CurrentUser('id') userId: string, @Param('id') id: string) {
     return this.auctionsService.findOne(id, userId);
