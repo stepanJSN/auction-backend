@@ -127,7 +127,6 @@ export class AuctionsService {
     const { bids, card_instance, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
-    this.auctionsGateway.handleSubscription(userId, id);
 
     const isUserHasThisCard = await this.cardInstancesService
       .findAll({
@@ -168,6 +167,7 @@ export class AuctionsService {
         'You cannot delete an auction that has already ended!',
       );
     }
+    await this.auctionRepository.remove(id);
     return auction;
   }
 
