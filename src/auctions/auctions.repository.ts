@@ -96,8 +96,8 @@ export class AuctionsRepository {
         AND (${locationId ? `c.location_id = ${locationId}` : '1'})
         AND (${cardName ? `c.name LIKE '%${cardName}%'` : '1'})
         AND (${cardId ? `c.id = '${cardId}'` : '1'})
-        AND (${fromPrice ? `b.bid_amount >= ${fromPrice}` : '1'})
-        AND (${toPrice ? `b.bid_amount <= ${toPrice}` : '1'})
+        AND (${fromPrice ? `b_highest.bid_amount  >= ${fromPrice} OR a.starting_bid >= ${fromPrice}` : '1'})
+        AND (${toPrice ? `b_highest.bid_amount  <= ${toPrice} OR a.starting_bid <= ${toPrice}` : '1'})
         AND (${
           participantId && !isUserLeader
             ? `EXISTS (

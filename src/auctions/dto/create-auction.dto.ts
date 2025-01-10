@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsDate, IsInt, IsUUID } from 'class-validator';
+import { IsDate, IsInt, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateAuctionDto {
   @IsUUID()
@@ -11,6 +11,7 @@ export class CreateAuctionDto {
   @IsInt()
   minBidStep: number;
 
+  @IsOptional()
   @IsInt()
   maxBid: number;
 

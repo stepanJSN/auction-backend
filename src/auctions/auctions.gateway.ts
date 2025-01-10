@@ -8,50 +8,44 @@ import { AuctionsWsOutgoingEventsEnum } from './enums/auctions-ws-events.enum';
 import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class AuctionsGateway {
   @WebSocketServer()
   private server: Server;
 
   @OnEvent(AuctionEvent.FINISHED)
   notifyClientsAboutAuctionFinish(event: AuctionsFinishedEvent) {
-    this.server
-      .to(`auction-${event.id}`)
-      .emit(AuctionsWsOutgoingEventsEnum.FINISHED, {
-        auctionId: event.id,
-        message: 'Auction has been completed.',
-      });
+    this.server.emit(`auction-${event.id}`, {
+      type: AuctionsWsOutgoingEventsEnum.FINISHED,
+      payload: {
+        id: event.id,
+      },
+    });
   }
 
   @OnEvent(AuctionEvent.CHANGED)
   notifyClientsAboutAuctionChanged({ id, ...restData }: AuctionChangedEvent) {
-    this.server.to(`auction-${id}`).emit(AuctionsWsOutgoingEventsEnum.CHANGED, {
-      auctionId: id,
-      ...restData,
+    this.server.emit(`auction-${id}`, {
+      type: AuctionsWsOutgoingEventsEnum.CHANGED,
+      payload: {
+        id,
+        ...restData,
+      },
     });
   }
 
   @OnEvent(BidEvent.NEW)
   notifyClientsAboutNewBid(event: NewBidEvent) {
-    this.server
-      .to(`auction-${event.auctionId}`)
-      .emit(AuctionsWsOutgoingEventsEnum.NEW_BID, {
-        auctionId: event.auctionId,
+    this.server.emit(`auction-${event.auctionId}`, {
+      type: AuctionsWsOutgoingEventsEnum.NEW_BID,
+      payload: {
+        id: event.auctionId,
         bidAmount: event.bidAmount,
-      });
-  }
-
-  async handleSubscription(userId: string, auctionId: string) {
-    const userSocketId = this.findUserSocket(userId);
-    this.server.sockets.sockets.get(userSocketId)?.join(`auction-${auctionId}`);
-  }
-
-  private findUserSocket(userId: string): string | null {
-    for (const [socketId, socket] of this.server.sockets.sockets) {
-      if (socket['user'].id === userId) {
-        return socketId;
-      }
-    }
-    return null;
+      },
+    });
   }
 }

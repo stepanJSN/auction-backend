@@ -87,12 +87,34 @@ export class AuctionsService {
       participantId: isUserTakePart || isUserLeader ? participantId : undefined,
     });
     return {
-      data: auctions,
+      data: auctions.map(({ highest_bid_user, ...restAuctionsData }) => ({
+        ...restAuctionsData,
+        is_user_leader: highest_bid_user === participantId,
+      })),
       info: {
         page,
         totalCount,
         totalPages: Math.ceil(totalCount / take),
       },
+    };
+  }
+
+  async getHighestBidRange() {
+    const auctionWithHighestBid = await this.auctionRepository.findAll({
+      sortOrder: 'desc',
+      sortBy: 'highestBid',
+      take: 1,
+    });
+
+    const auctionWithLowestBid = await this.auctionRepository.findAll({
+      sortOrder: 'asc',
+      sortBy: 'highestBid',
+      take: 1,
+    });
+
+    return {
+      min: auctionWithLowestBid.auctions[0].highest_bid ?? 0,
+      max: auctionWithHighestBid.auctions[0].highest_bid ?? 0,
     };
   }
 
@@ -105,7 +127,6 @@ export class AuctionsService {
     const { bids, card_instance, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
-    this.auctionsGateway.handleSubscription(userId, id);
 
     const isUserHasThisCard = await this.cardInstancesService
       .findAll({
@@ -146,6 +167,7 @@ export class AuctionsService {
         'You cannot delete an auction that has already ended!',
       );
     }
+    await this.auctionRepository.remove(id);
     return auction;
   }
 

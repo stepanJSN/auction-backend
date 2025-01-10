@@ -10,7 +10,11 @@ import { Server, Socket } from 'socket.io';
 import { ChatWsOutgoingEventsEnum } from './enums/chat-ws-events.enum';
 
 @UseGuards(AuthGuard)
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class ChatsGateway implements OnGatewayConnection {
   @WebSocketServer()
   private server: Server;
