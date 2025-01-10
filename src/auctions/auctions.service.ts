@@ -76,6 +76,7 @@ export class AuctionsService {
     isUserTakePart,
     isUserLeader,
     participantId,
+    createdById,
     ...findAllAuctionsData
   }: FindAllAuctionsType) {
     const { auctions, totalCount } = await this.auctionRepository.findAll({
@@ -84,13 +85,25 @@ export class AuctionsService {
       take,
       isUserLeader,
       isUserTakePart,
+      createdById,
       participantId: isUserTakePart || isUserLeader ? participantId : undefined,
     });
     return {
-      data: auctions.map(({ highest_bid_user, ...restAuctionsData }) => ({
-        ...restAuctionsData,
-        is_user_leader: highest_bid_user === participantId,
-      })),
+      data: auctions.map(
+        ({
+          highest_bid_user,
+          created_by_id,
+          is_completed,
+          ...restAuctionsData
+        }) => ({
+          ...restAuctionsData,
+          is_user_leader: highest_bid_user === participantId,
+          is_completed: !!is_completed,
+          is_this_user_auction: participantId
+            ? participantId === created_by_id
+            : createdById === created_by_id,
+        }),
+      ),
       info: {
         page,
         totalCount,
@@ -101,12 +114,14 @@ export class AuctionsService {
 
   async getHighestBidRange() {
     const auctionWithHighestBid = await this.auctionRepository.findAll({
+      isCompleted: false,
       sortOrder: 'desc',
       sortBy: 'highestBid',
       take: 1,
     });
 
     const auctionWithLowestBid = await this.auctionRepository.findAll({
+      isCompleted: false,
       sortOrder: 'asc',
       sortBy: 'highestBid',
       take: 1,
@@ -149,6 +164,12 @@ export class AuctionsService {
   }
 
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
+    const auctionBeforeUpdate = await this.auctionRepository.findOne(id);
+    if (auctionBeforeUpdate.is_completed) {
+      throw new ForbiddenException(
+        'You cannot update an auction that has already ended!',
+      );
+    }
     const auction = await this.auctionRepository.update(id, updateAuctionDto);
     this.eventEmitter.emit(
       AuctionEvent.CHANGED,
