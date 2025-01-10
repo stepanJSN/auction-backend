@@ -198,7 +198,12 @@ export class AuctionsRepository {
         card_instance: {
           select: {
             user_id: true,
-            cards: true,
+            cards: {
+              include: {
+                location: true,
+                episodes: true,
+              },
+            },
           },
         },
         bids: {

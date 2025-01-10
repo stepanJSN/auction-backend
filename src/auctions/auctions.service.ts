@@ -124,27 +124,27 @@ export class AuctionsService {
     if (!auction) {
       throw new NotFoundException('Auction not found');
     }
-    const { bids, card_instance, ...restAuctionData } = auction;
+    const { bids, card_instance, created_by, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
 
-    const isUserHasThisCard = await this.cardInstancesService
-      .findAll({
-        userId,
-        cardsId: [card_instance.cards.id],
-      })
-      .then((cardInstances) => !!cardInstances.pop());
+    const card = await this.cardInstancesService.attachOwnershipFlag(
+      [card_instance.cards],
+      userId,
+    );
+
+    const isThisUserAuction = created_by.id === userId;
 
     return {
       ...restAuctionData,
-      card: {
-        isUserHasThisCard,
-        ...card_instance.cards,
-      },
-      highestBid: {
-        amount: highestBid?.bid_amount,
-        isThisUserBid: highestBid && highestBid.user_id === userId,
-      },
+      card: card[0],
+      is_this_user_auction: isThisUserAuction,
+      highest_bid: highestBid
+        ? {
+            amount: highestBid.bid_amount,
+            is_this_user_bid: highestBid && highestBid.user_id === userId,
+          }
+        : null,
     };
   }
 
