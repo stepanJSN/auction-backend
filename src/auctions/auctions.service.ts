@@ -128,8 +128,8 @@ export class AuctionsService {
     });
 
     return {
-      min: auctionWithLowestBid.auctions[0].highest_bid ?? 0,
-      max: auctionWithHighestBid.auctions[0].highest_bid ?? 0,
+      min: auctionWithLowestBid.auctions[0]?.highest_bid ?? 0,
+      max: auctionWithHighestBid.auctions[0]?.highest_bid ?? 0,
     };
   }
 
