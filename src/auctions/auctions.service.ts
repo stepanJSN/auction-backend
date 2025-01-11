@@ -21,7 +21,6 @@ import {
 import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
-import { AuctionsGateway } from './auctions.gateway';
 import { CardsService } from 'src/cards/cards.service';
 
 @Injectable()
@@ -30,7 +29,6 @@ export class AuctionsService {
     private auctionRepository: AuctionsRepository,
     private cardInstancesService: CardInstancesService,
     private eventEmitter: EventEmitter2,
-    private auctionsGateway: AuctionsGateway,
     private cardsService: CardsService,
   ) {}
 
@@ -76,6 +74,7 @@ export class AuctionsService {
     isUserTakePart,
     isUserLeader,
     participantId,
+    createdById,
     ...findAllAuctionsData
   }: FindAllAuctionsType) {
     const { auctions, totalCount } = await this.auctionRepository.findAll({
@@ -84,13 +83,25 @@ export class AuctionsService {
       take,
       isUserLeader,
       isUserTakePart,
+      createdById,
       participantId: isUserTakePart || isUserLeader ? participantId : undefined,
     });
     return {
-      data: auctions.map(({ highest_bid_user, ...restAuctionsData }) => ({
-        ...restAuctionsData,
-        is_user_leader: highest_bid_user === participantId,
-      })),
+      data: auctions.map(
+        ({
+          highest_bid_user,
+          created_by_id,
+          is_completed,
+          ...restAuctionsData
+        }) => ({
+          ...restAuctionsData,
+          is_user_leader: highest_bid_user === participantId,
+          is_completed: !!is_completed,
+          is_this_user_auction: participantId
+            ? participantId === created_by_id
+            : createdById === created_by_id,
+        }),
+      ),
       info: {
         page,
         totalCount,
@@ -101,20 +112,22 @@ export class AuctionsService {
 
   async getHighestBidRange() {
     const auctionWithHighestBid = await this.auctionRepository.findAll({
+      isCompleted: false,
       sortOrder: 'desc',
       sortBy: 'highestBid',
       take: 1,
     });
 
     const auctionWithLowestBid = await this.auctionRepository.findAll({
+      isCompleted: false,
       sortOrder: 'asc',
       sortBy: 'highestBid',
       take: 1,
     });
 
     return {
-      min: auctionWithLowestBid.auctions[0].highest_bid ?? 0,
-      max: auctionWithHighestBid.auctions[0].highest_bid ?? 0,
+      min: auctionWithLowestBid.auctions[0]?.highest_bid ?? 0,
+      max: auctionWithHighestBid.auctions[0]?.highest_bid ?? 0,
     };
   }
 
@@ -124,31 +137,37 @@ export class AuctionsService {
     if (!auction) {
       throw new NotFoundException('Auction not found');
     }
-    const { bids, card_instance, ...restAuctionData } = auction;
+    const { bids, card_instance, created_by, ...restAuctionData } = auction;
 
     const highestBid = bids[0];
 
-    const isUserHasThisCard = await this.cardInstancesService
-      .findAll({
-        userId,
-        cardsId: [card_instance.cards.id],
-      })
-      .then((cardInstances) => !!cardInstances.pop());
+    const card = await this.cardInstancesService.attachOwnershipFlag(
+      [card_instance.cards],
+      userId,
+    );
+
+    const isThisUserAuction = created_by.id === userId;
 
     return {
       ...restAuctionData,
-      card: {
-        isUserHasThisCard,
-        ...card_instance.cards,
-      },
-      highestBid: {
-        amount: highestBid?.bid_amount,
-        isThisUserBid: highestBid && highestBid.user_id === userId,
-      },
+      card: card[0],
+      is_this_user_auction: isThisUserAuction,
+      highest_bid: highestBid
+        ? {
+            amount: highestBid.bid_amount,
+            is_this_user_bid: highestBid && highestBid.user_id === userId,
+          }
+        : null,
     };
   }
 
   async update(id: string, updateAuctionDto: UpdateAuctionDto) {
+    const auctionBeforeUpdate = await this.auctionRepository.findOne(id);
+    if (auctionBeforeUpdate.is_completed) {
+      throw new ForbiddenException(
+        'You cannot update an auction that has already ended!',
+      );
+    }
     const auction = await this.auctionRepository.update(id, updateAuctionDto);
     this.eventEmitter.emit(
       AuctionEvent.CHANGED,

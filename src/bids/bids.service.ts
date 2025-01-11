@@ -41,7 +41,7 @@ export class BidsService {
       });
     }
 
-    if (auction.card.isUserHasThisCard) {
+    if (auction.card.is_owned) {
       throw new BadRequestException({
         code: BidExceptionCode.USER_ALREADY_HAS_CARD,
         message: 'You already have this card!',
@@ -59,7 +59,7 @@ export class BidsService {
     }
 
     if (
-      !auction.highestBid.amount &&
+      auction.highest_bid?.amount &&
       auction.starting_bid > createBidData.bidAmount
     ) {
       throw new BadRequestException({
@@ -76,8 +76,9 @@ export class BidsService {
     }
 
     if (
-      auction.highestBid.amount &&
-      auction.min_bid_step > createBidData.bidAmount - auction.highestBid.amount
+      auction.highest_bid?.amount &&
+      auction.min_bid_step >
+        createBidData.bidAmount - auction.highest_bid.amount
     ) {
       throw new BadRequestException({
         code: BidExceptionCode.BID_NOT_EXCEEDS_MINIMUM_STEP,
@@ -95,5 +96,7 @@ export class BidsService {
         auctionId: auction_id,
       }),
     );
+
+    return bid_amount;
   }
 }
