@@ -21,7 +21,6 @@ import {
 import { AuctionEvent } from './enums/auction-event.enum';
 import { BidEvent } from 'src/bids/enums/bid-event.enum';
 import { RatingEvent } from 'src/users/enums/rating-event.enum';
-import { AuctionsGateway } from './auctions.gateway';
 import { CardsService } from 'src/cards/cards.service';
 
 @Injectable()
@@ -30,7 +29,6 @@ export class AuctionsService {
     private auctionRepository: AuctionsRepository,
     private cardInstancesService: CardInstancesService,
     private eventEmitter: EventEmitter2,
-    private auctionsGateway: AuctionsGateway,
     private cardsService: CardsService,
   ) {}
 
