@@ -31,11 +31,14 @@ export class MessagesService {
     };
   }
 
-  update(id: string, updateMessageDto: UpdateMessageDto) {
-    return this.messagesRepository.update(id, updateMessageDto);
+  async update(id: string, updateMessageDto: UpdateMessageDto) {
+    const message = await this.messagesRepository.update(id, updateMessageDto);
+    this.messagesGateway.editMessage(message.chat_id, message);
+    return message;
   }
 
-  remove(id: string) {
-    return this.messagesRepository.remove(id);
+  async remove(id: string) {
+    const message = await this.messagesRepository.remove(id);
+    this.messagesGateway.remove(message.chat_id, id);
   }
 }
