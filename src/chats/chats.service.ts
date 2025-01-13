@@ -9,6 +9,8 @@ import { CreateChatType } from './types/create-chat.type';
 import { UpdateChatDto } from './dto/update-chat.dto';
 import { FindAllChatsType } from './types/find-all-chats.type';
 import { ChatsGateway } from './chats.gateway';
+import { ChatType } from './types/chat.type';
+import { MessageType } from './types/message.type';
 
 @Injectable()
 export class ChatsService {
@@ -55,15 +57,44 @@ export class ChatsService {
     return chat;
   }
 
+  private formatChatName(chat: ChatType, userId: string): string {
+    if (chat.name) return chat.name;
+
+    const otherUser = chat.users.find((user) => user.id !== userId);
+    return `${otherUser.name} ${otherUser.surname}`;
+  }
+
+  private formatLastMessage(message: MessageType, userId: string) {
+    return {
+      sender: {
+        name: message.sender.name,
+        surname: message.sender.surname,
+        is_this_user_message: message.sender.id === userId,
+      },
+      id: message.id,
+      message: message.message,
+      created_at: message.created_at,
+    };
+  }
+
   async findAll(findAllChats: FindAllChatsType) {
     const { chats, totalCount } =
       await this.chatsRepository.findAll(findAllChats);
+
+    const formattedChats = chats.map((chat) => ({
+      id: chat.id,
+      name: this.formatChatName(chat, findAllChats.userId),
+      lastMessage: chat.messages.length
+        ? this.formatLastMessage(chat.messages[0], findAllChats.userId)
+        : null,
+    }));
+
     return {
-      data: chats,
+      data: formattedChats,
       info: {
-        page: findAllChats.page ?? 1,
+        page: findAllChats.page,
         totalCount,
-        totalPages: Math.ceil(totalCount / (findAllChats.take ?? 10)),
+        totalPages: Math.ceil(totalCount / findAllChats.take),
       },
     };
   }

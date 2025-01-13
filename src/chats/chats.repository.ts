@@ -65,6 +65,7 @@ export class ChatsRepository {
           id: true,
           users: {
             select: {
+              id: true,
               name: true,
               surname: true,
             },
@@ -74,10 +75,12 @@ export class ChatsRepository {
             select: {
               sender: {
                 select: {
+                  id: true,
                   name: true,
                   surname: true,
                 },
               },
+              id: true,
               message: true,
               created_at: true,
             },

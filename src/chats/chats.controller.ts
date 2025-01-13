@@ -39,8 +39,8 @@ export class ChatsController {
     return this.chatsService.findAll({
       userId,
       name: findAllChats.name,
-      page: findAllChats.page,
-      take: findAllChats.take,
+      page: findAllChats.page ?? 1,
+      take: findAllChats.take ?? 20,
     });
   }
 
