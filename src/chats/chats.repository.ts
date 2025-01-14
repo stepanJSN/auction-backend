@@ -15,6 +15,17 @@ export class ChatsRepository {
           connect: participants.map((participant) => ({ id: participant })),
         },
       },
+      select: {
+        id: true,
+        name: true,
+        users: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+      },
     });
   }
 

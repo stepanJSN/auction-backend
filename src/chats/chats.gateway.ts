@@ -24,12 +24,16 @@ export class ChatsGateway implements OnGatewayConnection {
     private readonly authGuard: AuthGuard,
   ) {}
 
-  async create(id: string, participantsId: string[]) {
+  async create(id: string, participantsId: string[], name: string) {
     participantsId.forEach((participant) => {
       const receiverSocketId = this.findReceiverSocket(participant);
       if (receiverSocketId) {
         this.server.sockets.sockets.get(receiverSocketId)?.join(id);
       }
+    });
+    this.server.to(id).emit(ChatWsOutgoingEventsEnum.CREATED, {
+      id,
+      name,
     });
   }
 
@@ -56,6 +60,7 @@ export class ChatsGateway implements OnGatewayConnection {
       const { data: userChats, info } = await this.chatsService.findAll({
         userId,
         page: currentPage,
+        take: 20,
       });
       for (const chat of userChats) {
         client.join(chat.id);
