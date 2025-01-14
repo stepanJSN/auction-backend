@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   forwardRef,
   Inject,
   Injectable,
@@ -20,10 +21,9 @@ export class ChatsService {
     private chatsGateway: ChatsGateway,
   ) {}
   async create(createChat: CreateChatType) {
-    const participantsWithCreator = [
-      createChat.userId,
-      ...createChat.participants,
-    ];
+    const participantsWithCreator = Array.from(
+      new Set([createChat.userId, ...createChat.participants]),
+    );
 
     if (participantsWithCreator.length === 2) {
       const existingChats = await this.chatsRepository.findAllChatsWithUsers(
@@ -34,7 +34,7 @@ export class ChatsService {
         (chat) => chat.users.length === 2,
       );
       if (existingPrivateChat) {
-        throw new BadRequestException({
+        throw new ConflictException({
           id: existingPrivateChat.id,
           message: 'Chat already exists',
         });
@@ -52,12 +52,17 @@ export class ChatsService {
       participants: participantsWithCreator,
     });
 
-    this.chatsGateway.create(chat.id, participantsWithCreator);
+    const newChatName = this.formatChatName(chat, createChat.userId);
+
+    this.chatsGateway.create(chat.id, participantsWithCreator, newChatName);
 
     return chat;
   }
 
-  private formatChatName(chat: ChatType, userId: string): string {
+  private formatChatName(
+    chat: Omit<ChatType, 'messages'>,
+    userId: string,
+  ): string {
     if (chat.name) return chat.name;
 
     const otherUser = chat.users.find((user) => user.id !== userId);
