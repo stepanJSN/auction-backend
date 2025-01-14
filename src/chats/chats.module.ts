@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { ChatsController } from './chats.controller';
+import { MessagesModule } from 'src/messages/messages.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ChatsController } from './chats.controller';
         secret: configService.get<string>('jwt_key'),
       }),
     }),
+    MessagesModule,
   ],
   providers: [ChatsGateway, ChatsService, ChatsRepository, AuthGuard],
   controllers: [ChatsController],

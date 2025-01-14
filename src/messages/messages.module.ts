@@ -5,7 +5,6 @@ import { MessagesRepository } from './messages.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from 'src/guards/auth.guard';
-import { MessagesController } from './messages.controller';
 
 @Module({
   imports: [
@@ -17,6 +16,6 @@ import { MessagesController } from './messages.controller';
     }),
   ],
   providers: [MessagesService, MessagesGateway, MessagesRepository, AuthGuard],
-  controllers: [MessagesController],
+  exports: [MessagesService],
 })
 export class MessagesModule {}

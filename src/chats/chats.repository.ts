@@ -109,6 +109,23 @@ export class ChatsRepository {
     return { chats, totalCount };
   }
 
+  findOne(id: string) {
+    return this.prisma.chats.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        users: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+      },
+    });
+  }
+
   findAllChatsWithUsers(user1Id: string, user2Id: string) {
     return this.prisma.chats.findMany({
       where: {

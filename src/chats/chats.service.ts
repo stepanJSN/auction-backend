@@ -4,6 +4,7 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ChatsRepository } from './chats.repository';
 import { CreateChatType } from './types/create-chat.type';
@@ -102,6 +103,15 @@ export class ChatsService {
         totalPages: Math.ceil(totalCount / findAllChats.take),
       },
     };
+  }
+
+  async findOne(id: string) {
+    const chat = await this.chatsRepository.findOne(id);
+    if (!chat) {
+      throw new NotFoundException('Chat not found');
+    }
+
+    return chat;
   }
 
   update(id: string, updateChatDto: UpdateChatDto) {
