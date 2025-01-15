@@ -60,24 +60,29 @@ export class ChatsController {
       userId,
       name: findAllChats.name,
       page: findAllChats.page ?? 1,
-      take: findAllChats.take ?? 2,
+      take: findAllChats.take ?? 10,
     });
   }
 
   @Get('/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.chatsService.findOne(id);
+  findOne(
+    @Param('id', ParseUUIDPipe) chatId: string,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.chatsService.findOne(chatId, userId);
   }
 
   @Get('/:id/messages')
   findAllMessages(
     @Param('id', ParseUUIDPipe) id: string,
     @Query() { take, cursor }: FindAllMessagesDto,
+    @CurrentUser('id') userId: string,
   ) {
     return this.messagesService.findAll({
       chatId: id,
       take: take ?? 10,
       cursor,
+      userId,
     });
   }
 
