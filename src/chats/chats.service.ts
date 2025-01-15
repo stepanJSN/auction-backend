@@ -105,13 +105,18 @@ export class ChatsService {
     };
   }
 
-  async findOne(id: string) {
-    const chat = await this.chatsRepository.findOne(id);
+  async findOne(chatId: string, userId: string) {
+    const chat = await this.chatsRepository.findOne(chatId);
     if (!chat) {
       throw new NotFoundException('Chat not found');
     }
 
-    return chat;
+    const chatName = this.formatChatName(chat, userId);
+
+    return {
+      ...chat,
+      name: chatName,
+    };
   }
 
   update(id: string, updateChatDto: UpdateChatDto) {
