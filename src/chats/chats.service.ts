@@ -21,15 +21,12 @@ export class ChatsService {
     @Inject(forwardRef(() => ChatsGateway))
     private chatsGateway: ChatsGateway,
   ) {}
-  async create(createChat: CreateChatType) {
-    const participantsWithCreator = Array.from(
-      new Set([createChat.userId, ...createChat.participants]),
-    );
 
-    if (participantsWithCreator.length === 2) {
+  async checkChat(participants: string[], chatName: string) {
+    if (participants.length === 2) {
       const existingChats = await this.chatsRepository.findAllChatsWithUsers(
-        participantsWithCreator[0],
-        participantsWithCreator[1],
+        participants[0],
+        participants[1],
       );
       const existingPrivateChat = existingChats.find(
         (chat) => chat.users.length === 2,
@@ -42,11 +39,19 @@ export class ChatsService {
       }
     }
 
-    if (participantsWithCreator.length > 2 && !createChat.name) {
+    if (participants.length > 2 && !chatName) {
       throw new BadRequestException(
         'Chat with more than 2 participants should have name',
       );
     }
+  }
+
+  async create(createChat: CreateChatType) {
+    const participantsWithCreator = Array.from(
+      new Set([createChat.userId, ...createChat.participants]),
+    );
+
+    await this.checkChat(participantsWithCreator, createChat.name);
 
     const chat = await this.chatsRepository.create({
       name: createChat.name,
@@ -119,8 +124,15 @@ export class ChatsService {
     };
   }
 
-  update(id: string, updateChatDto: UpdateChatDto) {
-    return this.chatsRepository.update(id, updateChatDto);
+  async update(id: string, updateChatDto: UpdateChatDto, userId: string) {
+    await this.checkChat(updateChatDto.participants, updateChatDto.name);
+    const chat = await this.chatsRepository.update(id, updateChatDto);
+    const chatName = this.formatChatName(chat, userId);
+
+    return {
+      ...chat,
+      name: chatName,
+    };
   }
 
   async remove(id: string) {

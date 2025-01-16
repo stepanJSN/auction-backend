@@ -143,13 +143,25 @@ export class ChatsRepository {
     });
   }
 
-  async update(id: string, { participants }: UpdateChatDto) {
+  async update(id: string, { name, participants }: UpdateChatDto) {
     try {
       return await this.prisma.chats.update({
         where: { id },
         data: {
+          name,
           users: {
             set: participants.map((participant) => ({ id: participant })),
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          users: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+            },
           },
         },
       });

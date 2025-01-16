@@ -90,8 +90,9 @@ export class ChatsController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateChatDto: UpdateChatDto,
+    @CurrentUser('id') userId: string,
   ) {
-    return this.chatsService.update(id, updateChatDto);
+    return this.chatsService.update(id, updateChatDto, userId);
   }
 
   @Patch('/:id/messages/:messageId')
