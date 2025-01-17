@@ -39,22 +39,22 @@ export class UsersRepository {
   }: FindAllUsersDto) {
     const condition = {
       role: isAdmin ? Role.Admin : undefined,
-      OR: [
-        {
-          name: { contains: fullName.split(' ')[0] },
-        },
-        {
-          surname: { contains: fullName.split(' ')[1] || '' },
-        },
-        {
-          AND: [
-            { name: { contains: fullName?.split(' ')[0] } },
-            {
-              surname: { contains: fullName?.split(' ')[1] || '' },
-            },
-          ],
-        },
-      ],
+      ...(fullName && {
+        OR: [
+          {
+            name: { contains: fullName.split(' ')[0] },
+          },
+          {
+            surname: { contains: fullName.split(' ')[1] || '' },
+          },
+          {
+            AND: [
+              { name: { contains: fullName.split(' ')[0] } },
+              { surname: { contains: fullName.split(' ')[1] || '' } },
+            ],
+          },
+        ],
+      }),
     };
     const [users, totalCount] = await this.prisma.$transaction([
       this.prisma.users.findMany({
