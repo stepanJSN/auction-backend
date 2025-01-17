@@ -48,6 +48,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Missing authentication token');
     }
     const payload = await this.validateToken(token);
+    console.log({ payload });
+    console.log(new Date().getTime());
     if (!payload) {
       throw new UnauthorizedException(
         'Invalid or expired authentication token',

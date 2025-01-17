@@ -39,11 +39,11 @@ export class AuthService {
 
     const accessToken = await this.generateToken(
       tokenPayload,
-      TEN_MINUTES_IN_SECONDS * 1000,
+      TEN_MINUTES_IN_SECONDS,
     );
     const refreshToken = await this.generateToken(
       tokenPayload,
-      ONE_MONTH_IN_SECONDS * 1000,
+      ONE_MONTH_IN_SECONDS,
     );
 
     return {
