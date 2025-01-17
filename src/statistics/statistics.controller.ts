@@ -17,12 +17,12 @@ import { RoleGuard } from 'src/guards/role.guard';
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
 
-  @Get('/cardsStatistics')
-  getCardsSt(@Query() { page, take }: PaginationDto) {
+  @Get('/cards')
+  getCardsStatistics(@Query() { page, take }: PaginationDto) {
     return this.statisticsService.getCardsStatistics(page, take);
   }
 
-  @Get('/usersStatistics')
+  @Get('/users')
   getTopUsersByCollectedCards(
     @Query('numberOfUsers', new ParseIntPipe({ optional: true }))
     numberOfUsers = 10,
@@ -30,13 +30,13 @@ export class StatisticsController {
     return this.statisticsService.getTopUsersByCollectedCards(numberOfUsers);
   }
 
-  @Get('/setsStatistics')
+  @Get('/sets')
   getNumberOfUsersPerSet(@Query() { page, take }: PaginationDto) {
     return this.statisticsService.getNumberOfUsersPerSet(page, take);
   }
 
-  @Get('/generalStatistics')
-  getGeneral() {
+  @Get('/general')
+  getGeneralStatistics() {
     return this.statisticsService.getGeneral();
   }
 }

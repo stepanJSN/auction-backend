@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsOptional } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from 'src/dto/pagination.dto';
 
 export class FindAllUsersDto extends PaginationDto {
@@ -14,5 +14,9 @@ export class FindAllUsersDto extends PaginationDto {
   @IsOptional()
   @Type(() => Boolean)
   @IsBoolean()
-  isAdmin: boolean;
+  isAdmin?: boolean;
+
+  @IsOptional()
+  @IsString()
+  fullName?: string;
 }

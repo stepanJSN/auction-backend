@@ -15,6 +15,17 @@ export class ChatsRepository {
           connect: participants.map((participant) => ({ id: participant })),
         },
       },
+      select: {
+        id: true,
+        name: true,
+        users: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+      },
     });
   }
 
@@ -65,6 +76,7 @@ export class ChatsRepository {
           id: true,
           users: {
             select: {
+              id: true,
               name: true,
               surname: true,
             },
@@ -74,10 +86,12 @@ export class ChatsRepository {
             select: {
               sender: {
                 select: {
+                  id: true,
                   name: true,
                   surname: true,
                 },
               },
+              id: true,
               message: true,
               created_at: true,
             },
@@ -93,6 +107,23 @@ export class ChatsRepository {
       this.prisma.chats.count({ where: conditions }),
     ]);
     return { chats, totalCount };
+  }
+
+  findOne(id: string) {
+    return this.prisma.chats.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        users: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          },
+        },
+      },
+    });
   }
 
   findAllChatsWithUsers(user1Id: string, user2Id: string) {
@@ -112,13 +143,25 @@ export class ChatsRepository {
     });
   }
 
-  async update(id: string, { participants }: UpdateChatDto) {
+  async update(id: string, { name, participants }: UpdateChatDto) {
     try {
       return await this.prisma.chats.update({
         where: { id },
         data: {
+          name,
           users: {
             set: participants.map((participant) => ({ id: participant })),
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          users: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+            },
           },
         },
       });

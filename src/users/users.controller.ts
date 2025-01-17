@@ -33,7 +33,6 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(Role.Admin)
   findAll(@Query() findAllUsersDto: FindAllUsersDto) {
     return this.usersService.findAll(findAllUsersDto);
   }

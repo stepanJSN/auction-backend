@@ -20,8 +20,9 @@ export class MessagesGateway {
   }
 
   remove(chatId: string, messageId: string) {
-    this.server
-      .to(chatId)
-      .emit(MessagesWsOutgoingEventsEnum.DELETED, messageId);
+    this.server.to(chatId).emit(MessagesWsOutgoingEventsEnum.DELETED, {
+      chat_id: chatId,
+      id: messageId,
+    });
   }
 }
