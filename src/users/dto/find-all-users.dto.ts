@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
 import { PaginationDto } from 'src/dto/pagination.dto';
 
@@ -12,7 +12,11 @@ export class FindAllUsersDto extends PaginationDto {
   sortOrder?: 'asc' | 'desc';
 
   @IsOptional()
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   isAdmin?: boolean;
 

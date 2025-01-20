@@ -1,5 +1,5 @@
 import { Gender } from '@prisma/client';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -27,7 +27,11 @@ export class CreateCardDto {
   @IsIn(['unknown', 'female', 'male', 'unknown'])
   gender: Gender;
 
-  @Type(() => Boolean)
+  @Transform(({ value }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsBoolean()
   isActive: boolean;
 
