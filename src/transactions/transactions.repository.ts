@@ -12,6 +12,9 @@ export class TransactionsRepository {
         from_id: createTransaction.fromId,
         to_id: createTransaction.toId,
         amount: new Prisma.Decimal(createTransaction.amount),
+        fee: createTransaction.fee
+          ? new Prisma.Decimal(createTransaction.fee)
+          : undefined,
       },
     });
   }
@@ -20,6 +23,14 @@ export class TransactionsRepository {
     return this.prisma.transactions.findMany({
       where: {
         OR: [{ from_id: userId }, { to_id: userId }],
+      },
+    });
+  }
+
+  calculateFee() {
+    return this.prisma.transactions.aggregate({
+      _sum: {
+        fee: true,
       },
     });
   }

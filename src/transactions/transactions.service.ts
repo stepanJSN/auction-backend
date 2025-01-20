@@ -7,6 +7,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
 import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
 
+const SYSTEM_FEE = 0.1;
+
 @Injectable()
 export class TransactionsService {
   constructor(
@@ -49,16 +51,24 @@ export class TransactionsService {
     });
   }
 
+  calculateSystemFee(amount: number) {
+    return amount * SYSTEM_FEE;
+  }
+
   async createTransfer({ fromId, toId, amount }: CreateTransferType) {
     const { available } = await this.calculateBalance(fromId);
     if (available < amount) {
       throw new Error('Not enough balance');
     }
 
+    const systemFee = this.calculateSystemFee(amount);
+    const amountWithoutFee = amount - systemFee;
+
     return this.transactionsRepository.create({
       fromId,
       toId,
-      amount,
+      amount: amountWithoutFee,
+      fee: systemFee,
     });
   }
 
@@ -84,15 +94,29 @@ export class TransactionsService {
     const transactions = await this.transactionsRepository.findAll(userId);
     const income = transactions
       .filter((transaction) => transaction.to_id === userId)
-      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      .reduce(
+        (sum, transaction) => sum + Number(transaction.amount.toFixed(2)),
+        0,
+      );
 
     const expense = transactions
       .filter((transaction) => transaction.from_id === userId)
-      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      .reduce(
+        (sum, transaction) =>
+          sum +
+          Number(transaction.amount.toFixed(2)) +
+          (transaction.fee ? Number(transaction.fee.toFixed(2)) : 0),
+        0,
+      );
 
     return {
       total: income - expense,
       available: income - expense - freezedBalance,
     };
+  }
+
+  async calculateFee() {
+    const sum = await this.transactionsRepository.calculateFee();
+    return { totalFeeAmount: +sum._sum.fee.toFixed(2) };
   }
 }
