@@ -26,4 +26,12 @@ export class TransactionsRepository {
       },
     });
   }
+
+  calculateFee() {
+    return this.prisma.transactions.aggregate({
+      _sum: {
+        fee: true,
+      },
+    });
+  }
 }

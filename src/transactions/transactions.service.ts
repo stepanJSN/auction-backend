@@ -109,4 +109,8 @@ export class TransactionsService {
       available: income - expense - freezedBalance,
     };
   }
+
+  calculateFee() {
+    return this.transactionsRepository.calculateFee();
+  }
 }
