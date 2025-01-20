@@ -20,6 +20,7 @@ import { ChangeRoleDto } from './dto/change-role.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { RoleGuard } from 'src/guards/role.guard';
+import { CurrentUser } from 'src/decorators/user.decorator';
 
 @Controller('users')
 @UseGuards(RoleGuard)
@@ -35,6 +36,11 @@ export class UsersController {
   @Get()
   findAll(@Query() findAllUsersDto: FindAllUsersDto) {
     return this.usersService.findAll(findAllUsersDto);
+  }
+
+  @Get('/current')
+  findCurrentUser(@CurrentUser('id') userId: string) {
+    return this.usersService.findOneById(userId);
   }
 
   @Get('/:userId')
