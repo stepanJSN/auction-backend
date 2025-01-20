@@ -12,6 +12,9 @@ export class TransactionsRepository {
         from_id: createTransaction.fromId,
         to_id: createTransaction.toId,
         amount: new Prisma.Decimal(createTransaction.amount),
+        fee: createTransaction.fee
+          ? new Prisma.Decimal(createTransaction.fee)
+          : undefined,
       },
     });
   }
