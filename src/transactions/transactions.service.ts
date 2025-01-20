@@ -105,7 +105,7 @@ export class TransactionsService {
         (sum, transaction) =>
           sum +
           Number(transaction.amount.toFixed(2)) +
-          (Number(transaction.fee.toFixed(2)) ?? 0),
+          (transaction.fee ? Number(transaction.fee.toFixed(2)) : 0),
         0,
       );
 
@@ -117,6 +117,6 @@ export class TransactionsService {
 
   async calculateFee() {
     const sum = await this.transactionsRepository.calculateFee();
-    return { totalFeeAmount: sum._sum.fee.toFixed(2) };
+    return { totalFeeAmount: +sum._sum.fee.toFixed(2) };
   }
 }
