@@ -94,13 +94,18 @@ export class TransactionsService {
     const transactions = await this.transactionsRepository.findAll(userId);
     const income = transactions
       .filter((transaction) => transaction.to_id === userId)
-      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      .reduce(
+        (sum, transaction) => sum + Number(transaction.amount.toFixed(2)),
+        0,
+      );
 
     const expense = transactions
       .filter((transaction) => transaction.from_id === userId)
       .reduce(
         (sum, transaction) =>
-          sum + Number(transaction.amount) + (Number(transaction.fee) ?? 0),
+          sum +
+          Number(transaction.amount.toFixed(2)) +
+          (Number(transaction.fee.toFixed(2)) ?? 0),
         0,
       );
 
@@ -110,7 +115,8 @@ export class TransactionsService {
     };
   }
 
-  calculateFee() {
-    return this.transactionsRepository.calculateFee();
+  async calculateFee() {
+    const sum = await this.transactionsRepository.calculateFee();
+    return { totalFeeAmount: sum._sum.fee.toFixed(2) };
   }
 }
