@@ -98,7 +98,11 @@ export class TransactionsService {
 
     const expense = transactions
       .filter((transaction) => transaction.from_id === userId)
-      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+      .reduce(
+        (sum, transaction) =>
+          sum + Number(transaction.amount) + (Number(transaction.fee) ?? 0),
+        0,
+      );
 
     return {
       total: income - expense,
