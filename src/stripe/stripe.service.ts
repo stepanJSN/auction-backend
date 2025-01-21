@@ -23,7 +23,8 @@ export class StripeService {
   }
 
   async createPaymentIntent(numberOfPoints: number, userId: string) {
-    const exchangeRate = +(await this.systemService.findExchangeRate());
+    const exchangeRate = (await this.systemService.findExchangeRate())
+      .exchange_rate;
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount: +(numberOfPoints * exchangeRate * 100).toFixed(0),
       currency: 'usd',

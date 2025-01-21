@@ -5,11 +5,23 @@ import { SystemRepository } from './system.repository';
 export class SystemService {
   constructor(private systemRepository: SystemRepository) {}
 
-  findExchangeRate() {
-    return this.systemRepository.findOne('exchange_rate');
+  async findExchangeRate() {
+    const exchangeRateRecord =
+      await this.systemRepository.findOne('exchange_rate');
+    return {
+      exchange_rate: +exchangeRateRecord.value,
+      updated_at: exchangeRateRecord.updated_at,
+    };
   }
 
-  updateExchangeRate(newValue: number) {
-    return this.systemRepository.update('exchange_rate', newValue.toString());
+  async updateExchangeRate(newValue: number) {
+    const exchangeRateRecord = await this.systemRepository.update(
+      'exchange_rate',
+      newValue.toString(),
+    );
+    return {
+      exchange_rate: +exchangeRateRecord.value,
+      updated_at: exchangeRateRecord.updated_at,
+    };
   }
 }
