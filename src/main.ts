@@ -7,7 +7,9 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
   app.use(cookieParser());
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
