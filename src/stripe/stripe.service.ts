@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { TransactionsService } from 'src/transactions/transactions.service';
 import Stripe from 'stripe';
 
 const EXCHANGE_RATE = 1.2;
@@ -10,7 +11,10 @@ export class StripeService {
   private readonly stripe: Stripe;
   private readonly stripeWebhookSecret: string;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private transactionsService: TransactionsService,
+  ) {
     this.stripeKey = this.configService.get<string>('stripe_key');
     this.stripe = new Stripe(this.stripeKey);
     this.stripeWebhookSecret = this.configService.get<string>(
@@ -54,14 +58,13 @@ export class StripeService {
     switch (event.type) {
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object;
-        console.log(
-          `PaymentIntent for ${paymentIntent.amount} was successful!`,
-          paymentIntent.metadata.userId,
-          paymentIntent.metadata.numberOfPoints,
-        );
+        this.transactionsService.topUp({
+          userId: paymentIntent.metadata.userId,
+          amount: +paymentIntent.metadata.numberOfPoints,
+        });
         break;
       default:
-        console.log(`Unhandled event type ${event.type}.`);
+        break;
     }
   }
 }
