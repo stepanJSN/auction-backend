@@ -4,6 +4,7 @@ import { seedEpisodes } from './seeds/episodes.seed';
 import { seedCards } from './seeds/cards.seed';
 import { seedAdmin } from './seeds/admin.seed';
 import { config } from 'dotenv';
+import { seedSystem } from './seeds/system.seed';
 
 config();
 export const prismaInstance = new PrismaClient();
@@ -13,6 +14,7 @@ async function main() {
   await seedEpisodes();
   await seedCards();
   await seedAdmin();
+  await seedSystem();
 }
 main()
   .then(async () => {
