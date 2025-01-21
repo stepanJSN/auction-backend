@@ -35,4 +35,9 @@ export class StripeController {
   ) {
     return this.stripeService.handleWebhookEvent(request.rawBody, signature);
   }
+
+  @Post('create-account')
+  async createAccount() {
+    return this.stripeService.createAccountLink();
+  }
 }

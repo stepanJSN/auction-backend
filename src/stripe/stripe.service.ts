@@ -69,4 +69,34 @@ export class StripeService {
         break;
     }
   }
+
+  async createAccount() {
+    const account = await this.stripe.accounts.create({
+      controller: {
+        losses: {
+          payments: 'application',
+        },
+        fees: {
+          payer: 'application',
+        },
+        stripe_dashboard: {
+          type: 'express',
+        },
+      },
+    });
+
+    return account.id;
+  }
+
+  async createAccountLink() {
+    const accountId = await this.createAccount();
+    const accountLink = await this.stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: 'http://localhost:5173/transactions',
+      return_url: 'http://localhost:5173/transactions',
+      type: 'account_onboarding',
+    });
+
+    return accountLink.url;
+  }
 }
