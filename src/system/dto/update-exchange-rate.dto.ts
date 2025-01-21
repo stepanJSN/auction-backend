@@ -1,6 +1,6 @@
 import { IsNumber } from 'class-validator';
 
-export class UpdateSystemDto {
+export class UpdateExchangeRateDto {
   @IsNumber()
   exchangeRate: number;
 }

@@ -1,26 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { CreateSystemDto } from './dto/create-system.dto';
-import { UpdateSystemDto } from './dto/update-exhange-rate.dto';
+import { SystemRepository } from './system.repository';
 
 @Injectable()
 export class SystemService {
-  create(createSystemDto: CreateSystemDto) {
-    return 'This action adds a new system';
+  constructor(private systemRepository: SystemRepository) {}
+
+  findExchangeRate() {
+    return this.systemRepository.findOne('exchange_rate');
   }
 
-  findAll() {
-    return `This action returns all system`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} system`;
-  }
-
-  update(id: number, updateSystemDto: UpdateSystemDto) {
-    return `This action updates a #${id} system`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} system`;
+  updateExchangeRate(newValue: number) {
+    return this.systemRepository.update('exchange_rate', newValue.toString());
   }
 }
