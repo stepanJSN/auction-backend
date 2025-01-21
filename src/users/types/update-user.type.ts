@@ -1,10 +1,5 @@
-import { Role } from '@prisma/client';
+import { users } from '@prisma/client';
 
-export type UpdateUserType = {
-  email?: string;
-  name?: string;
-  surname?: string;
-  password?: string;
-  role?: Role;
-  rating?: number;
-};
+export type UpdateUserType = Partial<
+  Omit<users, 'id' | 'created_at' | 'email'>
+>;

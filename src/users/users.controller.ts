@@ -40,12 +40,12 @@ export class UsersController {
 
   @Get('/current')
   findCurrentUser(@CurrentUser('id') userId: string) {
-    return this.usersService.findOneById(userId);
+    return this.usersService.findOneByIdWithBalance(userId);
   }
 
   @Get('/:userId')
   findOneById(@Param('userId', ParseUUIDPipe) id: string) {
-    return this.usersService.findOneById(id);
+    return this.usersService.findOneByIdWithBalance(id);
   }
 
   @Put('/:userId')

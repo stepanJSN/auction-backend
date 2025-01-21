@@ -67,12 +67,16 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const { rating, ...userWithoutRating } = user;
+    return user;
+  }
+
+  async findOneByIdWithBalance(userId: string) {
+    const { rating, ...userWithoutRating } = await this.findOneById(userId);
     const balance = await this.transactionsService.calculateBalance(userId);
 
     return {
       ...userWithoutRating,
-      rating: user.role === Role.User ? rating : null,
+      rating: userWithoutRating.role === Role.User ? rating : null,
       balance,
     };
   }
