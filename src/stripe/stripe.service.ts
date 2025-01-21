@@ -16,7 +16,7 @@ export class StripeService {
 
   async createPaymentIntent(numberOfPoints: number) {
     const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: numberOfPoints * EXCHANGE_RATE,
+      amount: +(numberOfPoints * EXCHANGE_RATE * 100).toFixed(0),
       currency: 'usd',
       automatic_payment_methods: {
         enabled: true,
