@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SystemService } from 'src/system/system.service';
 import { TransactionsService } from 'src/transactions/transactions.service';
 import Stripe from 'stripe';
-
-const EXCHANGE_RATE = 1.2;
 
 @Injectable()
 export class StripeService {
@@ -14,6 +13,7 @@ export class StripeService {
   constructor(
     private configService: ConfigService,
     private transactionsService: TransactionsService,
+    private systemService: SystemService,
   ) {
     this.stripeKey = this.configService.get<string>('stripe_key');
     this.stripe = new Stripe(this.stripeKey);
@@ -23,8 +23,9 @@ export class StripeService {
   }
 
   async createPaymentIntent(numberOfPoints: number, userId: string) {
+    const exchangeRate = +(await this.systemService.findExchangeRate());
     const paymentIntent = await this.stripe.paymentIntents.create({
-      amount: +(numberOfPoints * EXCHANGE_RATE * 100).toFixed(0),
+      amount: +(numberOfPoints * exchangeRate * 100).toFixed(0),
       currency: 'usd',
       automatic_payment_methods: {
         enabled: true,
