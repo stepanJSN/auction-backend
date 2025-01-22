@@ -3,9 +3,12 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { users } from '@prisma/client';
 import { SystemService } from 'src/system/system.service';
+import { TransactionExceptionCode } from 'src/transactions/transactions-exceptions.enum';
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { UsersService } from 'src/users/users.service';
 import Stripe from 'stripe';
@@ -79,8 +82,19 @@ export class StripeService {
     }
   }
 
-  async createAccount() {
+  async createAccount(userData: Omit<users, 'password' | 'stripe_account_id'>) {
     const account = await this.stripe.accounts.create({
+      email: userData.email,
+      business_type: 'individual',
+      individual: {
+        first_name: userData.name,
+        last_name: userData.surname,
+        email: userData.email,
+      },
+      business_profile: {
+        product_description: 'Platform customer',
+        url: '',
+      },
       controller: {
         losses: {
           payments: 'application',
@@ -101,8 +115,9 @@ export class StripeService {
     const clientUrl = this.configService.get<string>('client_url');
     const redirectUrl = clientUrl + '/transactions';
 
-    const { stripe_account_id } = await this.userService.findOneById(userId);
-    const accountId = stripe_account_id ?? (await this.createAccount());
+    const { stripe_account_id, ...restData } =
+      await this.userService.findOneById(userId);
+    const accountId = stripe_account_id ?? (await this.createAccount(restData));
     if (!stripe_account_id) {
       this.userService.update(userId, { stripe_account_id: accountId });
     }
@@ -120,16 +135,17 @@ export class StripeService {
     const { stripe_account_id } = await this.userService.findOneById(userId);
 
     if (!stripe_account_id) {
-      throw new BadRequestException('Stripe account not found');
+      throw new NotFoundException('Stripe account not found');
     }
 
     const { charges_enabled } =
       await this.stripe.accounts.retrieve(stripe_account_id);
 
     if (!charges_enabled) {
-      throw new BadRequestException(
-        'You don`t complete stripe account registration',
-      );
+      throw new BadRequestException({
+        code: TransactionExceptionCode.STRIPE_ACCOUNT_NOT_COMPLETED,
+        message: 'You don`t complete stripe account registration',
+      });
     }
 
     try {

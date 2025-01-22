@@ -13,6 +13,7 @@ import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.even
 import { StripeService } from 'src/stripe/stripe.service';
 import { JWTPayload } from 'src/auth/types/auth.type';
 import { Role } from '@prisma/client';
+import { TransactionExceptionCode } from './transactions-exceptions.enum';
 
 const SYSTEM_FEE = 0.1;
 
@@ -36,7 +37,10 @@ export class TransactionsService {
   async withdraw(amount: number, userData: JWTPayload) {
     const { available } = await this.calculateBalance(userData.id);
     if (available < amount) {
-      throw new BadRequestException('Not enough balance');
+      throw new BadRequestException({
+        code: TransactionExceptionCode.INSUFFICIENT_BALANCE,
+        message: 'Not enough balance',
+      });
     }
 
     if (userData.role === Role.User) {
