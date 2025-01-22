@@ -5,4 +5,6 @@ export default () => ({
   client_url: process.env.CLIENT_URL || 'http://localhost:5000',
   server_url: process.env.SERVER_URL || 'http://localhost:3000',
   image_folder: process.env.IMAGE_FOLDER || 'public',
+  stripe_key: process.env.STRIPE_KEY || '',
+  stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET || '',
 });

@@ -1,0 +1,6 @@
+model system {
+  id String @id @default(uuid())
+  key String @unique
+  value String
+  updated_at DateTime @updatedAt
+}

@@ -4,14 +4,15 @@ enum Role {
 }
 
 model users {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  name       String
-  surname    String
-  password   String
-  rating     Int      @default(0)
-  role       Role     @default(User)
-  created_at DateTime @default(now())
+  id                String   @id @default(uuid())
+  email             String   @unique
+  name              String
+  surname           String
+  password          String
+  rating            Int      @default(0)
+  role              Role     @default(User)
+  stripe_account_id String?
+  created_at        DateTime @default(now())
 
   outgoingTransactions transactions[]   @relation("from")
   incomingTransactions transactions[]   @relation("to")

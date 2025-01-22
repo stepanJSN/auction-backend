@@ -1,11 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { TransactionsRepository } from './transactions.repository';
 import { CreateTransferType } from './types/create-transfer.type';
-import { CreateTransactionServiceType } from './types/create-transaction-service.type';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { OnEvent } from '@nestjs/event-emitter';
 import { AuctionEvent } from 'src/auctions/enums/auction-event.enum';
 import { AuctionsFinishedEvent } from 'src/auctions/events/auction-finished.event';
+import { StripeService } from 'src/stripe/stripe.service';
+import { JWTPayload } from 'src/auth/types/auth.type';
+import { Role } from '@prisma/client';
+import { TransactionExceptionCode } from './transactions-exceptions.enum';
 
 const SYSTEM_FEE = 0.1;
 
@@ -14,28 +22,37 @@ export class TransactionsService {
   constructor(
     private transactionsRepository: TransactionsRepository,
     private auctionsService: AuctionsService,
+    @Inject(forwardRef(() => StripeService))
+    private stripeService: StripeService,
   ) {}
 
-  async topUp(createTransaction: CreateTransactionServiceType) {
+  async topUp(amount: number, userId: string) {
     await this.transactionsRepository.create({
-      toId: createTransaction.userId,
-      amount: createTransaction.amount,
+      toId: userId,
+      amount,
     });
-    return this.calculateBalance(createTransaction.userId);
+    return this.calculateBalance(userId);
   }
 
-  async withdraw(createTransaction: CreateTransactionServiceType) {
-    const { available } = await this.calculateBalance(createTransaction.userId);
-    if (available < createTransaction.amount) {
-      throw new BadRequestException('Not enough balance');
+  async withdraw(amount: number, userData: JWTPayload) {
+    const { available } = await this.calculateBalance(userData.id);
+    if (available < amount) {
+      throw new BadRequestException({
+        code: TransactionExceptionCode.INSUFFICIENT_BALANCE,
+        message: 'Not enough balance',
+      });
+    }
+
+    if (userData.role === Role.User) {
+      await this.stripeService.transferToAccount(amount, userData.id);
     }
 
     await this.transactionsRepository.create({
-      fromId: createTransaction.userId,
-      amount: createTransaction.amount,
+      fromId: userData.id,
+      amount,
     });
 
-    return this.calculateBalance(createTransaction.userId);
+    return this.calculateBalance(userData.id);
   }
 
   @OnEvent(AuctionEvent.FINISHED)
