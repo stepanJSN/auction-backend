@@ -5,6 +5,7 @@ import { CurrentUser } from 'src/decorators/user.decorator';
 import { Role } from '@prisma/client';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
+import { JWTPayload } from 'src/auth/types/auth.type';
 
 @Controller('transactions')
 export class TransactionsController {
@@ -15,15 +16,15 @@ export class TransactionsController {
     @Body() { amount }: CreateTransactionDto,
     @CurrentUser('id') userId: string,
   ) {
-    return this.transactionsService.topUp({ amount, userId });
+    return this.transactionsService.topUp(amount, userId);
   }
 
   @Post('/withdraw')
   withdraw(
     @Body() { amount }: CreateTransactionDto,
-    @CurrentUser('id') userId: string,
+    @CurrentUser() userData: JWTPayload,
   ) {
-    return this.transactionsService.withdraw({ amount, userId });
+    return this.transactionsService.withdraw(amount, userData);
   }
 
   @Get('/fee')
