@@ -37,7 +37,7 @@ export class StripeController {
   }
 
   @Post('create-account')
-  async createAccount() {
-    return this.stripeService.createAccountLink();
+  async createAccount(@CurrentUser('id') userId: string) {
+    return this.stripeService.createAccountLink(userId);
   }
 }
