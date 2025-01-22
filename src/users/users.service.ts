@@ -77,6 +77,7 @@ export class UsersService {
 
     return {
       ...restData,
+      role,
       rating: role === Role.User ? rating : null,
       has_stripe_account: !!stripe_account_id,
       balance,
