@@ -7,6 +7,11 @@ import { AuthGuard } from './auth.guard';
 import { UnauthorizedException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { Role } from '@prisma/client';
+import { MOCK_EMAIL, MOCK_ID } from 'config/mock-test-data';
+
+const MOCK_SECRET = 'mockSecret';
+const BEARER_TOKEN = 'Bearer mockToken';
+const MOCK_TOKEN = 'mockToken';
 
 describe('AuthGuard', () => {
   let authGuard: AuthGuard;
@@ -25,6 +30,14 @@ describe('AuthGuard', () => {
   });
 
   describe('canActivate', () => {
+    const mockPayload = { id: MOCK_ID, role: Role.User, email: MOCK_EMAIL };
+    const mockRequest = {
+      headers: { authorization: BEARER_TOKEN },
+    };
+    const mockClient = {
+      handshake: { auth: { token: BEARER_TOKEN }, headers: {} },
+    };
+
     it('should allow access if the route is public', async () => {
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(true);
       const context = {
@@ -58,15 +71,13 @@ describe('AuthGuard', () => {
       jest
         .spyOn(jwtService, 'verifyAsync')
         .mockRejectedValue(new Error('Token expired'));
-      jest.spyOn(configService, 'get').mockReturnValue('mockSecret');
+      jest.spyOn(configService, 'get').mockReturnValue(MOCK_SECRET);
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
         getType: jest.fn().mockReturnValue('http'),
         switchToHttp: jest.fn().mockReturnValue({
-          getRequest: jest.fn().mockReturnValue({
-            headers: { authorization: 'Bearer mockTokenExpired' },
-          }),
+          getRequest: jest.fn().mockReturnValue(mockRequest),
         }),
       } as unknown as ExecutionContext;
 
@@ -76,14 +87,9 @@ describe('AuthGuard', () => {
     });
 
     it('should validate token and attach user to request (HTTP)', async () => {
-      const mockPayload = { id: 1, role: Role.User, email: 'mockEmail' };
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue(mockPayload);
-      jest.spyOn(configService, 'get').mockReturnValue('mockSecret');
-
-      const mockRequest = {
-        headers: { authorization: 'Bearer mockToken' },
-      };
+      jest.spyOn(configService, 'get').mockReturnValue(MOCK_SECRET);
 
       const context = {
         getHandler: jest.fn(),
@@ -96,8 +102,8 @@ describe('AuthGuard', () => {
 
       const result = await authGuard.canActivate(context);
       expect(result).toBe(true);
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith('mockToken', {
-        secret: 'mockSecret',
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith(MOCK_TOKEN, {
+        secret: BEARER_TOKEN,
       });
       expect(mockRequest['user']).toEqual(mockPayload);
     });
@@ -125,18 +131,13 @@ describe('AuthGuard', () => {
       jest
         .spyOn(jwtService, 'verifyAsync')
         .mockRejectedValue(new Error('Token expired'));
-      jest.spyOn(configService, 'get').mockReturnValue('mockSecret');
+      jest.spyOn(configService, 'get').mockReturnValue(MOCK_SECRET);
       const context = {
         getHandler: jest.fn(),
         getClass: jest.fn(),
         getType: jest.fn().mockReturnValue('ws'),
         switchToWs: jest.fn().mockReturnValue({
-          getClient: jest.fn().mockReturnValue({
-            handshake: {
-              auth: { token: 'Bearer mockTokenExpired' },
-              headers: {},
-            },
-          }),
+          getClient: jest.fn().mockReturnValue(mockClient),
         }),
       } as unknown as ExecutionContext;
 
@@ -146,14 +147,9 @@ describe('AuthGuard', () => {
     });
 
     it('should validate token and attach user to client (WebSocket)', async () => {
-      const mockPayload = { id: 1, role: 'user', email: 'mockEmail' };
       jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(false);
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue(mockPayload);
-      jest.spyOn(configService, 'get').mockReturnValue('mockSecret');
-
-      const mockClient = {
-        handshake: { auth: { token: 'Bearer mockToken' }, headers: {} },
-      };
+      jest.spyOn(configService, 'get').mockReturnValue(MOCK_SECRET);
 
       const context = {
         getHandler: jest.fn(),
@@ -166,8 +162,8 @@ describe('AuthGuard', () => {
 
       const result = await authGuard.canActivate(context);
       expect(result).toBe(true);
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith('mockToken', {
-        secret: 'mockSecret',
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith(MOCK_TOKEN, {
+        secret: MOCK_SECRET,
       });
       expect(mockClient['user']).toEqual(mockPayload);
     });

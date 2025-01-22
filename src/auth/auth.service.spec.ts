@@ -5,10 +5,19 @@ import { Test } from '@nestjs/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { compare } from 'bcrypt';
 import { Role } from '@prisma/client';
+import {
+  MOCK_EMAIL,
+  MOCK_PASSWORD,
+  MOCK_ID,
+  MOCK_HASHED_PASSWORD,
+  MOCK_ACCESS_TOKEN,
+  MOCK_REFRESH_TOKEN,
+} from 'config/mock-test-data';
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(),
 }));
+const ONE_MONTH_IN_SECONDS = 2678400;
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -33,61 +42,58 @@ describe('AuthService', () => {
   });
 
   describe('signIn', () => {
+    const mockSignInPayload = {
+      email: MOCK_EMAIL,
+      password: MOCK_PASSWORD,
+    };
+    const mockUser = {
+      id: MOCK_ID,
+      password: MOCK_HASHED_PASSWORD,
+      role: Role.User,
+    };
+
     it('should throw UnauthorizedException if user is not found', async () => {
       jest.spyOn(usersService, 'findOneByEmail').mockResolvedValue(null);
 
-      await expect(
-        authService.signIn({
-          email: 'test@example.com',
-          password: 'password',
-        }),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.signIn(mockSignInPayload)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
-      jest.spyOn(usersService, 'findOneByEmail').mockResolvedValue({
-        id: '1',
-        password: 'hashedPassword',
-        role: Role.User,
-      });
+      jest.spyOn(usersService, 'findOneByEmail').mockResolvedValue(mockUser);
       (compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(
-        authService.signIn({
-          email: 'test@example.com',
-          password: 'password',
-        }),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(authService.signIn(mockSignInPayload)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should return tokens and user data if sign-in is successful', async () => {
-      const mockUser = {
-        id: '1',
-        password: 'hashedPassword',
-        role: Role.User,
-      };
-
       jest.spyOn(usersService, 'findOneByEmail').mockResolvedValue(mockUser);
       (compare as jest.Mock).mockResolvedValue(true);
-      jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce('accessToken');
-      jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce('refreshToken');
+      jest
+        .spyOn(jwtService, 'signAsync')
+        .mockResolvedValueOnce(MOCK_ACCESS_TOKEN);
+      jest
+        .spyOn(jwtService, 'signAsync')
+        .mockResolvedValueOnce(MOCK_REFRESH_TOKEN);
 
-      expect(
-        await authService.signIn({
-          email: 'test@example.com',
-          password: 'password',
-        }),
-      ).toEqual({
+      const signInResponse = {
         refreshToken: {
-          token: 'refreshToken',
-          maxAge: 2678400000, // ONE_MONTH_IN_SECONDS * 1000
+          token: MOCK_REFRESH_TOKEN,
+          maxAge: ONE_MONTH_IN_SECONDS * 1000,
         },
-        accessToken: 'accessToken',
+        accessToken: MOCK_ACCESS_TOKEN,
         role: mockUser.role,
         id: mockUser.id,
-      });
+      };
+
+      expect(await authService.signIn(mockSignInPayload)).toEqual(
+        signInResponse,
+      );
       expect(usersService.findOneByEmail).toHaveBeenCalledWith(
-        'test@example.com',
+        mockSignInPayload.email,
       );
       expect(jwtService.signAsync).toHaveBeenCalledTimes(2);
     });
