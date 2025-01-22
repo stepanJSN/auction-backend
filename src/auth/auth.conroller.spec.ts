@@ -3,6 +3,14 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { Response, Request } from 'express';
+import { Role } from '@prisma/client';
+import {
+  MOCK_ACCESS_TOKEN,
+  MOCK_EMAIL,
+  MOCK_ID,
+  MOCK_PASSWORD,
+  MOCK_REFRESH_TOKEN,
+} from 'config/mock-test-data';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -33,27 +41,28 @@ describe('AuthController', () => {
       const mockResponse = {
         cookie: jest.fn(),
       } as unknown as Response;
-      const signInDto = { email: 'test@example.com', password: 'password123' };
+      const signInDto = { email: MOCK_EMAIL, password: MOCK_PASSWORD };
       const mockSignInResponse = {
-        refreshToken: { token: 'mockRefreshToken', maxAge: 3600 * 1000 },
-        accessToken: 'mockAccessToken',
-        role: 'User',
-        id: 'userId',
+        refreshToken: { token: MOCK_REFRESH_TOKEN, maxAge: 3600 * 1000 },
+        accessToken: MOCK_ACCESS_TOKEN,
+        role: Role.User,
+        id: MOCK_ID,
+      };
+      const signInResponse = {
+        accessToken: MOCK_ACCESS_TOKEN,
+        role: Role.User,
+        id: MOCK_ID,
       };
 
       authService.signIn.mockResolvedValue(mockSignInResponse);
 
       const result = await authController.signIn(mockResponse, signInDto);
 
-      expect(result).toEqual({
-        accessToken: 'mockAccessToken',
-        role: 'User',
-        id: 'userId',
-      });
+      expect(result).toEqual(signInResponse);
       expect(authService.signIn).toHaveBeenCalledWith(signInDto);
       expect(mockResponse.cookie).toHaveBeenCalledWith(
         'refreshToken',
-        'mockRefreshToken',
+        MOCK_REFRESH_TOKEN,
         {
           httpOnly: true,
           maxAge: 3600 * 1000,
@@ -67,16 +76,16 @@ describe('AuthController', () => {
   describe('getNewTokens', () => {
     it('should return new access token if refresh token is valid', async () => {
       const mockRequest = {
-        cookies: { refreshToken: 'validRefreshToken' },
+        cookies: { refreshToken: MOCK_REFRESH_TOKEN },
       } as unknown as Request;
-      authService.getNewAccessToken.mockResolvedValue('newAccessToken');
+      authService.getNewAccessToken.mockResolvedValue(MOCK_ACCESS_TOKEN);
 
       const result = await authController.getNewTokens(mockRequest);
 
       expect(authService.getNewAccessToken).toHaveBeenCalledWith(
-        'validRefreshToken',
+        MOCK_REFRESH_TOKEN,
       );
-      expect(result).toEqual({ accessToken: 'newAccessToken' });
+      expect(result).toEqual({ accessToken: MOCK_ACCESS_TOKEN });
     });
 
     it('should throw UnauthorizedException if refresh token is missing', async () => {
