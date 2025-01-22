@@ -6,7 +6,6 @@ import {
 import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { hash } from 'bcrypt';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangeRoleDto } from './dto/change-role.dto';
 import { OnEvent } from '@nestjs/event-emitter';
 import { RatingAction, UpdateRatingEvent } from './events/update-rating.event';
@@ -14,6 +13,7 @@ import { RatingEvent } from './enums/rating-event.enum';
 import { FindAllUsersDto } from './dto/find-all-users.dto';
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { Role } from '@prisma/client';
+import { UpdateUserType } from './types/update-user.type';
 
 @Injectable()
 export class UsersService {
@@ -71,17 +71,19 @@ export class UsersService {
   }
 
   async findOneByIdWithBalance(userId: string) {
-    const { rating, ...userWithoutRating } = await this.findOneById(userId);
+    const { rating, stripe_account_id, role, ...restData } =
+      await this.findOneById(userId);
     const balance = await this.transactionsService.calculateBalance(userId);
 
     return {
-      ...userWithoutRating,
-      rating: userWithoutRating.role === Role.User ? rating : null,
+      ...restData,
+      rating: role === Role.User ? rating : null,
+      has_stripe_account: !!stripe_account_id,
       balance,
     };
   }
 
-  async update(userId: string, updateUsersDto: UpdateUserDto) {
+  async update(userId: string, updateUsersDto: UpdateUserType) {
     const userPassword =
       updateUsersDto.password &&
       (await this.hashPassword(updateUsersDto.password));
