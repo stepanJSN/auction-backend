@@ -1,6 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { BidsRepository } from './bids.repository';
+import {
+  MOCK_AUCTION_ID,
+  MOCK_DATE,
+  MOCK_ID,
+  MOCK_USER_ID,
+} from 'config/mock-test-data';
 
 describe('BidsRepository', () => {
   let bidsRepository: BidsRepository;
@@ -17,17 +23,17 @@ describe('BidsRepository', () => {
 
   it('should create a new bid successfully', async () => {
     const mockBidData = {
-      userId: 'user123',
-      auctionId: 'auction456',
+      userId: MOCK_USER_ID,
+      auctionId: MOCK_AUCTION_ID,
       bidAmount: 100,
     };
 
     const mockCreatedBid = {
-      id: 'bid789',
+      id: MOCK_ID,
       user_id: mockBidData.userId,
       auction_id: mockBidData.auctionId,
       bid_amount: mockBidData.bidAmount,
-      created_at: new Date(),
+      created_at: MOCK_DATE,
     };
 
     jest.spyOn(prismaService.bids, 'create').mockResolvedValue(mockCreatedBid);
