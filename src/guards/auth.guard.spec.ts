@@ -107,7 +107,7 @@ describe('AuthGuard', () => {
       const result = await authGuard.canActivate(context);
       expect(result).toBe(true);
       expect(jwtService.verifyAsync).toHaveBeenCalledWith(MOCK_TOKEN, {
-        secret: BEARER_TOKEN,
+        secret: MOCK_SECRET,
       });
       expect(mockRequest['user']).toEqual(mockPayload);
     });
