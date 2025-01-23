@@ -59,7 +59,7 @@ export class BidsService {
     }
 
     if (
-      auction.highest_bid?.amount &&
+      !auction.highest_bid?.amount &&
       auction.starting_bid > createBidData.bidAmount
     ) {
       throw new BadRequestException({
