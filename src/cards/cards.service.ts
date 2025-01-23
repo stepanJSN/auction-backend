@@ -139,9 +139,8 @@ export class CardsService {
     updateCardDto: UpdateCardDto,
     image?: Express.Multer.File,
   ) {
-    const { image_url } = await this.findOne(id);
-
     if (image) {
+      const { image_url } = await this.cardsRepository.findOneById(id);
       await this.imagesService.delete(image_url);
       const filename = Date.now() + image.originalname;
       const imageUrl = await this.imagesService.upload(filename, image);

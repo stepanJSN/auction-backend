@@ -12,7 +12,6 @@ export const MOCK_REFRESH_TOKEN = 'refreshToken';
 export const MOCK_DATE = new Date();
 export const MOCK_IMAGE_URL = 'https://example.com/image.jpg';
 export const MOCK_CARD = {
-  is_owned: false,
   id: MOCK_CARD_ID,
   created_at: MOCK_DATE,
   name: 'Test Card',

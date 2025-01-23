@@ -4,6 +4,6 @@ export type FindAllCardsServiceType = {
   userId?: string;
   role?: Role;
   name?: string;
-  page: number;
-  take: number;
+  page?: number;
+  take?: number;
 };
