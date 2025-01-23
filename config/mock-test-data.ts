@@ -22,3 +22,7 @@ export const MOCK_CARD = {
   is_active: true,
   is_created_by_admin: true,
 };
+export const MOCK_PAGINATION = {
+  page: 1,
+  take: 20,
+};
