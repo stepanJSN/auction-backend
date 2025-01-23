@@ -77,7 +77,8 @@
       "ts"
     ],
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/$1"
+      "^src/(.*)$": "<rootDir>/$1",
+      "^config/mock-test-data": "<rootDir>/../config/mock-test-data.ts"
     },
     "rootDir": "src",
     "testRegex": ".*\\.spec\\.ts$",
