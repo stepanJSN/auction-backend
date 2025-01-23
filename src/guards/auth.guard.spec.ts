@@ -7,7 +7,7 @@ import { AuthGuard } from './auth.guard';
 import { UnauthorizedException } from '@nestjs/common';
 import { WsException } from '@nestjs/websockets';
 import { Role } from '@prisma/client';
-import { MOCK_EMAIL, MOCK_ID } from 'config/mock-test-data';
+import { MOCK_EMAIL, MOCK_USER_ID } from 'config/mock-test-data';
 
 const MOCK_SECRET = 'mockSecret';
 const BEARER_TOKEN = 'Bearer mockToken';
@@ -30,7 +30,11 @@ describe('AuthGuard', () => {
   });
 
   describe('canActivate', () => {
-    const mockPayload = { id: MOCK_ID, role: Role.User, email: MOCK_EMAIL };
+    const mockPayload = {
+      id: MOCK_USER_ID,
+      role: Role.User,
+      email: MOCK_EMAIL,
+    };
     const mockRequest = {
       headers: { authorization: BEARER_TOKEN },
     };

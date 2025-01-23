@@ -7,9 +7,9 @@ import { Role } from '@prisma/client';
 import {
   MOCK_ACCESS_TOKEN,
   MOCK_EMAIL,
-  MOCK_ID,
   MOCK_PASSWORD,
   MOCK_REFRESH_TOKEN,
+  MOCK_USER_ID,
 } from 'config/mock-test-data';
 
 describe('AuthController', () => {
@@ -46,12 +46,12 @@ describe('AuthController', () => {
         refreshToken: { token: MOCK_REFRESH_TOKEN, maxAge: 3600 * 1000 },
         accessToken: MOCK_ACCESS_TOKEN,
         role: Role.User,
-        id: MOCK_ID,
+        id: MOCK_USER_ID,
       };
       const signInResponse = {
         accessToken: MOCK_ACCESS_TOKEN,
         role: Role.User,
-        id: MOCK_ID,
+        id: MOCK_USER_ID,
       };
 
       authService.signIn.mockResolvedValue(mockSignInResponse);

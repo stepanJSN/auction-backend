@@ -8,10 +8,10 @@ import { Role } from '@prisma/client';
 import {
   MOCK_EMAIL,
   MOCK_PASSWORD,
-  MOCK_ID,
   MOCK_HASHED_PASSWORD,
   MOCK_ACCESS_TOKEN,
   MOCK_REFRESH_TOKEN,
+  MOCK_USER_ID,
 } from 'config/mock-test-data';
 
 jest.mock('bcrypt', () => ({
@@ -47,7 +47,7 @@ describe('AuthService', () => {
       password: MOCK_PASSWORD,
     };
     const mockUser = {
-      id: MOCK_ID,
+      id: MOCK_USER_ID,
       password: MOCK_HASHED_PASSWORD,
       role: Role.User,
     };
