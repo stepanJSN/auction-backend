@@ -7,6 +7,7 @@ import {
   MOCK_ID,
   MOCK_USER_ID,
 } from 'config/mock-test-data';
+import { GroupCardByParamType } from './types/group-card-by-param.type';
 
 describe('CardInstancesRepository', () => {
   let cardInstancesRepository: CardInstancesRepository;
@@ -126,9 +127,10 @@ describe('CardInstancesRepository', () => {
   });
 
   it('should group card instances by user id successfully', async () => {
+    const mockGroup = [{ user_id: MOCK_USER_ID, _count: { id: 1 } }];
     prismaService.card_instances.groupBy = jest
       .fn()
-      .mockResolvedValue([{ user_id: MOCK_USER_ID, _count: { id: 1 } }]);
+      .mockResolvedValue(mockGroup);
 
     const result = await cardInstancesRepository.groupByUserIdWithCards([
       MOCK_CARD_ID,
@@ -140,6 +142,34 @@ describe('CardInstancesRepository', () => {
       where: { card_id: { in: [MOCK_CARD_ID] } },
       _count: { card_id: true },
     });
-    expect(result).toEqual([{ user_id: MOCK_USER_ID, _count: { id: 1 } }]);
+    expect(result).toEqual(mockGroup);
+  });
+
+  it('should group card instances by param successfully', async () => {
+    const mockGroupPayload: GroupCardByParamType = {
+      param: 'card_id',
+      sortOrder: 'asc',
+      take: 10,
+    };
+    const mockGroup = [{ card_id: MOCK_CARD_ID, _count: { id: 1 } }];
+    prismaService.card_instances.groupBy = jest
+      .fn()
+      .mockResolvedValue(mockGroup);
+
+    const result =
+      await cardInstancesRepository.groupCardByParam(mockGroupPayload);
+
+    expect(prismaService.card_instances.groupBy).toHaveBeenCalledTimes(1);
+    expect(prismaService.card_instances.groupBy).toHaveBeenCalledWith({
+      by: [mockGroupPayload.param],
+      _count: { [mockGroupPayload.param]: true },
+      orderBy: {
+        _count: {
+          [mockGroupPayload.param]: mockGroupPayload.sortOrder,
+        },
+      },
+      take: mockGroupPayload.take,
+    });
+    expect(result).toEqual(mockGroup);
   });
 });
