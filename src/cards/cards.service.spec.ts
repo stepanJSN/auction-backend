@@ -98,16 +98,20 @@ describe('CardsService', () => {
         card_id: MOCK_CARD_ID,
         user_id: MOCK_USER_ID,
       };
+      const mockTimestamp = 1672531200000; // January 1, 2023
+      const mockFilename = `${mockTimestamp}${image.originalname}`;
       cardsRepository.findAll.mockResolvedValue([MOCK_CARD]);
       cardsRepository.countNumberOfCards.mockResolvedValue(1);
       cardsInstancesService.findAll.mockResolvedValue([mockCardInstance]);
 
       imagesService.upload.mockResolvedValue(MOCK_IMAGE_URL);
+      jest.spyOn(Date, 'now').mockReturnValue(mockTimestamp);
       cardsRepository.create.mockResolvedValue(MOCK_CARD_ID);
 
       const result = await cardsService.create(createCardPayload, image);
 
       expect(imagesService.upload).toHaveBeenCalledTimes(1);
+      expect(imagesService.upload).toHaveBeenCalledWith(mockFilename, image);
       expect(cardsRepository.create).toHaveBeenCalledTimes(1);
       expect(cardsRepository.create).toHaveBeenCalledWith({
         ...createCardPayload,
@@ -117,36 +121,38 @@ describe('CardsService', () => {
     });
   });
 
-  describe('findAll', () => {
+  describe('findAllWithDetails', () => {
     it('should return active cards with ownership flag for User role', async () => {
       const findAllPayload = {
         userId: MOCK_USER_ID,
         role: Role.User,
         name: MOCK_CARD.name,
       };
+      const mockFindAllResponse = {
+        data: [MOCK_CARD],
+        info: { page: 1, totalCount: 40, totalPages: 2 },
+      };
 
-      cardsRepository.findAll.mockResolvedValue([MOCK_CARD]);
-      cardsRepository.countNumberOfCards.mockResolvedValue(40);
+      jest
+        .spyOn(cardsService, 'findAll')
+        .mockResolvedValue(mockFindAllResponse);
       cardsInstancesService.attachOwnershipFlag.mockResolvedValue([
         { ...MOCK_CARD, is_owned: false },
       ]);
 
-      const result = await cardsService.findAll(findAllPayload);
+      const result = await cardsService.findAllWithDetails(findAllPayload);
 
-      expect(cardsRepository.findAll).toHaveBeenCalledWith({
-        active: true,
+      expect(cardsService.findAll).toHaveBeenCalledWith({
+        role: findAllPayload.role,
         name: findAllPayload.name,
         page: 1,
         take: 20,
       });
-      expect(cardsRepository.countNumberOfCards).toHaveBeenCalledWith({
-        active: true,
-        name: findAllPayload.name,
-      });
       expect(result).toEqual({
         data: [{ ...MOCK_CARD, is_owned: false }],
-        info: { page: 1, totalCount: 40, totalPages: 2 },
+        info: mockFindAllResponse.info,
       });
+      jest.restoreAllMocks();
     });
 
     it('should return all cards for Admin role', async () => {
@@ -155,26 +161,28 @@ describe('CardsService', () => {
         role: Role.Admin,
         name: MOCK_CARD.name,
       };
+      const mockFindAllResponse = {
+        data: [MOCK_CARD],
+        info: { page: 1, totalCount: 40, totalPages: 2 },
+      };
 
-      cardsRepository.findAll.mockResolvedValue([MOCK_CARD]);
-      cardsRepository.countNumberOfCards.mockResolvedValue(40);
+      jest
+        .spyOn(cardsService, 'findAll')
+        .mockResolvedValue(mockFindAllResponse);
 
-      const result = await cardsService.findAll(findAllPayload);
+      const result = await cardsService.findAllWithDetails(findAllPayload);
 
-      expect(cardsRepository.findAll).toHaveBeenCalledWith({
-        active: undefined,
+      expect(cardsService.findAll).toHaveBeenCalledWith({
+        role: findAllPayload.role,
         name: findAllPayload.name,
         page: 1,
         take: 20,
       });
-      expect(cardsRepository.countNumberOfCards).toHaveBeenCalledWith({
-        active: undefined,
-        name: findAllPayload.name,
-      });
       expect(result).toEqual({
         data: [MOCK_CARD],
-        info: { page: 1, totalCount: 40, totalPages: 2 },
+        info: mockFindAllResponse.info,
       });
+      jest.restoreAllMocks();
     });
   });
 
@@ -187,14 +195,18 @@ describe('CardsService', () => {
     expect(result).toEqual(40);
   });
 
-  it('should find all cards by user id', async () => {
+  it('should find all cards', async () => {
     const pagination = {
       page: 1,
       take: 20,
     };
     cardsRepository.findAll.mockResolvedValue([MOCK_CARD]);
     cardsRepository.countNumberOfCards.mockResolvedValue(40);
-    const result = await cardsService.findAllByUserId(MOCK_USER_ID, pagination);
+    const result = await cardsService.findAll({
+      userId: MOCK_USER_ID,
+      page: pagination.page,
+      take: pagination.take,
+    });
     expect(cardsRepository.findAll).toHaveBeenCalledWith({
       userId: MOCK_USER_ID,
       page: pagination.page,
@@ -258,11 +270,14 @@ describe('CardsService', () => {
 
   describe('update', () => {
     it('should update a card and image if it was provided successfully', async () => {
+      const mockTimestamp = 1672531200000; // January 1, 2023
+      const mockFilename = `${mockTimestamp}${image.originalname}`;
       cardsRepository.findOneById.mockResolvedValue(
         mockCardWithEpisodesAndLocation,
       );
       imagesService.delete.mockResolvedValue();
       imagesService.upload.mockResolvedValue(MOCK_IMAGE_URL);
+      jest.spyOn(Date, 'now').mockReturnValue(mockTimestamp);
       cardsRepository.update.mockResolvedValue(MOCK_CARD);
 
       const result = await cardsService.update(
@@ -278,6 +293,7 @@ describe('CardsService', () => {
         mockCardWithEpisodesAndLocation.image_url,
       );
       expect(imagesService.upload).toHaveBeenCalledTimes(1);
+      expect(imagesService.upload).toHaveBeenCalledWith(mockFilename, image);
       expect(cardsRepository.update).toHaveBeenCalledTimes(1);
       expect(cardsRepository.update).toHaveBeenCalledWith(MOCK_CARD_ID, {
         ...createCardPayload,

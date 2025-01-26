@@ -66,7 +66,6 @@ export class CardsService {
     take = 20,
   }: FindAllCardsServiceType) {
     const { data: cards, info } = await this.findAll({
-      userId,
       role,
       name,
       page,
