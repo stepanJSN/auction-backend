@@ -57,7 +57,7 @@ export class CardsController {
     @CurrentUser() user: JWTPayload,
     @Query() { page, take, name }: FindAllCards,
   ) {
-    return this.cardsService.findAll({
+    return this.cardsService.findAllWithDetails({
       userId: user.id,
       role: user.role,
       page,
@@ -69,9 +69,9 @@ export class CardsController {
   @Get('myCards')
   findMyCards(
     @CurrentUser('id') userId: string,
-    @Query() paginationDto: PaginationDto,
+    @Query() { page, take }: PaginationDto,
   ) {
-    return this.cardsService.findAllByUserId(userId, paginationDto);
+    return this.cardsService.findAll({ page, take, userId });
   }
 
   @Get(':id')
