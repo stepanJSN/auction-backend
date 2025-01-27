@@ -8,8 +8,12 @@ import {
   MOCK_PAGINATION,
   MOCK_USER_ID,
 } from 'config/mock-test-data';
-import { Readable } from 'stream';
 import { Role } from '@prisma/client';
+import {
+  mockImage,
+  createCardDto,
+  mockCardWithEpisodesAndLocation,
+} from './mockData';
 
 describe('CardsController', () => {
   let cardsController: CardsController;
@@ -30,46 +34,10 @@ describe('CardsController', () => {
     cardsService = module.get(CardsService);
   });
 
-  const createCardDto = {
-    name: MOCK_CARD.name,
-    type: MOCK_CARD.type,
-    locationId: MOCK_CARD.location_id,
-    gender: MOCK_CARD.gender,
-    isActive: MOCK_CARD.is_active,
-    episodesId: [1, 2, 3],
-  };
-  const mockCardWithEpisodesAndLocation = {
-    ...MOCK_CARD,
-    episodes: [
-      {
-        id: 1,
-        name: 'episode 1',
-        code: '1234',
-      },
-    ],
-    location: {
-      id: 1,
-      name: 'location 1',
-      type: 'location type 1',
-    },
-  };
-  const image: Express.Multer.File = {
-    originalname: 'image.png',
-    buffer: Buffer.from('image'),
-    fieldname: '',
-    encoding: '',
-    mimetype: '',
-    size: 0,
-    stream: new Readable(),
-    destination: '',
-    filename: '',
-    path: '',
-  };
-
   describe('create', () => {
     it('should create a card', () => {
       cardsService.create.mockResolvedValue(MOCK_CARD.id);
-      const result = cardsController.create(image, createCardDto);
+      const result = cardsController.create(mockImage, createCardDto);
       expect(result).resolves.toEqual(MOCK_CARD.id);
     });
   });
@@ -133,7 +101,11 @@ describe('CardsController', () => {
   describe('update', () => {
     it('should update a card', () => {
       cardsService.update.mockResolvedValue(MOCK_CARD);
-      const result = cardsController.update(MOCK_CARD.id, createCardDto, image);
+      const result = cardsController.update(
+        MOCK_CARD.id,
+        createCardDto,
+        mockImage,
+      );
       expect(result).resolves.toEqual(MOCK_CARD);
     });
   });
