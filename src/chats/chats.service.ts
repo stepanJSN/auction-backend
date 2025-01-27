@@ -22,7 +22,7 @@ export class ChatsService {
     private chatsGateway: ChatsGateway,
   ) {}
 
-  async checkChat(participants: string[], chatName: string) {
+  private async checkChat(participants: string[], chatName: string) {
     if (participants.length === 2) {
       const existingChats = await this.chatsRepository.findAllChatsWithUsers(
         participants[0],

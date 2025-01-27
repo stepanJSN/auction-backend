@@ -137,8 +137,13 @@ export class ChatsRepository {
           },
         },
       },
-      include: {
-        users: true,
+      select: {
+        id: true,
+        users: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
   }
