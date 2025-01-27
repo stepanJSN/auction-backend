@@ -3,8 +3,17 @@ import { ChatsGateway } from './chats.gateway';
 import { ChatsRepository } from './chats.repository';
 import { ChatsService } from './chats.service';
 import { Test } from '@nestjs/testing';
-import { MOCK_ID, MOCK_USER2_ID, MOCK_USER_ID } from 'config/mock-test-data';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  MOCK_DATE,
+  MOCK_ID,
+  MOCK_USER2_ID,
+  MOCK_USER_ID,
+} from 'config/mock-test-data';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('ChatsService', () => {
   let chatsService: ChatsService;
@@ -108,6 +117,169 @@ describe('ChatsService', () => {
         expectedChatName,
       );
       expect(result).toEqual(mockCreateChatResponse);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should find all chats', async () => {
+      const mockFindAllChatsResponse = [
+        {
+          id: MOCK_ID,
+          name: 'Test Chat',
+          users: [
+            {
+              id: MOCK_USER_ID,
+              name: 'User1',
+              surname: 'User1Surname',
+            },
+            {
+              id: MOCK_USER2_ID,
+              name: 'User2',
+              surname: 'User2Surname',
+            },
+          ],
+          messages: [
+            {
+              id: 'messageId',
+              created_at: MOCK_DATE,
+              message: 'some message',
+              sender: {
+                id: MOCK_USER2_ID,
+                name: 'User2',
+                surname: 'User2Surname',
+              },
+            },
+          ],
+        },
+      ];
+      const findAllChatsPayload = {
+        page: 1,
+        take: 10,
+        userId: MOCK_USER_ID,
+      };
+
+      chatsRepository.findAll.mockResolvedValueOnce({
+        chats: mockFindAllChatsResponse,
+        totalCount: 1,
+      });
+
+      const result = await chatsService.findAll(findAllChatsPayload);
+
+      expect(chatsRepository.findAll).toHaveBeenCalledTimes(1);
+      expect(chatsRepository.findAll).toHaveBeenCalledWith(findAllChatsPayload);
+      expect(result).toEqual({
+        data: [
+          {
+            id: mockFindAllChatsResponse[0].id,
+            name: mockFindAllChatsResponse[0].name,
+            lastMessage: {
+              id: mockFindAllChatsResponse[0].messages[0].id,
+              message: mockFindAllChatsResponse[0].messages[0].message,
+              created_at: mockFindAllChatsResponse[0].messages[0].created_at,
+              sender: {
+                name: mockFindAllChatsResponse[0].messages[0].sender.name,
+                surname: mockFindAllChatsResponse[0].messages[0].sender.surname,
+                is_this_user_message: false,
+              },
+            },
+          },
+        ],
+        info: {
+          page: findAllChatsPayload.page,
+          totalCount: 1,
+          totalPages: 1,
+        },
+      });
+    });
+  });
+
+  describe('findOne', () => {
+    it('should throw an NotFoundException if chat does not exist', async () => {
+      chatsRepository.findOne.mockResolvedValueOnce(null);
+
+      await expect(chatsService.findOne(MOCK_ID, MOCK_USER_ID)).rejects.toThrow(
+        new NotFoundException('Chat not found'),
+      );
+    });
+
+    it('should find one chat', async () => {
+      const mockFindOneChatResponse = {
+        id: MOCK_ID,
+        name: 'Test Chat',
+        users: [
+          {
+            id: MOCK_USER_ID,
+            name: 'User1',
+            surname: 'User1Surname',
+          },
+          {
+            id: MOCK_USER2_ID,
+            name: 'User2',
+            surname: 'User2Surname',
+          },
+        ],
+      };
+
+      chatsRepository.findOne.mockResolvedValueOnce(mockFindOneChatResponse);
+
+      const result = await chatsService.findOne(MOCK_ID, MOCK_USER_ID);
+
+      expect(chatsRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(chatsRepository.findOne).toHaveBeenCalledWith(MOCK_ID);
+      expect(result).toEqual(mockFindOneChatResponse);
+    });
+  });
+
+  describe('update', () => {
+    it('should update a chat', async () => {
+      const newChatData = {
+        participants: [MOCK_USER_ID, MOCK_USER2_ID],
+      };
+
+      const mockUpdateChatResponse = {
+        id: MOCK_ID,
+        name: 'Test Chat',
+        users: [
+          {
+            id: MOCK_USER_ID,
+            name: 'User1',
+            surname: 'User1Surname',
+          },
+          {
+            id: MOCK_USER2_ID,
+            name: 'User2',
+            surname: 'User2Surname',
+          },
+        ],
+      };
+
+      chatsRepository.update.mockResolvedValueOnce(mockUpdateChatResponse);
+      chatsRepository.findAllChatsWithUsers.mockResolvedValueOnce([]);
+
+      const result = await chatsService.update(
+        MOCK_ID,
+        newChatData,
+        MOCK_USER_ID,
+      );
+
+      expect(chatsRepository.findAllChatsWithUsers).toHaveBeenCalledTimes(1);
+      expect(chatsRepository.findAllChatsWithUsers).toHaveBeenCalledWith(
+        newChatData.participants[0],
+        newChatData.participants[1],
+      );
+      expect(chatsRepository.update).toHaveBeenCalledTimes(1);
+      expect(chatsRepository.update).toHaveBeenCalledWith(MOCK_ID, newChatData);
+      expect(result).toEqual(mockUpdateChatResponse);
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove a chat', async () => {
+      await chatsService.remove(MOCK_ID);
+      expect(chatsRepository.remove).toHaveBeenCalledTimes(1);
+      expect(chatsRepository.remove).toHaveBeenCalledWith(MOCK_ID);
+      expect(chatsGateway.remove).toHaveBeenCalledTimes(1);
+      expect(chatsGateway.remove).toHaveBeenCalledWith(MOCK_ID);
     });
   });
 });
