@@ -17,7 +17,7 @@ import { ChatWsOutgoingEventsEnum } from './enums/chat-ws-events.enum';
 })
 export class ChatsGateway implements OnGatewayConnection {
   @WebSocketServer()
-  private server: Server;
+  server: Server;
   constructor(
     @Inject(forwardRef(() => ChatsService))
     private readonly chatsService: ChatsService,
@@ -49,8 +49,11 @@ export class ChatsGateway implements OnGatewayConnection {
   async handleConnection(client: Socket) {
     const context = { switchToWs: () => ({ getClient: () => client }) } as any;
     try {
+      console.log('validating');
       await this.authGuard.validateWsRequest(context);
+      console.log('validateWsRequest was called successfully!');
     } catch {
+      console.log('validateWsRequest failed.');
       client.disconnect();
       return;
     }
