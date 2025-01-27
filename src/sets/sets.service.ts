@@ -21,7 +21,7 @@ import { RatingEvent } from 'src/users/enums/rating-event.enum';
 import { SetEvent } from './enums/set-event.enum';
 import { UserSetType } from './types/user-sets.type';
 import { CardsService } from 'src/cards/cards.service';
-import areArraysEqual from 'src/helpers/areArrayEquals';
+import areArraysEqual from 'src/helpers/areArraysEquals';
 
 const SETS_PER_ITERATION = 30;
 
@@ -202,7 +202,13 @@ export class SetsService {
       );
     }
 
-    if (updateSetDto.cardsId && !areArraysEqual(cards, updateSetDto.cardsId)) {
+    if (
+      updateSetDto.cardsId &&
+      !areArraysEqual(
+        cards.map((card) => card.id),
+        updateSetDto.cardsId,
+      )
+    ) {
       this.eventEmitter.emit(
         SetEvent.REMOVE,
         new SetEventPayload({
