@@ -6,6 +6,7 @@ export const MOCK_HASHED_PASSWORD = 'hashedPassword';
 export const MOCK_ID = 'id123';
 export const MOCK_CARD_ID = 'cardId123';
 export const MOCK_USER_ID = 'userId123';
+export const MOCK_USER2_ID = 'user2Id123';
 export const MOCK_AUCTION_ID = 'auctionId123';
 export const MOCK_ACCESS_TOKEN = 'accessToken';
 export const MOCK_REFRESH_TOKEN = 'refreshToken';
