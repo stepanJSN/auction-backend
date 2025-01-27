@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FindAllCardsType } from './types/find-all-cards.type';
 import { CreateCardType } from './types/create-card.type';
@@ -98,25 +98,29 @@ export class CardsRepository {
     });
   }
 
-  update(cardId: string, updateCardData: UpdateCardType) {
-    return this.prisma.cards.update({
-      where: { id: cardId },
-      data: {
-        name: updateCardData.name,
-        type: updateCardData.type,
-        gender: updateCardData.gender,
-        image_url: updateCardData.imageUrl,
-        is_active: updateCardData.isActive,
-        episodes: {
-          set: updateCardData.episodesId?.map((episodeId) => ({
-            id: episodeId,
-          })),
+  async update(cardId: string, updateCardData: UpdateCardType) {
+    try {
+      return await this.prisma.cards.update({
+        where: { id: cardId },
+        data: {
+          name: updateCardData.name,
+          type: updateCardData.type,
+          gender: updateCardData.gender,
+          image_url: updateCardData.imageUrl,
+          is_active: updateCardData.isActive,
+          episodes: {
+            set: updateCardData.episodesId?.map((episodeId) => ({
+              id: episodeId,
+            })),
+          },
+          location: updateCardData.locationId && {
+            connect: { id: updateCardData.locationId },
+          },
         },
-        location: updateCardData.locationId && {
-          connect: { id: updateCardData.locationId },
-        },
-      },
-    });
+      });
+    } catch {
+      throw new NotFoundException('Card not found');
+    }
   }
 
   async delete(cardId: string) {

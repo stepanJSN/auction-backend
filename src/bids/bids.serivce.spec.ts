@@ -57,7 +57,10 @@ describe('BidsService', () => {
 
   describe('create', () => {
     const mockAuctionData = {
-      card: MOCK_CARD,
+      card: {
+        ...MOCK_CARD,
+        is_owned: false,
+      },
       is_completed: false,
       is_this_user_auction: false,
       highest_bid: {

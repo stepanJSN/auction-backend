@@ -10,7 +10,6 @@ import { CardsRepository } from './cards.repository';
 import { ImagesService } from 'src/images/images.service';
 import { FindAllCardsServiceType } from './types/find-all-cards-service.type';
 import { Role } from '@prisma/client';
-import { PaginationDto } from 'src/dto/pagination.dto';
 
 const CARD_PER_ITERATION = 20;
 
@@ -59,28 +58,19 @@ export class CardsService {
     return this.cardsRepository.create({ ...createCardDto, imageUrl });
   }
 
-  async findAll({
+  async findAllWithDetails({
     userId,
     role,
     name,
     page = 1,
     take = 20,
   }: FindAllCardsServiceType) {
-    const cards = await this.cardsRepository.findAll({
-      active: role === Role.User || undefined,
+    const { data: cards, info } = await this.findAll({
+      role,
+      name,
       page,
       take,
-      name,
     });
-    const totalCount = await this.cardsRepository.countNumberOfCards({
-      active: role === Role.User || undefined,
-      name,
-    });
-    const info = {
-      page,
-      totalCount,
-      totalPages: Math.ceil(totalCount / take),
-    };
     if (role !== Role.User) {
       return { data: cards, info };
     }
@@ -100,12 +90,23 @@ export class CardsService {
     });
   }
 
-  async findAllByUserId(
-    userId: string,
-    { page = 1, take = 20 }: PaginationDto,
-  ) {
-    const cards = await this.cardsRepository.findAll({ userId, page, take });
+  async findAll({
+    userId,
+    role,
+    name,
+    page = 1,
+    take = 20,
+  }: FindAllCardsServiceType) {
+    const cards = await this.cardsRepository.findAll({
+      active: role === Role.User || undefined,
+      page,
+      take,
+      name,
+      userId,
+    });
     const totalCount = await this.cardsRepository.countNumberOfCards({
+      active: role === Role.User || undefined,
+      name,
       userId,
     });
     return {
@@ -139,9 +140,8 @@ export class CardsService {
     updateCardDto: UpdateCardDto,
     image?: Express.Multer.File,
   ) {
-    const { image_url } = await this.findOne(id);
-
     if (image) {
+      const { image_url } = await this.cardsRepository.findOneById(id);
       await this.imagesService.delete(image_url);
       const filename = Date.now() + image.originalname;
       const imageUrl = await this.imagesService.upload(filename, image);
