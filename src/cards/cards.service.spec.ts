@@ -13,51 +13,18 @@ import {
   MOCK_USER_ID,
 } from 'config/mock-test-data';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Readable } from 'stream';
 import { Role } from '@prisma/client';
+import {
+  createCardDto,
+  mockImage,
+  mockCardWithEpisodesAndLocation,
+} from './mockData';
 
 describe('CardsService', () => {
   let cardsService: CardsService;
   let cardsRepository: DeepMockProxy<CardsRepository>;
   let cardsInstancesService: DeepMockProxy<CardInstancesService>;
   let imagesService: DeepMockProxy<ImagesService>;
-
-  const createCardPayload = {
-    name: MOCK_CARD.name,
-    type: MOCK_CARD.type,
-    locationId: MOCK_CARD.location_id,
-    gender: MOCK_CARD.gender,
-    isActive: MOCK_CARD.is_active,
-    episodesId: [1, 2, 3],
-  };
-
-  const image: Express.Multer.File = {
-    originalname: 'image.png',
-    buffer: Buffer.from('image'),
-    fieldname: '',
-    encoding: '',
-    mimetype: '',
-    size: 0,
-    stream: new Readable(),
-    destination: '',
-    filename: '',
-    path: '',
-  };
-  const mockCardWithEpisodesAndLocation = {
-    ...MOCK_CARD,
-    episodes: [
-      {
-        id: 1,
-        name: 'episode 1',
-        code: '1234',
-      },
-    ],
-    location: {
-      id: 1,
-      name: 'location 1',
-      type: 'location type 1',
-    },
-  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -85,7 +52,7 @@ describe('CardsService', () => {
       cardsInstancesService.findAll.mockResolvedValue([]);
 
       await expect(
-        cardsService.create(createCardPayload, image),
+        cardsService.create(createCardDto, mockImage),
       ).rejects.toThrow(
         new BadRequestException('Not all cards from the API were sold'),
       );
@@ -99,7 +66,7 @@ describe('CardsService', () => {
         user_id: MOCK_USER_ID,
       };
       const mockTimestamp = 1672531200000; // January 1, 2023
-      const mockFilename = `${mockTimestamp}${image.originalname}`;
+      const mockFilename = `${mockTimestamp}${mockImage.originalname}`;
       cardsRepository.findAll.mockResolvedValue([MOCK_CARD]);
       cardsRepository.countNumberOfCards.mockResolvedValue(1);
       cardsInstancesService.findAll.mockResolvedValue([mockCardInstance]);
@@ -108,13 +75,16 @@ describe('CardsService', () => {
       jest.spyOn(Date, 'now').mockReturnValue(mockTimestamp);
       cardsRepository.create.mockResolvedValue(MOCK_CARD_ID);
 
-      const result = await cardsService.create(createCardPayload, image);
+      const result = await cardsService.create(createCardDto, mockImage);
 
       expect(imagesService.upload).toHaveBeenCalledTimes(1);
-      expect(imagesService.upload).toHaveBeenCalledWith(mockFilename, image);
+      expect(imagesService.upload).toHaveBeenCalledWith(
+        mockFilename,
+        mockImage,
+      );
       expect(cardsRepository.create).toHaveBeenCalledTimes(1);
       expect(cardsRepository.create).toHaveBeenCalledWith({
-        ...createCardPayload,
+        ...createCardDto,
         imageUrl: MOCK_IMAGE_URL,
       });
       expect(result).toEqual(MOCK_CARD_ID);
@@ -271,7 +241,7 @@ describe('CardsService', () => {
   describe('update', () => {
     it('should update a card and image if it was provided successfully', async () => {
       const mockTimestamp = 1672531200000; // January 1, 2023
-      const mockFilename = `${mockTimestamp}${image.originalname}`;
+      const mockFilename = `${mockTimestamp}${mockImage.originalname}`;
       cardsRepository.findOneById.mockResolvedValue(
         mockCardWithEpisodesAndLocation,
       );
@@ -282,8 +252,8 @@ describe('CardsService', () => {
 
       const result = await cardsService.update(
         MOCK_CARD_ID,
-        createCardPayload,
-        image,
+        createCardDto,
+        mockImage,
       );
 
       expect(cardsRepository.findOneById).toHaveBeenCalledTimes(1);
@@ -293,10 +263,13 @@ describe('CardsService', () => {
         mockCardWithEpisodesAndLocation.image_url,
       );
       expect(imagesService.upload).toHaveBeenCalledTimes(1);
-      expect(imagesService.upload).toHaveBeenCalledWith(mockFilename, image);
+      expect(imagesService.upload).toHaveBeenCalledWith(
+        mockFilename,
+        mockImage,
+      );
       expect(cardsRepository.update).toHaveBeenCalledTimes(1);
       expect(cardsRepository.update).toHaveBeenCalledWith(MOCK_CARD_ID, {
-        ...createCardPayload,
+        ...createCardDto,
         imageUrl: MOCK_IMAGE_URL,
       });
       expect(result).toEqual(MOCK_CARD);
