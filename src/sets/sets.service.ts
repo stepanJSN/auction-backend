@@ -91,11 +91,7 @@ export class SetsService {
     );
     return {
       data: mappedSets,
-      info: {
-        page,
-        totalCount,
-        totalPages: Math.ceil(totalCount / take),
-      },
+      info,
     };
   }
 
@@ -196,7 +192,7 @@ export class SetsService {
       this.eventEmitter.emit(
         SetEvent.UPDATE,
         new SetEventPayload({
-          cardsId: cards.map((card) => card.id),
+          cardsId: updateSet.cards.map((card) => card.id),
           bonus: newBonus,
         }),
       );
