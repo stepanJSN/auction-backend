@@ -17,7 +17,7 @@ export class StatisticsService {
   ) {}
 
   async getCardsStatistics(page = 1, take = 20) {
-    const cards = await this.cardsService.findAllWithDetails({
+    const cards = await this.cardsService.findAll({
       page,
       take,
     });
