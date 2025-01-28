@@ -15,8 +15,6 @@ import Stripe from 'stripe';
 
 @Injectable()
 export class StripeService {
-  private readonly stripeKey: string;
-  private readonly stripe: Stripe;
   private readonly stripeWebhookSecret: string;
 
   constructor(
@@ -26,9 +24,8 @@ export class StripeService {
     private systemService: SystemService,
     @Inject(forwardRef(() => UsersService))
     private userService: UsersService,
+    private stripe: Stripe,
   ) {
-    this.stripeKey = this.configService.get<string>('stripe_key');
-    this.stripe = new Stripe(this.stripeKey);
     this.stripeWebhookSecret = this.configService.get<string>(
       'stripe_webhook_secret',
     );
@@ -82,7 +79,9 @@ export class StripeService {
     }
   }
 
-  async createAccount(userData: Omit<users, 'password' | 'stripe_account_id'>) {
+  private async createAccount(
+    userData: Omit<users, 'password' | 'stripe_account_id'>,
+  ) {
     const account = await this.stripe.accounts.create({
       email: userData.email,
       business_type: 'individual',
