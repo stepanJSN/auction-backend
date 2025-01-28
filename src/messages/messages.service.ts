@@ -54,7 +54,16 @@ export class MessagesService {
   async update(id: string, updateMessageDto: UpdateMessageDto) {
     const message = await this.messagesRepository.update(id, updateMessageDto);
     this.messagesGateway.editMessage(message.chat_id, message);
-    return message;
+    return {
+      id: message.id,
+      message: message.message,
+      created_at: message.created_at,
+      sender: {
+        name: message.sender.name,
+        surname: message.sender.surname,
+        is_this_user_message: true,
+      },
+    };
   }
 
   async remove(id: string) {

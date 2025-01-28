@@ -59,7 +59,7 @@ export class MessagesRepository {
 
   async update(id: string, { message }: UpdateMessageDto) {
     try {
-      return this.prisma.messages.update({
+      return await this.prisma.messages.update({
         where: { id },
         data: {
           message,
@@ -85,7 +85,7 @@ export class MessagesRepository {
 
   async remove(id: string) {
     try {
-      return this.prisma.messages.delete({
+      return await this.prisma.messages.delete({
         where: { id },
         select: {
           id: true,
