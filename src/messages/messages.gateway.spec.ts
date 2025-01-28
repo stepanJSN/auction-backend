@@ -6,7 +6,12 @@ import { MessagesWsOutgoingEventsEnum } from './enums/messages-ws-events.enum';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
-jest.mock('socket.io');
+jest.mock('socket.io', () => ({
+  Server: jest.fn().mockImplementation(() => ({
+    to: jest.fn().mockReturnThis(),
+    emit: jest.fn(),
+  })),
+}));
 
 describe('MessagesGateway', () => {
   let messagesGateway: MessagesGateway;
@@ -25,19 +30,13 @@ describe('MessagesGateway', () => {
   };
 
   beforeEach(async () => {
-    mockServer = {
-      to: jest.fn().mockReturnThis(),
-      emit: jest.fn(),
-    };
-
     const module = await Test.createTestingModule({
       providers: [MessagesGateway, JwtService, ConfigService],
     }).compile();
 
     messagesGateway = module.get(MessagesGateway);
-    (messagesGateway as any).server = mockServer as jest.Mocked<
-      Partial<Server>
-    >;
+    mockServer = new Server() as unknown as jest.Mocked<Partial<Server>>;
+    (messagesGateway as any).server = mockServer;
   });
 
   describe('newMessage', () => {
