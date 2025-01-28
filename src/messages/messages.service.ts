@@ -28,7 +28,7 @@ export class MessagesService {
 
   async findAll(findOneChatDto: FindAllMessagesType) {
     const messages = await this.messagesRepository.findAll(findOneChatDto);
-    
+
     const hasNextPage = messages.length > findOneChatDto.take;
     if (hasNextPage) messages.pop();
 
