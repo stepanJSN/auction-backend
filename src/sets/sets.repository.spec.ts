@@ -2,36 +2,13 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SetsRepository } from './sets.repository';
 import { Test } from '@nestjs/testing';
-import { MOCK_CARD, MOCK_DATE } from 'config/mock-test-data';
+import { MOCK_DATE } from 'config/mock-test-data';
 import { NotFoundException } from '@nestjs/common';
+import { CARD_1, CARD_2, SET_1, SET_2 } from './mockData';
 
 describe('SetsRepository', () => {
   let setsRepository: SetsRepository;
   let prisma: DeepMockProxy<PrismaService>;
-  const card1 = {
-    ...MOCK_CARD,
-    id: 'card1',
-    name: 'Card 1',
-  };
-  const card2 = {
-    ...MOCK_CARD,
-    id: 'card2',
-    name: 'Card 2',
-  };
-  const set1 = {
-    id: 'set1',
-    name: 'Set 1',
-    bonus: 10,
-    created_at: MOCK_DATE,
-    cards: [card1, card2],
-  };
-  const set2 = {
-    id: 'set2',
-    name: 'Set 2',
-    bonus: 20,
-    created_at: MOCK_DATE,
-    cards: [card1, card2],
-  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -50,14 +27,14 @@ describe('SetsRepository', () => {
       const createSetDto = {
         name: 'Test Set',
         bonus: 10,
-        cardsId: [card1.id, card2.id],
+        cardsId: [CARD_1.id, CARD_2.id],
       };
       const createSetPrismaResponse = {
-        id: 'set1',
+        id: 'SET_1',
         name: 'Test Set',
         bonus: 10,
         created_at: MOCK_DATE,
-        cards: [card1, card2],
+        cards: [CARD_1, CARD_2],
       };
 
       prisma.sets.create.mockResolvedValue(createSetPrismaResponse);
@@ -69,7 +46,7 @@ describe('SetsRepository', () => {
           name: createSetDto.name,
           bonus: createSetDto.bonus,
           cards: {
-            connect: [{ id: card1.id }, { id: card2.id }],
+            connect: [{ id: CARD_1.id }, { id: CARD_2.id }],
           },
         },
         include: {
@@ -85,7 +62,7 @@ describe('SetsRepository', () => {
       const page = 1;
       const take = 10;
       const setsLength = 2;
-      const findManySetsWithCountPrismaResponse = [[set1, set2], setsLength];
+      const findManySetsWithCountPrismaResponse = [[SET_1, SET_2], setsLength];
 
       prisma.$transaction.mockResolvedValue(
         findManySetsWithCountPrismaResponse,
@@ -104,7 +81,7 @@ describe('SetsRepository', () => {
         prisma.sets.count(),
       ]);
       expect(result).toEqual({
-        sets: [set1, set2],
+        sets: [SET_1, SET_2],
         totalCount: setsLength,
       });
     });
@@ -112,14 +89,14 @@ describe('SetsRepository', () => {
 
   describe('findAllWithCard', () => {
     it('should return all sets with the specified card', async () => {
-      const cardId = 'card1';
+      const cardId = 'CARD_1';
       const page = 1;
       const take = 20;
       const setsLength = 2;
       const findManySetsWithCountPrismaResponse = [
         [
-          { bonus: set1.bonus, cards: set1.cards.map(({ id }) => ({ id })) },
-          { bonus: set2.bonus, cards: set2.cards.map(({ id }) => ({ id })) },
+          { bonus: SET_1.bonus, cards: SET_1.cards.map(({ id }) => ({ id })) },
+          { bonus: SET_2.bonus, cards: SET_2.cards.map(({ id }) => ({ id })) },
         ],
         setsLength,
       ];
@@ -166,9 +143,9 @@ describe('SetsRepository', () => {
 
   describe('findOne', () => {
     it('should return a set', async () => {
-      const id = set1.id;
+      const id = SET_1.id;
 
-      prisma.sets.findUnique.mockResolvedValue(set1);
+      prisma.sets.findUnique.mockResolvedValue(SET_1);
 
       const result = await setsRepository.findOne(id);
 
@@ -179,21 +156,21 @@ describe('SetsRepository', () => {
         },
       });
 
-      expect(result).toEqual(set1);
+      expect(result).toEqual(SET_1);
     });
   });
 
   describe('update', () => {
     it('should update a set if it exists', async () => {
-      const id = set1.id;
+      const id = SET_1.id;
       const updateSetDto = {
         name: 'Updated Set',
-        cardsId: [card1.id, card2.id],
+        cardsId: [CARD_1.id, CARD_2.id],
       };
       const updateSetPrismaResponse = {
-        ...set1,
+        ...SET_1,
         name: updateSetDto.name,
-        cards: [card1, card2],
+        cards: [CARD_1, CARD_2],
       };
 
       prisma.sets.update.mockResolvedValue(updateSetPrismaResponse);
@@ -205,7 +182,7 @@ describe('SetsRepository', () => {
         data: {
           name: updateSetDto.name,
           cards: {
-            set: [{ id: card1.id }, { id: card2.id }],
+            set: [{ id: CARD_1.id }, { id: CARD_2.id }],
           },
         },
         include: {
@@ -219,7 +196,7 @@ describe('SetsRepository', () => {
       const id = 'invalid-id';
       const updateSetDto = {
         name: 'Updated Set',
-        cardsId: [card1.id, card2.id],
+        cardsId: [CARD_1.id, CARD_2.id],
       };
 
       prisma.sets.update.mockRejectedValue(new Error('Prisma error'));
@@ -232,9 +209,9 @@ describe('SetsRepository', () => {
 
   describe('remove', () => {
     it('should remove a set if it exists', async () => {
-      const id = set1.id;
+      const id = SET_1.id;
 
-      prisma.sets.delete.mockResolvedValue(set1);
+      prisma.sets.delete.mockResolvedValue(SET_1);
 
       const result = await setsRepository.remove(id);
 
@@ -250,7 +227,7 @@ describe('SetsRepository', () => {
         },
       });
 
-      expect(result).toEqual(set1);
+      expect(result).toEqual(SET_1);
     });
 
     it('should not throw NotFoundException if set does not exist', async () => {

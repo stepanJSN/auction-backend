@@ -5,7 +5,7 @@ import { CardInstancesService } from 'src/card-instances/card-instances.service'
 import { CardsService } from 'src/cards/cards.service';
 import { SetsRepository } from './sets.repository';
 import { Test } from '@nestjs/testing';
-import { MOCK_CARD, MOCK_DATE, MOCK_USER_ID } from 'config/mock-test-data';
+import { MOCK_DATE, MOCK_USER_ID } from 'config/mock-test-data';
 import { SetEvent } from './enums/set-event.enum';
 import { SetEventPayload } from './events/set.event';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
@@ -15,6 +15,7 @@ import {
   RatingAction,
   UpdateRatingEvent,
 } from 'src/users/events/update-rating.event';
+import { SET_1, CARD_1, CARD_2, SET_2 } from './mockData';
 
 describe('SetsService', () => {
   let setsService: SetsService;
@@ -22,30 +23,6 @@ describe('SetsService', () => {
   let cardsService: DeepMockProxy<CardsService>;
   let cardInstancesService: DeepMockProxy<CardInstancesService>;
   let eventEmitter: DeepMockProxy<EventEmitter2>;
-  const card1 = {
-    ...MOCK_CARD,
-    id: 'card1',
-    name: 'Card 1',
-  };
-  const card2 = {
-    ...MOCK_CARD,
-    id: 'card2',
-    name: 'Card 2',
-  };
-  const set1 = {
-    id: 'set1',
-    name: 'Set 1',
-    bonus: 10,
-    created_at: MOCK_DATE,
-    cards: [card1, card2],
-  };
-  const set2 = {
-    id: 'set2',
-    name: 'Set 2',
-    bonus: 20,
-    created_at: MOCK_DATE,
-    cards: [card1, card2],
-  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -71,37 +48,37 @@ describe('SetsService', () => {
   describe('create', () => {
     it('should create a set if all cards are active', async () => {
       const createSetDto = {
-        name: set1.name,
-        bonus: set1.bonus,
-        cardsId: set1.cards.map((card) => card.id),
+        name: SET_1.name,
+        bonus: SET_1.bonus,
+        cardsId: SET_1.cards.map((card) => card.id),
       };
 
       cardsService.isCardActive.mockResolvedValue(true);
-      setsRepository.create.mockResolvedValue(set1);
+      setsRepository.create.mockResolvedValue(SET_1);
 
       const result = await setsService.create(createSetDto);
 
       expect(cardsService.isCardActive).toHaveBeenCalledTimes(
-        set1.cards.length,
+        SET_1.cards.length,
       );
-      expect(cardsService.isCardActive).toHaveBeenCalledWith(card1.id);
-      expect(cardsService.isCardActive).toHaveBeenCalledWith(card2.id);
+      expect(cardsService.isCardActive).toHaveBeenCalledWith(CARD_1.id);
+      expect(cardsService.isCardActive).toHaveBeenCalledWith(CARD_2.id);
       expect(setsRepository.create).toHaveBeenCalledWith(createSetDto);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         SetEvent.CREATE,
         new SetEventPayload({
-          cardsId: set1.cards.map((card) => card.id),
-          bonus: set1.bonus,
+          cardsId: SET_1.cards.map((card) => card.id),
+          bonus: SET_1.bonus,
         }),
       );
-      expect(result).toEqual(set1.id);
+      expect(result).toEqual(SET_1.id);
     });
 
     it('should throw BadRequestException if one of the cards is inactive', async () => {
       const createSetDto = {
-        name: set1.name,
-        bonus: set1.bonus,
-        cardsId: set1.cards.map((card) => card.id),
+        name: SET_1.name,
+        bonus: SET_1.bonus,
+        cardsId: SET_1.cards.map((card) => card.id),
       };
 
       cardsService.isCardActive.mockResolvedValueOnce(true);
@@ -112,10 +89,10 @@ describe('SetsService', () => {
       );
 
       expect(cardsService.isCardActive).toHaveBeenCalledTimes(
-        set1.cards.length,
+        SET_1.cards.length,
       );
-      expect(cardsService.isCardActive).toHaveBeenCalledWith(card1.id);
-      expect(cardsService.isCardActive).toHaveBeenCalledWith(card2.id);
+      expect(cardsService.isCardActive).toHaveBeenCalledWith(CARD_1.id);
+      expect(cardsService.isCardActive).toHaveBeenCalledWith(CARD_2.id);
     });
   });
 
@@ -125,7 +102,7 @@ describe('SetsService', () => {
       take: 10,
     };
     const mockFindAllResponse = {
-      sets: [set1, set2],
+      sets: [SET_1, SET_2],
       totalCount: 2,
     };
     const expectedInfo = {
@@ -163,12 +140,12 @@ describe('SetsService', () => {
       };
       setsRepository.findAll.mockResolvedValue(mockFindAllResponse);
       cardInstancesService.attachOwnershipFlag.mockResolvedValueOnce([
-        { ...card1, is_owned: true },
-        { ...card2, is_owned: true },
+        { ...CARD_1, is_owned: true },
+        { ...CARD_2, is_owned: true },
       ]);
       cardInstancesService.attachOwnershipFlag.mockResolvedValueOnce([
-        { ...card1, is_owned: true },
-        { ...card2, is_owned: false },
+        { ...CARD_1, is_owned: true },
+        { ...CARD_2, is_owned: false },
       ]);
 
       const result = await setsService.findAll(findAllPayload);
@@ -194,16 +171,16 @@ describe('SetsService', () => {
             ...mockFindAllResponse.sets[0],
             is_user_has_set: true,
             cards: [
-              { ...card1, is_owned: true },
-              { ...card2, is_owned: true },
+              { ...CARD_1, is_owned: true },
+              { ...CARD_2, is_owned: true },
             ],
           },
           {
             ...mockFindAllResponse.sets[1],
             is_user_has_set: false,
             cards: [
-              { ...card1, is_owned: true },
-              { ...card2, is_owned: false },
+              { ...CARD_1, is_owned: true },
+              { ...CARD_2, is_owned: false },
             ],
           },
         ],
@@ -214,18 +191,18 @@ describe('SetsService', () => {
 
   describe('findAllWithCard', () => {
     it('should return all sets with the specified card id', async () => {
-      const cardId = card1.id;
+      const cardId = CARD_1.id;
       const page = 1;
       const take = 20;
       const mockFindAllWithCardResponse = {
         sets: [
           {
-            bonus: set1.bonus,
-            cards: [{ id: card1.id }, { id: card2.id }],
+            bonus: SET_1.bonus,
+            cards: [{ id: CARD_1.id }, { id: CARD_2.id }],
           },
           {
-            bonus: set2.bonus,
-            cards: [{ id: card1.id }, { id: card2.id }],
+            bonus: SET_2.bonus,
+            cards: [{ id: CARD_1.id }, { id: CARD_2.id }],
           },
         ],
         totalCount: 2,
@@ -248,12 +225,12 @@ describe('SetsService', () => {
 
   describe('findOne', () => {
     it('should return a set if it exists', async () => {
-      const id = set1.id;
-      setsRepository.findOne.mockResolvedValue(set1);
+      const id = SET_1.id;
+      setsRepository.findOne.mockResolvedValue(SET_1);
 
       const result = await setsService.findOne(id);
       expect(setsRepository.findOne).toHaveBeenCalledWith(id);
-      expect(result).toEqual(set1);
+      expect(result).toEqual(SET_1);
     });
 
     it('should throw NotFoundException if set does not exist', async () => {
@@ -276,7 +253,7 @@ describe('SetsService', () => {
     };
     const mockFindOneCardInstanceResponse = {
       id: AuctionsFinishedEventPayload.cardInstanceId,
-      card_id: card1.id,
+      card_id: CARD_1.id,
       created_at: MOCK_DATE,
       user_id: AuctionsFinishedEventPayload.sellerId,
     };
@@ -285,8 +262,8 @@ describe('SetsService', () => {
       const mockFindAllWithCardResponse = {
         sets: [
           {
-            bonus: set1.bonus,
-            cards: [{ id: card1.id }, { id: card2.id }],
+            bonus: SET_1.bonus,
+            cards: [{ id: CARD_1.id }, { id: CARD_2.id }],
           },
         ],
         totalCount: 1,
@@ -301,7 +278,7 @@ describe('SetsService', () => {
       cardInstancesService.findAll.mockResolvedValue([
         {
           id: 'cardsInstance2Id',
-          card_id: card2.id,
+          card_id: CARD_2.id,
           created_at: MOCK_DATE,
           user_id: AuctionsFinishedEventPayload.sellerId,
         },
@@ -314,12 +291,12 @@ describe('SetsService', () => {
       );
       expect(setsRepository.findAllWithCard).toHaveBeenCalledTimes(1);
       expect(setsRepository.findAllWithCard).toHaveBeenCalledWith(
-        card1.id,
+        CARD_1.id,
         1,
         30,
       );
       expect(cardInstancesService.findAll).toHaveBeenCalledWith({
-        cardsId: [card2.id],
+        cardsId: [CARD_2.id],
         userId: AuctionsFinishedEventPayload.sellerId,
       });
       expect(eventEmitter.emit).toHaveBeenCalledWith(
@@ -337,8 +314,8 @@ describe('SetsService', () => {
       const mockFindAllWithCardResponse = {
         sets: [
           {
-            bonus: set1.bonus,
-            cards: [{ id: card1.id }, { id: card2.id }, { id: card3Id }],
+            bonus: SET_1.bonus,
+            cards: [{ id: CARD_1.id }, { id: CARD_2.id }, { id: card3Id }],
           },
         ],
         totalCount: 1,
@@ -353,7 +330,7 @@ describe('SetsService', () => {
       cardInstancesService.findAll.mockResolvedValue([
         {
           id: 'cardsInstance2Id',
-          card_id: card2.id,
+          card_id: CARD_2.id,
           created_at: MOCK_DATE,
           user_id: AuctionsFinishedEventPayload.sellerId,
         },
@@ -365,7 +342,7 @@ describe('SetsService', () => {
         AuctionsFinishedEventPayload.cardInstanceId,
       );
       expect(cardInstancesService.findAll).toHaveBeenCalledWith({
-        cardsId: [card2.id, card3Id],
+        cardsId: [CARD_2.id, card3Id],
         userId: AuctionsFinishedEventPayload.sellerId,
       });
       expect(eventEmitter.emit).not.toHaveBeenCalled();
@@ -375,8 +352,8 @@ describe('SetsService', () => {
       const mockFindAllWithCardResponse = {
         sets: [
           {
-            bonus: set1.bonus,
-            cards: [{ id: card1.id }, { id: card2.id }],
+            bonus: SET_1.bonus,
+            cards: [{ id: CARD_1.id }, { id: CARD_2.id }],
           },
         ],
         totalCount: 1,
@@ -391,7 +368,7 @@ describe('SetsService', () => {
       cardInstancesService.findAll.mockResolvedValue([
         {
           id: 'cardsInstance2Id',
-          card_id: card2.id,
+          card_id: CARD_2.id,
           created_at: MOCK_DATE,
           user_id: AuctionsFinishedEventPayload.winnerId,
         },
@@ -403,7 +380,7 @@ describe('SetsService', () => {
         AuctionsFinishedEventPayload.cardInstanceId,
       );
       expect(cardInstancesService.findAll).toHaveBeenCalledWith({
-        cardsId: [card2.id],
+        cardsId: [CARD_2.id],
         userId: AuctionsFinishedEventPayload.winnerId,
       });
       expect(eventEmitter.emit).toHaveBeenCalledWith(
@@ -423,35 +400,38 @@ describe('SetsService', () => {
       const updateSetDto = {
         name: 'Updated Set',
         bonus: 50,
-        cardsId: [card1.id, card2.id, newCardId],
+        cardsId: [CARD_1.id, CARD_2.id, newCardId],
       };
       const mockUpdateSetRepositoryResponse = {
-        ...set1,
+        ...SET_1,
         name: updateSetDto.name,
         bonus: updateSetDto.bonus,
-        cards: [...set1.cards, { ...card1, id: newCardId }],
+        cards: [...SET_1.cards, { ...CARD_1, id: newCardId }],
       };
 
-      setsRepository.findOne.mockResolvedValue(set1);
+      setsRepository.findOne.mockResolvedValue(SET_1);
       setsRepository.update.mockResolvedValue(mockUpdateSetRepositoryResponse);
 
-      const result = await setsService.update(set1.id, updateSetDto);
+      const result = await setsService.update(SET_1.id, updateSetDto);
 
-      expect(setsRepository.update).toHaveBeenCalledWith(set1.id, updateSetDto);
-      expect(setsRepository.findOne).toHaveBeenCalledWith(set1.id);
+      expect(setsRepository.update).toHaveBeenCalledWith(
+        SET_1.id,
+        updateSetDto,
+      );
+      expect(setsRepository.findOne).toHaveBeenCalledWith(SET_1.id);
       expect(eventEmitter.emit).toHaveBeenCalledTimes(3);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         SetEvent.UPDATE,
         new SetEventPayload({
           cardsId: mockUpdateSetRepositoryResponse.cards.map((card) => card.id),
-          bonus: mockUpdateSetRepositoryResponse.bonus - set1.bonus,
+          bonus: mockUpdateSetRepositoryResponse.bonus - SET_1.bonus,
         }),
       );
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         SetEvent.REMOVE,
         new SetEventPayload({
-          cardsId: set1.cards.map((card) => card.id),
-          bonus: set1.bonus,
+          cardsId: SET_1.cards.map((card) => card.id),
+          bonus: SET_1.bonus,
         }),
       );
       expect(eventEmitter.emit).toHaveBeenCalledWith(
@@ -467,16 +447,16 @@ describe('SetsService', () => {
 
   describe('remove', () => {
     it('should remove a set', async () => {
-      setsRepository.remove.mockResolvedValue(set1);
+      setsRepository.remove.mockResolvedValue(SET_1);
 
-      await setsService.remove(set1.id);
+      await setsService.remove(SET_1.id);
 
-      expect(setsRepository.remove).toHaveBeenCalledWith(set1.id);
+      expect(setsRepository.remove).toHaveBeenCalledWith(SET_1.id);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         SetEvent.REMOVE,
         new SetEventPayload({
-          cardsId: set1.cards.map((card) => card.id),
-          bonus: set1.bonus,
+          cardsId: SET_1.cards.map((card) => card.id),
+          bonus: SET_1.bonus,
         }),
       );
     });
