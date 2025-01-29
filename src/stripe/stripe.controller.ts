@@ -29,7 +29,7 @@ export class StripeController {
 
   @Public()
   @Post('webhook')
-  async webhook(
+  async handleWebhookEvent(
     @Req() request: RawBodyRequest<Request>,
     @Headers('stripe-signature') signature: string,
   ) {
