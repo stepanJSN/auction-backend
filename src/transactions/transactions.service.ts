@@ -34,14 +34,18 @@ export class TransactionsService {
     return this.calculateBalance(userId);
   }
 
-  async withdraw(amount: number, userData: JWTPayload) {
-    const { available } = await this.calculateBalance(userData.id);
+  checkIfUserHasEnoughBalance(available: number, amount: number) {
     if (available < amount) {
       throw new BadRequestException({
         code: TransactionExceptionCode.INSUFFICIENT_BALANCE,
         message: 'Not enough balance',
       });
     }
+  }
+
+  async withdraw(amount: number, userData: JWTPayload) {
+    const { available, total } = await this.calculateBalance(userData.id);
+    this.checkIfUserHasEnoughBalance(available, amount);
 
     if (userData.role === Role.User) {
       await this.stripeService.transferToAccount(amount, userData.id);
@@ -52,7 +56,10 @@ export class TransactionsService {
       amount,
     });
 
-    return this.calculateBalance(userData.id);
+    return {
+      available: available - amount,
+      total: total - amount,
+    };
   }
 
   @OnEvent(AuctionEvent.FINISHED)
@@ -74,9 +81,7 @@ export class TransactionsService {
 
   async createTransfer({ fromId, toId, amount }: CreateTransferType) {
     const { available } = await this.calculateBalance(fromId);
-    if (available < amount) {
-      throw new Error('Not enough balance');
-    }
+    this.checkIfUserHasEnoughBalance(available, amount);
 
     const systemFee = this.calculateSystemFee(amount);
     const amountWithoutFee = amount - systemFee;
@@ -132,7 +137,7 @@ export class TransactionsService {
     };
   }
 
-  async calculateFee() {
+  async calculateTotalFeeAmount() {
     const sum = await this.transactionsRepository.calculateFee();
     return { totalFeeAmount: +sum._sum.fee.toFixed(2) };
   }

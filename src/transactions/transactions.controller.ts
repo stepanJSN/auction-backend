@@ -30,7 +30,7 @@ export class TransactionsController {
   @Get('/fee')
   @UseGuards(RoleGuard)
   @Roles(Role.Admin)
-  calculateFee() {
-    return this.transactionsService.calculateFee();
+  calculateTotalFeeAmount() {
+    return this.transactionsService.calculateTotalFeeAmount();
   }
 }
