@@ -12,7 +12,6 @@ describe('SystemController', () => {
     const module = await Test.createTestingModule({
       controllers: [SystemController],
       providers: [
-        SystemService,
         { provide: SystemService, useValue: mockDeep<SystemService>() },
       ],
     }).compile();
