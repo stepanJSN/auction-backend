@@ -8,6 +8,7 @@ import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { MOCK_DATE, MOCK_EMAIL, MOCK_USER_ID } from 'config/mock-test-data';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { TransactionExceptionCode } from 'src/transactions/transactions-exceptions.enum';
 
 describe('StripeService', () => {
   let stripeService: StripeService;
@@ -260,6 +261,46 @@ describe('StripeService', () => {
       await expect(
         stripeService.transferToAccount(amount, userId),
       ).rejects.toThrow(new NotFoundException('Stripe account not found'));
+    });
+
+    it('should throw a BadRequestException if user stripe account is not completed', async () => {
+      const userId = MOCK_USER_ID;
+      const amount = 100;
+      const mockUserData = {
+        stripe_account_id: 'accountId',
+      };
+
+      userService.findOneById.mockResolvedValue(mockUserData as any);
+      stripe.accounts.retrieve.mockResolvedValue({
+        charges_enabled: false,
+      } as any);
+
+      await expect(
+        stripeService.transferToAccount(amount, userId),
+      ).rejects.toThrow(
+        new BadRequestException({
+          code: TransactionExceptionCode.STRIPE_ACCOUNT_NOT_COMPLETED,
+          message: 'You don`t complete stripe account registration',
+        }),
+      );
+    });
+
+    it('should throw an error if Stripe transfer fails', async () => {
+      const userId = MOCK_USER_ID;
+      const amount = 100;
+      const mockUserData = {
+        stripe_account_id: 'accountId',
+      };
+
+      userService.findOneById.mockResolvedValue(mockUserData as any);
+      stripe.accounts.retrieve.mockResolvedValue({
+        charges_enabled: true,
+      } as any);
+      stripe.transfers.create.mockRejectedValue(new Error('Transfer failed'));
+
+      await expect(
+        stripeService.transferToAccount(amount, userId),
+      ).rejects.toThrow(new Error('Transfer failed'));
     });
   });
 });
