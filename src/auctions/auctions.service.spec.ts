@@ -507,11 +507,12 @@ describe('AuctionsService', () => {
   });
 
   describe('extendAuctionIfNecessary', () => {
+    const MILLISECONDS_IN_A_MINUTE = 60 * 1000;
     it('should extend the auction if a bid has been made and the time left until completion is less than the minimum', async () => {
       const auctionId = mockAuction.id;
       const minLength = 3;
       const endTime = new Date(
-        new Date().getTime() + (minLength - 1) * 60 * 1000,
+        new Date().getTime() + (minLength - 1) * MILLISECONDS_IN_A_MINUTE,
       );
       const bidEvent = {
         auctionId,
@@ -530,7 +531,7 @@ describe('AuctionsService', () => {
       await auctionsService.extendAuctionIfNecessary(bidEvent);
 
       const expectedEndTime = new Date(
-        bidEvent.createdAt.getTime() + minLength * 60 * 1000,
+        bidEvent.createdAt.getTime() + minLength * MILLISECONDS_IN_A_MINUTE,
       );
       expect(auctionRepository.update).toHaveBeenCalledWith(auctionId, {
         endTime: expectedEndTime,
@@ -541,7 +542,7 @@ describe('AuctionsService', () => {
       const auctionId = mockAuction.id;
       const minLength = 3;
       const endTime = new Date(
-        new Date().getTime() + (minLength + 1) * 60 * 1000,
+        new Date().getTime() + (minLength + 1) * MILLISECONDS_IN_A_MINUTE,
       );
       const bidEvent = {
         auctionId,
