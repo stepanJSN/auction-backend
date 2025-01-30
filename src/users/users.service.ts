@@ -1,5 +1,7 @@
 import {
   ConflictException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,6 +21,7 @@ import { UpdateUserType } from './types/update-user.type';
 export class UsersService {
   constructor(
     private usersRepository: UsersRepository,
+    @Inject(forwardRef(() => TransactionsService))
     private transactionsService: TransactionsService,
   ) {}
 
@@ -85,9 +88,9 @@ export class UsersService {
   }
 
   async update(userId: string, updateUsersDto: UpdateUserType) {
-    const userPassword =
-      updateUsersDto.password &&
-      (await this.hashPassword(updateUsersDto.password));
+    const userPassword = updateUsersDto.password
+      ? await this.hashPassword(updateUsersDto.password)
+      : undefined;
 
     return this.usersRepository.update(userId, {
       ...updateUsersDto,
@@ -102,7 +105,7 @@ export class UsersService {
   @OnEvent(RatingEvent.UPDATE)
   async updateRating({ userId, pointsAmount, action }: UpdateRatingEvent) {
     const { rating } = await this.findOneById(userId);
-    return this.usersRepository.update(userId, {
+    await this.usersRepository.update(userId, {
       rating:
         action === RatingAction.INCREASE
           ? rating + pointsAmount
