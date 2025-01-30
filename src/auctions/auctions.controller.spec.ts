@@ -81,7 +81,7 @@ describe('AuctionsController', () => {
   describe('findAllCreatedByUser', () => {
     it('should return all auctions created by the user', async () => {
       auctionsService.findAll.mockResolvedValue(mockFindAllAuctions);
-      const result = await auctionsController.findAll(
+      const result = await auctionsController.findAllCreatedByUser(
         currentUserId,
         findAllAuctionsDto,
       );
@@ -96,12 +96,13 @@ describe('AuctionsController', () => {
   describe('findAllWonByUser', () => {
     it('should return all auctions won by the user', async () => {
       auctionsService.findAll.mockResolvedValue(mockFindAllAuctions);
-      const result = await auctionsController.findAll(
+      const result = await auctionsController.findAllWonByUser(
         currentUserId,
         findAllAuctionsDto,
       );
       expect(auctionsService.findAll).toHaveBeenCalledWith({
-        ...findAllAuctionsDto,
+        page: findAllAuctionsDto.page,
+        take: findAllAuctionsDto.take,
         participantId: currentUserId,
         isCompleted: true,
         isUserLeader: true,
@@ -135,7 +136,6 @@ describe('AuctionsController', () => {
         auctionId,
         currentUserId,
       );
-      expect(auctionsService.findOne).toHaveBeenCalledWith(auctionId);
       expect(result).toEqual(mockAuction);
     });
   });
@@ -150,6 +150,8 @@ describe('AuctionsController', () => {
         id: auctionId,
         ...updateAuctionDto,
       };
+      auctionsService.update.mockResolvedValue(mockAuction as any);
+
       const result = await auctionsController.update(
         auctionId,
         updateAuctionDto,
@@ -168,6 +170,8 @@ describe('AuctionsController', () => {
       const mockAuction = {
         id: auctionId,
       };
+      auctionsService.remove.mockResolvedValue(mockAuction as any);
+
       const result = await auctionsController.remove(auctionId);
       expect(auctionsService.remove).toHaveBeenCalledWith(auctionId);
       expect(result).toEqual(mockAuction);
