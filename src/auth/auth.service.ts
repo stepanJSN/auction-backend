@@ -21,6 +21,10 @@ export class AuthService {
     return this.jwtService.signAsync(payload, { expiresIn });
   }
 
+  private calcExpiationTime(age: number) {
+    return new Date(Date.now() + age * 1000);
+  }
+
   private async validateUserCredentials(email: string, password: string) {
     const user = await this.userService.findOneByEmail(email);
 
@@ -51,7 +55,10 @@ export class AuthService {
         token: refreshToken,
         maxAge: ONE_MONTH_IN_SECONDS * 1000,
       },
-      accessToken,
+      accessToken: {
+        token: accessToken,
+        exp: this.calcExpiationTime(TEN_MINUTES_IN_SECONDS),
+      },
       role: user.role,
       id: user.id,
     };
@@ -60,9 +67,15 @@ export class AuthService {
   async getNewAccessToken(refreshToken: string) {
     const result = await this.jwtService.verifyAsync(refreshToken);
     if (!result) throw new UnauthorizedException('Invalid refresh token');
-    return await this.generateToken(
+    const accessToken = await this.generateToken(
       { id: result.id, email: result.email, role: result.role },
       TEN_MINUTES_IN_SECONDS,
     );
+    return {
+      accessToken: {
+        token: accessToken,
+        exp: this.calcExpiationTime(TEN_MINUTES_IN_SECONDS),
+      },
+    };
   }
 }

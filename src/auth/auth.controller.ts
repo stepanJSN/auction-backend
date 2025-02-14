@@ -22,12 +22,11 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() signInDto: SignInRequestDto,
   ) {
-    const { refreshToken, ...signInResponse } =
-      await this.authService.signIn(signInDto);
+    const signInResponse = await this.authService.signIn(signInDto);
 
-    response.cookie('refreshToken', refreshToken.token, {
+    response.cookie('refreshToken', signInResponse.refreshToken.token, {
       httpOnly: true,
-      maxAge: refreshToken.maxAge,
+      maxAge: signInResponse.refreshToken.maxAge,
       secure: true,
       sameSite: 'none',
     });
@@ -36,16 +35,17 @@ export class AuthController {
   }
 
   @Public()
-  @Get('access-token')
-  async getNewTokens(@Req() req: Request) {
-    const refreshToken = req.cookies['refreshToken'];
-    if (!refreshToken) {
+  @Post('access-token')
+  async getNewTokens(
+    @Body() { refreshToken }: { refreshToken: string },
+    @Req() req: Request,
+  ) {
+    const cookieRefreshToken = req.cookies['refreshToken'];
+    if (!cookieRefreshToken && !refreshToken) {
       throw new UnauthorizedException('Refresh token not passed');
     }
 
-    return {
-      accessToken: await this.authService.getNewAccessToken(refreshToken),
-    };
+    return this.authService.getNewAccessToken(refreshToken);
   }
 
   @Public()
