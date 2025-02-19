@@ -48,6 +48,7 @@ export class AuctionsRepository {
       creationDate: 'a.created_at',
       finishDate: 'a.end_time',
       highestBid: 'highest_bid',
+      startingBid: 'a.starting_bid',
     }[sortBy];
     const sortDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
 
@@ -152,7 +153,7 @@ export class AuctionsRepository {
           AND (${locationId ? `c.location_id = ${locationId}` : '1'})
           AND (${cardName ? `c.name LIKE '%${cardName}%'` : '1'})
           AND (${cardId ? `c.id = '${cardId}'` : '1'})
-          AND (${fromPrice ? `b_highest.bid_amount >= ${fromPrice}` : '1'})
+          AND (${fromPrice ? `b_highest.bid_amount >= ${fromPrice} OR a.starting_bid >= ${fromPrice}` : '1'})
           AND (${toPrice ? `b_highest.bid_amount <= ${toPrice}` : '1'})
           AND (${
             participantId && !isUserLeader
