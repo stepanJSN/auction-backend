@@ -111,6 +111,8 @@ export class AuctionsService {
   }
 
   async getHighestBidRange() {
+    let min: number;
+    let max: number;
     const auctionWithHighestBid = await this.auctionRepository.findAll({
       isCompleted: false,
       sortOrder: 'desc',
@@ -118,16 +120,42 @@ export class AuctionsService {
       take: 1,
     });
 
+    if (auctionWithHighestBid.auctions[0]?.highest_bid) {
+      max = auctionWithHighestBid.auctions[0]?.highest_bid;
+    } else {
+      const auctionWithHighestStartingBid =
+        await this.auctionRepository.findAll({
+          isCompleted: false,
+          sortOrder: 'desc',
+          sortBy: 'startingBid',
+          take: 1,
+        });
+      max = auctionWithHighestStartingBid.auctions[0]?.starting_bid ?? 0;
+    }
+
     const auctionWithLowestBid = await this.auctionRepository.findAll({
       isCompleted: false,
       sortOrder: 'asc',
       sortBy: 'highestBid',
       take: 1,
     });
+    if (auctionWithLowestBid.auctions[0]?.highest_bid) {
+      min = auctionWithLowestBid.auctions[0]?.highest_bid;
+    } else {
+      const auctionWithLowestStartingBid = await this.auctionRepository.findAll(
+        {
+          isCompleted: false,
+          sortOrder: 'asc',
+          sortBy: 'startingBid',
+          take: 1,
+        },
+      );
+      min = auctionWithLowestStartingBid.auctions[0]?.starting_bid ?? 0;
+    }
 
     return {
-      min: auctionWithLowestBid.auctions[0]?.highest_bid ?? 0,
-      max: auctionWithHighestBid.auctions[0]?.highest_bid ?? 0,
+      min,
+      max,
     };
   }
 
