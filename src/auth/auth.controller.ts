@@ -22,18 +22,20 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() signInDto: { accessToken: string },
   ) {
-    const signInResponse = await this.authService.signInWithGoogle(
-      signInDto.accessToken,
-    );
+    const { refreshToken, ...signInResponse } =
+      await this.authService.signInWithGoogle(signInDto.accessToken);
 
-    response.cookie('refreshToken', signInResponse.refreshToken.token, {
+    response.cookie('refreshToken', refreshToken.token, {
       httpOnly: true,
-      maxAge: signInResponse.refreshToken.maxAge,
+      maxAge: refreshToken.maxAge,
       secure: true,
       sameSite: 'none',
     });
 
-    return signInResponse;
+    return {
+      refreshToken: refreshToken.token,
+      ...signInResponse,
+    };
   }
 
   @Public()
@@ -42,17 +44,20 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
     @Body() signInDto: SignInRequestDto,
   ) {
-    const signInResponse =
+    const { refreshToken, ...signInResponse } =
       await this.authService.signInWithCredentials(signInDto);
 
-    response.cookie('refreshToken', signInResponse.refreshToken.token, {
+    response.cookie('refreshToken', refreshToken.token, {
       httpOnly: true,
-      maxAge: signInResponse.refreshToken.maxAge,
+      maxAge: refreshToken.maxAge,
       secure: true,
       sameSite: 'none',
     });
 
-    return signInResponse;
+    return {
+      refreshToken: refreshToken.token,
+      ...signInResponse,
+    };
   }
 
   @Public()

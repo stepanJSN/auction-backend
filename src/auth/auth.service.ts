@@ -26,10 +26,6 @@ export class AuthService {
     return this.jwtService.signAsync(payload, { expiresIn });
   }
 
-  private calcExpiationTime(age: number) {
-    return new Date(Date.now() + age * 1000);
-  }
-
   private async validateUserCredentials(email: string, password: string) {
     const user = await this.userService.findOneByEmail(email);
 
@@ -56,10 +52,7 @@ export class AuthService {
         token: refreshToken,
         maxAge: ONE_MONTH_IN_SECONDS * 1000,
       },
-      accessToken: {
-        token: accessToken,
-        exp: this.calcExpiationTime(TEN_MINUTES_IN_SECONDS),
-      },
+      accessToken: accessToken,
     };
   }
 
@@ -86,10 +79,7 @@ export class AuthService {
       TEN_MINUTES_IN_SECONDS,
     );
     return {
-      accessToken: {
-        token: accessToken,
-        exp: this.calcExpiationTime(TEN_MINUTES_IN_SECONDS),
-      },
+      accessToken: accessToken,
     };
   }
 
