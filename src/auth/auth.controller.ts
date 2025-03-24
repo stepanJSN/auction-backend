@@ -18,18 +18,32 @@ export class AuthController {
 
   @Public()
   @Post('signin/google')
-  async signInViaGoogle(@Body() signInDto: { accessToken: string }) {
-    await this.authService.signInViaGoogle(signInDto.accessToken);
-    return;
+  async signInWithGoogle(
+    @Res({ passthrough: true }) response: Response,
+    @Body() signInDto: { accessToken: string },
+  ) {
+    const signInResponse = await this.authService.signInWithGoogle(
+      signInDto.accessToken,
+    );
+
+    response.cookie('refreshToken', signInResponse.refreshToken.token, {
+      httpOnly: true,
+      maxAge: signInResponse.refreshToken.maxAge,
+      secure: true,
+      sameSite: 'none',
+    });
+
+    return signInResponse;
   }
 
   @Public()
-  @Post('signin')
-  async signIn(
+  @Post('signin/credentials')
+  async signInWithCredentials(
     @Res({ passthrough: true }) response: Response,
     @Body() signInDto: SignInRequestDto,
   ) {
-    const signInResponse = await this.authService.signIn(signInDto);
+    const signInResponse =
+      await this.authService.signInWithCredentials(signInDto);
 
     response.cookie('refreshToken', signInResponse.refreshToken.token, {
       httpOnly: true,
