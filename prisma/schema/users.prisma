@@ -8,10 +8,11 @@ model users {
   email             String   @unique
   name              String
   surname           String
-  password          String
+  password          String?
   rating            Int      @default(0)
   role              Role     @default(User)
   stripe_account_id String?
+  googleSub         String?
   created_at        DateTime @default(now())
 
   outgoingTransactions transactions[]   @relation("from")
