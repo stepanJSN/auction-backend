@@ -17,6 +17,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @Post('signin/google')
+  async signInViaGoogle(@Body() signInDto: { accessToken: string }) {
+    await this.authService.signInViaGoogle(signInDto.accessToken);
+    return;
+  }
+
+  @Public()
   @Post('signin')
   async signIn(
     @Res({ passthrough: true }) response: Response,

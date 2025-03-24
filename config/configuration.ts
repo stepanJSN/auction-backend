@@ -7,4 +7,5 @@ export default () => ({
   image_folder: process.env.IMAGE_FOLDER || 'public',
   stripe_key: process.env.STRIPE_KEY || '',
   stripe_webhook_secret: process.env.STRIPE_WEBHOOK_SECRET || '',
+  google_auth_client_id: process.env.GOOGLE_AUTH_CLIENT_ID || '',
 });
