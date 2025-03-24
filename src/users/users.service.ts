@@ -16,6 +16,7 @@ import { FindAllUsersDto } from './dto/find-all-users.dto';
 import { TransactionsService } from 'src/transactions/transactions.service';
 import { Role } from '@prisma/client';
 import { UpdateUserType } from './types/update-user.type';
+import { CreateUserType } from './types/create-user.type';
 
 @Injectable()
 export class UsersService {
@@ -30,14 +31,18 @@ export class UsersService {
     return hash(password, saltRounds);
   }
 
-  async create(createUsersDto: CreateUserDto) {
+  async create(createUsers: CreateUserType) {
+    return this.usersRepository.create(createUsers);
+  }
+
+  async createWithPassword(createUsersDto: CreateUserDto) {
     const user = await this.findOneByEmail(createUsersDto.email);
 
     if (user) {
       throw new ConflictException('User already exists');
     }
 
-    return this.usersRepository.create({
+    return this.create({
       email: createUsersDto.email,
       name: createUsersDto.name,
       surname: createUsersDto.surname,

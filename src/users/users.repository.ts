@@ -25,6 +25,7 @@ export class UsersRepository {
         id: true,
         password: true,
         role: true,
+        googleSub: true,
       },
     });
   }

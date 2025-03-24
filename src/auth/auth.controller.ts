@@ -17,21 +17,47 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
-  @Post('signin')
-  async signIn(
+  @Post('signin/google')
+  async signInWithGoogle(
     @Res({ passthrough: true }) response: Response,
-    @Body() signInDto: SignInRequestDto,
+    @Body() signInDto: { accessToken: string },
   ) {
-    const signInResponse = await this.authService.signIn(signInDto);
+    const { refreshToken, ...signInResponse } =
+      await this.authService.signInWithGoogle(signInDto.accessToken);
 
-    response.cookie('refreshToken', signInResponse.refreshToken.token, {
+    response.cookie('refreshToken', refreshToken.token, {
       httpOnly: true,
-      maxAge: signInResponse.refreshToken.maxAge,
+      maxAge: refreshToken.maxAge,
       secure: true,
       sameSite: 'none',
     });
 
-    return signInResponse;
+    return {
+      refreshToken: refreshToken.token,
+      ...signInResponse,
+    };
+  }
+
+  @Public()
+  @Post('signin/credentials')
+  async signInWithCredentials(
+    @Res({ passthrough: true }) response: Response,
+    @Body() signInDto: SignInRequestDto,
+  ) {
+    const { refreshToken, ...signInResponse } =
+      await this.authService.signInWithCredentials(signInDto);
+
+    response.cookie('refreshToken', refreshToken.token, {
+      httpOnly: true,
+      maxAge: refreshToken.maxAge,
+      secure: true,
+      sameSite: 'none',
+    });
+
+    return {
+      refreshToken: refreshToken.token,
+      ...signInResponse,
+    };
   }
 
   @Public()
